@@ -37,29 +37,6 @@ void Kernel::observe() {
 }
 namespace {
 const Values empty;
-float probability(const Command &p, const Values &q, const Values &k,
-                  uint32_t row, uint32_t key) {
-  const auto d = p.cols, t = p.seq, i = row % t, base = row - i;
-  float maximum = -std::numeric_limits<float>::infinity(), denominator = 0,
-        target = 0;
-  for (uint32_t j = 0; j <= i; ++j) {
-    float score = 0;
-    for (uint32_t c = 0; c < d; ++c)
-      score += q[row * d + c] * k[(base + j) * d + c];
-    score /= std::sqrt(float(d));
-    maximum = std::max(maximum, score);
-  }
-  for (uint32_t j = 0; j <= i; ++j) {
-    float score = 0;
-    for (uint32_t c = 0; c < d; ++c)
-      score += q[row * d + c] * k[(base + j) * d + c];
-    const float term = std::exp(score / std::sqrt(float(d)) - maximum);
-    denominator += term;
-    if (j == key)
-      target = term;
-  }
-  return target / denominator;
-}
 } // namespace
 Values CpuKernel::run(const Command &p, const Values &x, const Values &w,
                       const Values &z, const Values &y, const Values &dy) {
@@ -174,34 +151,6 @@ Values CpuKernel::run(const Command &p, const Values &x, const Values &w,
             v += dy[r * K + c];
       }
       break;
-    case Op::Attention: {
-      auto row = n / K, c = n % K, i = row % T, base = row - i;
-      if (p.mode == 0) {
-        for (uint32_t j = 0; j <= i; ++j)
-          v += probability(p, x, w, row, j) * z[(base + j) * K + c];
-      } else if (p.mode == 1) {
-        for (uint32_t j = 0; j <= i; ++j) {
-          float dot = 0;
-          for (uint32_t k = 0; k < K; ++k)
-            dot += dy[row * K + k] * (z[(base + j) * K + k] - y[row * K + k]);
-          v += probability(p, x, w, row, j) * dot * w[(base + j) * K + c] /
-               std::sqrt(float(K));
-        }
-      } else if (p.mode == 2) {
-        for (uint32_t r = i; r < T; ++r) {
-          auto query = base + r;
-          float dot = 0;
-          for (uint32_t k = 0; k < K; ++k)
-            dot += dy[query * K + k] * (z[row * K + k] - y[query * K + k]);
-          v += probability(p, x, w, query, i) * dot * x[query * K + c] /
-               std::sqrt(float(K));
-        }
-      } else {
-        for (uint32_t r = i; r < T; ++r)
-          v += probability(p, x, w, base + r, i) * dy[(base + r) * K + c];
-      }
-      break;
-    }
     case Op::Slice:
       if (p.mode == 0) {
         auto r = n / O, c = n % O;

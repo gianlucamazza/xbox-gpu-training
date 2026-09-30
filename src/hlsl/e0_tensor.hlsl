@@ -10,22 +10,6 @@ StructuredBuffer<float> Y : register(t3);
 StructuredBuffer<float> G : register(t4);
 RWStructuredBuffer<float> Result : register(u0);
 
-float Probability(uint row, uint key) {
-  uint i=row%seq, base=row-i;
-  float maximum=-3.402823466e+38f, denominator=0, target=0;
-  for(uint j=0;j<=i;++j) {
-    float score=0;
-    for(uint c=0;c<cols;++c) score+=X[row*cols+c]*W[(base+j)*cols+c];
-    maximum=max(maximum,score/sqrt(float(cols)));
-  }
-  for(uint j=0;j<=i;++j) {
-    float score=0;
-    for(uint c=0;c<cols;++c) score+=X[row*cols+c]*W[(base+j)*cols+c];
-    float term=exp(score/sqrt(float(cols))-maximum);
-    denominator+=term; if(j==key) target=term;
-  }
-  return target/denominator;
-}
 float Erf(float a) {
   float t=1/(1+0.3275911f*abs(a));
   float poly=(((((1.061405429f*t-1.453152027f)*t)+1.421413741f)*t-0.284496736f)*t+0.254829592f)*t;
@@ -34,7 +18,7 @@ float Erf(float a) {
 [numthreads(64,1,1)]
 void CSMain(uint3 id:SV_DispatchThreadID) {
   uint n=id.x;
-  if(op==13) {
+  if(op==12) {
     if(n>=rows) return;
     uint row=n,limit=row%seq;
     float maximum=-3.402823466e+38f,sum=0,dot=0;
@@ -50,7 +34,7 @@ void CSMain(uint3 id:SV_DispatchThreadID) {
   uint K=cols,O=outputCols,T=seq,H=heads,D=H?K/H:0;
   float v=0;
   if(op==0) v=mode?G[n]:X[n]+W[n];
-  else if(op==10) v=mode?(mode==1?G[n]*W[n]:G[n]*X[n]):X[n]*W[n];
+  else if(op==9) v=mode?(mode==1?G[n]*W[n]:G[n]*X[n]):X[n]*W[n];
   else if(op==1) {
     if(mode==0) { uint r=n/O,o=n%O; for(uint k=0;k<K;++k) v+=X[r*K+k]*W[o*K+k]; }
     else if(mode==1) { uint r=n/K,k=n%K; for(uint o=0;o<O;++o) v+=G[r*O+o]*W[o*K+k]; }
@@ -87,26 +71,18 @@ void CSMain(uint3 id:SV_DispatchThreadID) {
     if(mode==0) v=W[uint(X[n/K])*K+n%K];
     else if(mode==2) { uint token=n/K,c=n%K; for(uint r=0;r<rows;++r) if(uint(X[r])==token) v+=G[r*K+c]; }
   } else if(op==8) {
-    uint row=n/K,c=n%K,i=row%T,base=row-i;
-    if(mode==0) { for(uint j=0;j<=i;++j) v+=Probability(row,j)*Z[(base+j)*K+c]; }
-    else if(mode==1) {
-      for(uint j=0;j<=i;++j) { float dot=0; for(uint k=0;k<K;++k) dot+=G[row*K+k]*(Z[(base+j)*K+k]-Y[row*K+k]); v+=Probability(row,j)*dot*W[(base+j)*K+c]/sqrt(float(K)); }
-    } else if(mode==2) {
-      for(uint r=i;r<T;++r) { uint query=base+r; float dot=0; for(uint k=0;k<K;++k) dot+=G[query*K+k]*(Z[row*K+k]-Y[query*K+k]); v+=Probability(query,i)*dot*X[query*K+c]/sqrt(float(K)); }
-    } else { for(uint r=i;r<T;++r) v+=Probability(base+r,i)*G[(base+r)*K+c]; }
-  } else if(op==9) {
     if(mode==0) { uint r=n/O,c=n%O; v=X[r*K+aux*O+c]; }
     else { uint r=n/K,c=n%K; if(c/O==aux) v=G[r*O+c%O]; }
-  } else if(op==12) {
+  } else if(op==11) {
     if(mode==0) { uint row=n/T,key=n%T,base=row-row%T;for(uint c=0;c<K;++c) v+=X[row*K+c]*W[(base+key)*K+c]; }
     else if(mode==1) { uint row=n/K,c=n%K,base=row-row%T;for(uint j=0;j<T;++j) v+=G[row*T+j]*W[(base+j)*K+c]; }
     else { uint row=n/K,c=n%K,key=row%T,base=row-key;for(uint i=0;i<T;++i) v+=G[(base+i)*T+key]*X[(base+i)*K+c]; }
     v/=sqrt(float(K));
-  } else if(op==14) {
+  } else if(op==13) {
     if(mode==0) { uint row=n/K,c=n%K,base=row-row%T;for(uint j=0;j<=row%T;++j) v+=X[row*T+j]*W[(base+j)*K+c]; }
     else if(mode==1) { uint row=n/T,key=n%T,base=row-row%T;if(key<=row%T) for(uint c=0;c<K;++c) v+=G[row*K+c]*W[(base+key)*K+c]; }
     else { uint row=n/K,c=n%K,key=row%T,base=row-key;for(uint i=key;i<T;++i) v+=X[(base+i)*T+key]*G[(base+i)*K+c]; }
-  } else if(op==11) {
+  } else if(op==10) {
     uint r=mode?n/K:n,c=n%K; float maximum=-3.402823466e+38f,sum=0;
     for(uint k=0;k<K;++k) maximum=max(maximum,X[r*K+k]);
     for(uint k=0;k<K;++k) sum+=exp(X[r*K+k]-maximum);

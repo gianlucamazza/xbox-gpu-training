@@ -15,7 +15,6 @@ enum class Op : uint32_t {
   Heads,
   Unheads,
   Embed,
-  Attention,
   Slice,
   Multiply,
   CrossEntropy,
