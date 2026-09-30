@@ -7,8 +7,9 @@
 #ifdef XGPU_UWP
 #include <winrt/Windows.System.h>
 #elif defined(_WIN32)
-#include <psapi.h>
 #include <windows.h>
+
+#include <psapi.h>
 #endif
 
 namespace e0 {

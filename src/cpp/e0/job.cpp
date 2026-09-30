@@ -6,8 +6,9 @@
 #include <sstream>
 #include <stdexcept>
 #ifdef _WIN32
-#include <bcrypt.h>
 #include <windows.h>
+
+#include <bcrypt.h>
 #else
 #include <openssl/evp.h>
 #endif
