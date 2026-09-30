@@ -205,6 +205,29 @@ Linux / no D3D12:
 
 Grad-check tolerance (chosen TBD): STE-identity max-abs `1e-3`; max-rel `2e-2` when `|analytic| ≥ 1e-2` (smaller grads are abs-gated). One measured train-step loss pair is **not** a quality curve.
 
+## Memory stream (Fase 4)
+
+| Piece | Path |
+| --- | --- |
+| Contract | [`docs/memory-budget.md`](memory-budget.md) |
+| SoT caps | [`docs/platform/uwp-resources.md`](platform/uwp-resources.md) — App **~1 GB**; Creators Game **~5 GB** |
+| Fixture | [`benchmarks/fixtures/stream_stress.json`](../benchmarks/fixtures/stream_stress.json) |
+| Host | `xbox_gpu_host --stream-stress --budget-mb 1024` |
+
+```bat
+.\build\Release\xbox_gpu_host.exe --stream-stress --budget-mb 1024
+```
+
+Linux / no D3D12:
+
+```bash
+./build/xbox_gpu_host --stream-stress --budget-mb 1024
+# Host double-buffer stream; peak working-set printed.
+# gpu_double_buffer: BLOCKED: no D3D12 device. Console AppContainer UNVALIDATED.
+```
+
+No new HLSL kernel. GPU work (when a D3D12 device exists) is a ping-pong `CopyBufferRegion` of two tiles. Debugger can mask OOM; the **non-debug** package is the gate. **Do not assume Game designation** in an App package. Desktop / CI peak working-set is **not** a Series S|X number.
+
 ## Docs lint
 
 ```bash
@@ -221,6 +244,7 @@ python3 scripts/check_relative_links.py
 | [dev-mode.md](platform/dev-mode.md) | Retail Dev Mode, ≤3 consoles, UWP deploy |
 | [dx12-hlsl-compute.md](platform/dx12-hlsl-compute.md) | FL 11.0, compute shader path, no CUDA |
 | [uwp-resources.md](platform/uwp-resources.md) | App 1 GB / Creators 5 GB; debugger masks OOM |
+| [memory-budget.md](memory-budget.md) | Fase 4 streaming vs those caps; console unvalidated |
 | [directml-scope.md](platform/directml-scope.md) | DirectML is not the trainer |
 | [series-s-vs-x.md](platform/series-s-vs-x.md) | Public SKU specs, not our benches |
 | [blockers-fase6-validation.md](platform/blockers-fase6-validation.md) | Why console tables wait |

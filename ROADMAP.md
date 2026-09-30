@@ -53,9 +53,12 @@ No tok/s or quality numbers until Fase 6 measures them on Dev Mode hardware (or 
 
 ## Phase 4 — memory streaming, double buffering, ~1 GB UWP App RAM discipline
 
-- Also document Game designation ~5 GB. AppContainer + VRAM budgets.
-- Public SoT: [docs/platform/uwp-resources.md](docs/platform/uwp-resources.md) (debugger can mask OOM; non-debug is the gate).
-- Label: `memory`, `phase-4`.
+- [x] Chunk stream + 2-slot host double buffer ([src/cpp/stream_buffer.cpp](src/cpp/stream_buffer.cpp)). Logical corpus is never allocated as one tensor.
+- [x] Stress fixture [benchmarks/fixtures/stream_stress.json](benchmarks/fixtures/stream_stress.json) + `xbox_gpu_host --stream-stress --budget-mb 1024`.
+- [x] App **~1 GB** (1024 MiB) planning budget documented; Creators **Game ~5 GB** (5120 MiB) documented as the **other** designation only — not assumed for App packages. Contract: [docs/memory-budget.md](docs/memory-budget.md). SoT: [docs/platform/uwp-resources.md](docs/platform/uwp-resources.md) (debugger can mask OOM; non-debug is the gate).
+- [x] Peak working-set printed from the host that actually ran. Linux desktop (this implementation host): **36.08 MiB** (`VmHWM`) vs App planning 1024 MiB — under budget, no OOM. **Console AppContainer UNVALIDATED** — no invented Series S|X numbers.
+- [x] No new HLSL kernel. GPU path (when D3D12 exists) is ping-pong `CopyBufferRegion` of two tiles; otherwise `gpu_double_buffer: BLOCKED: no D3D12 device`.
+- Status: **Fase 4 implementation**. Execution: [docs/execution-plan.md](docs/execution-plan.md#fase-4--memory-streaming). Label: `memory`, `phase-4`.
 
 ## Phase 5 — full QAT ternary/2/4-bit on GPU with WSD + isolated cooldowns
 

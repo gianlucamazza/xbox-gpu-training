@@ -21,6 +21,8 @@ Fase 2 shaders are real correctness kernels for RMSNorm, RoPE, and scalar FLP2 d
 
 Fase 3 shaders are real correctness kernels for ternary FakeQuant, linear weight grad, relu2 grad, and the STE clip mask. AdamW stays on the host (master fp32). Contract: [docs/ste-adamw.md](../../docs/ste-adamw.md), [docs/adr/0002-ste-qat-mapping.md](../../docs/adr/0002-ste-qat-mapping.md).
 
+Fase 4 adds **no new HLSL**. Streaming is a host + optional `CopyBufferRegion` path: [docs/memory-budget.md](../../docs/memory-budget.md).
+
 ## Entry points (`matmul.hlsl`)
 
 | Entry | Precision | Thread group | Storage |

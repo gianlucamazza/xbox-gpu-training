@@ -214,6 +214,22 @@ jobs:
           }
           if ($code -ne 0) { exit $code }
 
+          Write-Host "Running $exe --stream-stress --budget-mb 1024"
+          & $exe --stream-stress --budget-mb 1024 *>&1 | Tee-Object -FilePath host-stream.txt
+          $code = $LASTEXITCODE
+          $st = Get-Content host-stream.txt -ErrorAction SilentlyContinue
+          $sttext = ($st -join "`n")
+          if ($sttext -match 'STATUS: stream-stress dispatched') {
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "**Fase 4:** host stream + GPU double-buffer copies. Desktop/CI working-set only. Console AppContainer **UNVALIDATED**. Not a tok/s result."
+          } elseif ($sttext -match 'STATUS: stream-stress budget breach') {
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "**Fase 4:** stream finished; **measured** peak working-set exceeded ``--budget-mb 1024``. Console AppContainer **UNVALIDATED**."
+          } elseif ($sttext -match 'STATUS: stream-stress ok' -or $sttext -match 'BLOCKED:') {
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "**Fase 4:** host double-buffer stream ran; GPU path ``BLOCKED`` or not dispatched. Console AppContainer **UNVALIDATED**. Dispatch log not invented."
+          } else {
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "**Fase 4:** ``--stream-stress`` ran (see log). Not treated as a console success."
+          }
+          if ($code -ne 0) { exit $code }
+
           $helloCandidates = @(
             "dist\bin\hello_compute.exe",
             "build\examples\hello-compute\Release\hello_compute.exe",

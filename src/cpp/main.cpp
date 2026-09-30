@@ -3,6 +3,7 @@
 // --bench matmul writes a CSV vs the CPU reference. --cpu-ref is CPU-only.
 // --forward-fixture runs Fase 2 FLP2 decode + tiny forward vs the CPU fixture.
 // --grad-check / --train-step run Fase 3 STE + host AdamW.
+// --stream-stress runs Fase 4 chunk stream + double buffer under --budget-mb.
 // --smoke keeps the no-GPU compile check. No CUDA. DirectML is not the trainer.
 
 #include "cpu_matmul.h"
@@ -10,6 +11,7 @@
 #include "hello_dispatch.h"
 #include "matmul_dispatch.h"
 #include "ste_dispatch.h"
+#include "stream_stress.h"
 
 #include <cstdint>
 #include <exception>
@@ -18,7 +20,7 @@
 #include <string>
 
 static void PrintBanner() {
-  std::cout << "xbox-gpu-training host (Fase 3)\n";
+  std::cout << "xbox-gpu-training host (Fase 4)\n";
   std::cout << "Target path: DirectX 12 compute shaders (HLSL). No CUDA.\n";
   std::cout << "DirectML is inference/forward-focused on console and is not the trainer.\n";
 }
@@ -39,6 +41,7 @@ static void PrintUsage() {
   std::cout << "  xbox_gpu_host --forward-fixture [path]\n";
   std::cout << "  xbox_gpu_host --grad-check\n";
   std::cout << "  xbox_gpu_host --train-step [N]\n";
+  std::cout << "  xbox_gpu_host --stream-stress [--budget-mb 1024]\n";
   std::cout << "  --smoke            Print the banner and exit 0 (no device create).\n";
   std::cout << "  --hello-compute    Create a D3D12 device and dispatch hello_compute once.\n";
   std::cout << "  --cpu-ref          Run the portable CPU GEMM tests (no GPU).\n";
@@ -48,6 +51,10 @@ static void PrintUsage() {
   std::cout << "                     Default path: benchmarks/fixtures/tiny_flp2.json\n";
   std::cout << "  --grad-check       Fase 3 STE-identity finite-diff vs analytic (tiny net).\n";
   std::cout << "  --train-step [N]   Fase 3 AdamW/STE on master fp32. Acceptance is N=1.\n";
+  std::cout << "  --stream-stress    Fase 4 chunk stream + double buffer. App ~1 GB planning.\n";
+  std::cout << "  --budget-mb N      Planning budget in MiB (default 1024). App, not Game.\n";
+  std::cout << "  --chunk-mb N       Override fixture tile size (optional).\n";
+  std::cout << "  --logical-mb N     Override fixture logical corpus (optional).\n";
   std::cout << "  default            Same as --hello-compute.\n";
 }
 
@@ -59,7 +66,12 @@ int main(int argc, char** argv) {
   bool forward_fixture = false;
   bool grad_check = false;
   bool train_step = false;
+  bool stream_stress = false;
   std::uint32_t train_steps = 1;
+  std::uint64_t budget_mb = 0;
+  std::uint64_t chunk_mb = 0;
+  std::uint64_t logical_mb = 0;
+  bool budget_mb_set = false;
   std::string bench_name;
   std::filesystem::path shader_hint;
   std::filesystem::path out_csv;
@@ -95,6 +107,48 @@ int main(int argc, char** argv) {
           return 1;
         }
       }
+    } else if (arg == "--stream-stress") {
+      stream_stress = true;
+      if (i + 1 < argc && argv[i + 1][0] != '-') {
+        fixture_path = argv[++i];
+      }
+    } else if (arg == "--budget-mb" && i + 1 < argc) {
+      try {
+        const unsigned long n = std::stoul(argv[++i]);
+        if (n < 1 || n > 65536ul) {
+          std::cerr << "--budget-mb must be in 1..65536\n";
+          return 1;
+        }
+        budget_mb = static_cast<std::uint64_t>(n);
+        budget_mb_set = true;
+      } catch (const std::exception&) {
+        std::cerr << "--budget-mb requires an integer MiB value\n";
+        return 1;
+      }
+    } else if (arg == "--chunk-mb" && i + 1 < argc) {
+      try {
+        const unsigned long n = std::stoul(argv[++i]);
+        if (n < 1 || n > 512ul) {
+          std::cerr << "--chunk-mb must be in 1..512\n";
+          return 1;
+        }
+        chunk_mb = static_cast<std::uint64_t>(n);
+      } catch (const std::exception&) {
+        std::cerr << "--chunk-mb requires an integer MiB value\n";
+        return 1;
+      }
+    } else if (arg == "--logical-mb" && i + 1 < argc) {
+      try {
+        const unsigned long n = std::stoul(argv[++i]);
+        if (n < 1 || n > 65536ul) {
+          std::cerr << "--logical-mb must be in 1..65536\n";
+          return 1;
+        }
+        logical_mb = static_cast<std::uint64_t>(n);
+      } catch (const std::exception&) {
+        std::cerr << "--logical-mb requires an integer MiB value\n";
+        return 1;
+      }
     } else if (arg == "--bench") {
       bench = true;
       if (i + 1 < argc) {
@@ -117,6 +171,14 @@ int main(int argc, char** argv) {
     std::cerr << "--bench requires name 'matmul' (got '" << bench_name << "')\n";
     return 1;
   }
+  if (budget_mb_set && !stream_stress) {
+    std::cerr << "--budget-mb requires --stream-stress\n";
+    return 1;
+  }
+  if ((chunk_mb > 0 || logical_mb > 0) && !stream_stress) {
+    std::cerr << "--chunk-mb / --logical-mb require --stream-stress\n";
+    return 1;
+  }
 
   PrintBanner();
   if (smoke_only) {
@@ -131,6 +193,17 @@ int main(int argc, char** argv) {
       std::cout << cpu.detail << "\n";
     }
     return cpu.ok ? 0 : 1;
+  }
+
+  if (stream_stress) {
+    StreamStressOptions opt;
+    opt.fixture = fixture_path;
+    opt.budget_mb = budget_mb_set ? budget_mb : kAppPlanningBudgetMiB;
+    opt.chunk_mb = chunk_mb;
+    opt.logical_mb = logical_mb;
+    const RunReport report = RunStreamStress(opt);
+    PrintReport(report);
+    return report.status == RunStatus::Failed ? 1 : 0;
   }
 
   if (grad_check) {
