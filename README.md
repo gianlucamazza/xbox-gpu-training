@@ -48,7 +48,13 @@ Playbook Cursor: [docs/execution-plan.md](docs/execution-plan.md). Tabella compl
 
 ### Stato attuale
 
-Fase 6: **`BLOCKED: no console`** — nessun kit Dev Mode in questa lane; GDKX / ID@Xbox non rivendicati. Pagina: [docs/console.md](docs/console.md) (deploy / PIX / tabella vuota). I quattro blocker restano veri: [docs/platform/blockers-fase6-validation.md](docs/platform/blockers-fase6-validation.md). Fase 5 resta il massimo host (`--qat-smoke --steps 16`). Setup: [docs/setup.md](docs/setup.md). **Nessun tok/s o banco Series S|X inventato.** xllama **non** modificato. Il smoke `benchmarks/run_smoke.py` resta stub.
+The separate E0 UWP backend has passed 36 numerical fixtures, identical-input
+AdamW and exact checkpoint resume on a retail **Series S**. The representative
+ctx=256/batch=32 trial measured **961 token/s**, **87 MiB** peak app memory and
+153 seconds wall time. These are synthetic-corpus functional measurements;
+scientific E0 remains gated on the FloppyLM tensor16/S9 decision.
+[Evidence and exact package lineage](docs/evidence/e0-20260930/notes.md).
+xllama is unchanged; the historical `--qat-smoke` lane remains a separate experiment.
 
 ### Come contribuire
 
@@ -89,7 +95,10 @@ Cursor playbook: [docs/execution-plan.md](docs/execution-plan.md). Full table: [
 
 ### Current status
 
-Fase 6: **`BLOCKED: no console`** — no Dev Mode kit in this lane; GDKX / ID@Xbox not claimed. Page: [docs/console.md](docs/console.md) (deploy / PIX / empty table). The four blockers stay accurate: [docs/platform/blockers-fase6-validation.md](docs/platform/blockers-fase6-validation.md). Fase 5 remains the host ceiling (`--qat-smoke --steps 16`). Setup: [docs/setup.md](docs/setup.md). **No invented tok/s or Series S|X benches.** xllama **not** modified. `benchmarks/run_smoke.py` remains a stub.
+The E0 UWP backend now has measured Series S functional evidence:
+36 numerical fixtures, identical-input AdamW, exact resume and a representative
+throughput trial. [Package, results and limits](docs/evidence/e0-20260930/notes.md).
+Scientific E0 remains gated on the companion protocol decision.
 
 ### How to contribute
 

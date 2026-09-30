@@ -1,0 +1,1606 @@
+{
+ "commit": "9744ff7dbe2b619a942e95f6209d8b5c6dd507a8",
+ "created": "2026-09-30T16:50:19+00:00",
+ "device": {
+  "adapter": "SraKmd_arden",
+  "commit": "9744ff7dbe2b619a942e95f6209d8b5c6dd507a8",
+  "hardware_gpu": true,
+  "package": "GianlucaMazza.XgpuE0_0.1.0.11_x64__g0p5dcfz4t9z4",
+  "schema": "floppylm.device.v1",
+  "state": "ready"
+ },
+ "fixtures": [
+  {
+   "actual_sha256": "1e1b3896e43ae419ae74b7f095b1883869121d6080c68794fd86d1b2f7fd79ae",
+   "ok": true,
+   "path": "fixture-00",
+   "config": {
+    "core_fmt": "ternary",
+    "ctx": 8,
+    "d": 32,
+    "d_ff": 48,
+    "delta": 0.5,
+    "emb_fmt": "4bit",
+    "mlp": "gelu",
+    "n_heads": 2,
+    "n_layers": 1,
+    "qk_norm": false,
+    "scale_policy": "row16",
+    "vocab": 256
+   },
+   "seed": 19,
+   "hardware_gpu": true,
+   "dispatches": 122,
+   "hashes": {
+    "fixture.json": "caf24e0a6f1a0e7b4e83ddc8ac0cbcdbbae8b99a6e9a8db01d0c0c6cf583c079",
+    "expected.json": "a3c448330ae0adea829409eef742bfda5e9cafe788d294c28109252eae32dcd2",
+    "actual.json": "1e1b3896e43ae419ae74b7f095b1883869121d6080c68794fd86d1b2f7fd79ae",
+    "parity.json": "f65a8e4ff7759712f6e768265020ff5e2a5a5fe7d2a2480367242070375317e9"
+   }
+  },
+  {
+   "actual_sha256": "87a4d07de29d9fc93f839f8a481a9b35c0d24aecc8c1b2a39027fa5f7c92c182",
+   "ok": true,
+   "path": "fixture-01",
+   "config": {
+    "core_fmt": "ternary",
+    "ctx": 8,
+    "d": 32,
+    "d_ff": 48,
+    "delta": 0.5,
+    "emb_fmt": "4bit",
+    "mlp": "gelu",
+    "n_heads": 2,
+    "n_layers": 1,
+    "qk_norm": true,
+    "scale_policy": "row16",
+    "vocab": 256
+   },
+   "seed": 19,
+   "hardware_gpu": true,
+   "dispatches": 130,
+   "hashes": {
+    "fixture.json": "4346a5e2a3f6858711a6237b55d9166d31abf0079e8403c043c6f68402994cbd",
+    "expected.json": "4860667a3efdf7814e26807e11ba8edffe76e05462d8d3d7d03d7be7a6389f85",
+    "actual.json": "87a4d07de29d9fc93f839f8a481a9b35c0d24aecc8c1b2a39027fa5f7c92c182",
+    "parity.json": "3292536de769edd76edffd02dee3228dc650466f97a6a126ad1e38e602bc7ec6"
+   }
+  },
+  {
+   "actual_sha256": "d5a55970aa54ef08f69d8bb8377d4397f2fb9abcd7082aa9b6965bfac6750d65",
+   "ok": true,
+   "path": "fixture-02",
+   "config": {
+    "core_fmt": "ternary",
+    "ctx": 8,
+    "d": 32,
+    "d_ff": 48,
+    "delta": 0.5,
+    "emb_fmt": "4bit",
+    "mlp": "relu2",
+    "n_heads": 2,
+    "n_layers": 1,
+    "qk_norm": false,
+    "scale_policy": "row16",
+    "vocab": 256
+   },
+   "seed": 19,
+   "hardware_gpu": true,
+   "dispatches": 122,
+   "hashes": {
+    "fixture.json": "8ed4e7541bd5279d538d5315dc5b820c1d7ffacacb72f36f0d457f591692f0bf",
+    "expected.json": "a41b170fa3c7b035b7c10b260b3b66a0054cc089021e451c4d1d8a42ea8d3cde",
+    "actual.json": "d5a55970aa54ef08f69d8bb8377d4397f2fb9abcd7082aa9b6965bfac6750d65",
+    "parity.json": "5ec2cba44bc2db443b336bf17d06cf2d1b1f8598bb419b72a2148c548ba4b260"
+   }
+  },
+  {
+   "actual_sha256": "b78cf6bd1e407a7dbbd5642c16768bf68b2de641c7f3a2f659df67482873d990",
+   "ok": true,
+   "path": "fixture-03",
+   "config": {
+    "core_fmt": "ternary",
+    "ctx": 8,
+    "d": 32,
+    "d_ff": 48,
+    "delta": 0.5,
+    "emb_fmt": "4bit",
+    "mlp": "relu2",
+    "n_heads": 2,
+    "n_layers": 1,
+    "qk_norm": true,
+    "scale_policy": "row16",
+    "vocab": 256
+   },
+   "seed": 19,
+   "hardware_gpu": true,
+   "dispatches": 130,
+   "hashes": {
+    "fixture.json": "d7b7f29ae177d421c9a193299a8e792c45b16ef15436b58662840bebe0ed284a",
+    "expected.json": "2c524875937823c1815d30079cf89ba2d289828e6db4e36271f3445e9ddb5dbc",
+    "actual.json": "b78cf6bd1e407a7dbbd5642c16768bf68b2de641c7f3a2f659df67482873d990",
+    "parity.json": "c783d3bd9fb1cd39a58d295f182eb6e59fa1e6d78ccce0cf7ae36c30b191333a"
+   }
+  },
+  {
+   "actual_sha256": "9197c7a487654cd894626a4c37ee10ea6bf072ed5e9a3102e9299de2b3348958",
+   "ok": true,
+   "path": "fixture-04",
+   "config": {
+    "core_fmt": "ternary",
+    "ctx": 8,
+    "d": 32,
+    "d_ff": 48,
+    "delta": 0.5,
+    "emb_fmt": "4bit",
+    "mlp": "swiglu",
+    "n_heads": 2,
+    "n_layers": 1,
+    "qk_norm": false,
+    "scale_policy": "row16",
+    "vocab": 256
+   },
+   "seed": 19,
+   "hardware_gpu": true,
+   "dispatches": 138,
+   "hashes": {
+    "fixture.json": "f09615c525d1da0a30facc595a8e6e41ba891b703e5ef7b10c7a0c592a1e2afc",
+    "expected.json": "e947acb16075c5db60a6a6d897276e514d3ee8bab4f088093146aa5667373d44",
+    "actual.json": "9197c7a487654cd894626a4c37ee10ea6bf072ed5e9a3102e9299de2b3348958",
+    "parity.json": "166f1dbdd27890a23e96447c39b7fdf17ec3ea5dab99fe7bfa1d798c3f6d97f8"
+   }
+  },
+  {
+   "actual_sha256": "ed1c4ef0e3417f8a5d4b90adb005c68049bfdf536a978913fabab7b166a6f5c6",
+   "ok": true,
+   "path": "fixture-05",
+   "config": {
+    "core_fmt": "ternary",
+    "ctx": 8,
+    "d": 32,
+    "d_ff": 48,
+    "delta": 0.5,
+    "emb_fmt": "4bit",
+    "mlp": "swiglu",
+    "n_heads": 2,
+    "n_layers": 1,
+    "qk_norm": true,
+    "scale_policy": "row16",
+    "vocab": 256
+   },
+   "seed": 19,
+   "hardware_gpu": true,
+   "dispatches": 146,
+   "hashes": {
+    "fixture.json": "b193b5862c3361b5db56e217de5a436226d5ff6ff4bdbdc9ba4e08b3a814593b",
+    "expected.json": "48d7f834304520be5a547b665b8e28a3b4556ebae53d8adeb2e60bd8dddaca74",
+    "actual.json": "ed1c4ef0e3417f8a5d4b90adb005c68049bfdf536a978913fabab7b166a6f5c6",
+    "parity.json": "be5e93a281c201e4747246fe0602257724d8511a6033a46e1393725e7b90a69d"
+   }
+  },
+  {
+   "actual_sha256": "ed6dcfa87a7bae324b7d79a945dcd1183943e4465ad74740bca98cb86aeafa70",
+   "ok": true,
+   "path": "fixture-06",
+   "config": {
+    "core_fmt": "ternary",
+    "ctx": 8,
+    "d": 32,
+    "d_ff": 48,
+    "delta": 0.5,
+    "emb_fmt": "4bit",
+    "mlp": "gelu",
+    "n_heads": 2,
+    "n_layers": 1,
+    "qk_norm": false,
+    "scale_policy": "row8log",
+    "vocab": 256
+   },
+   "seed": 19,
+   "hardware_gpu": true,
+   "dispatches": 122,
+   "hashes": {
+    "fixture.json": "74e83c1f9c3435c380d870722aeeeadbfe3bf2bda57f82e46c52107111109bd7",
+    "expected.json": "6d29f8085c1a16dd416bfb31c0839d9c0e8b3ac169b6f8d2cefd3b479c304f93",
+    "actual.json": "ed6dcfa87a7bae324b7d79a945dcd1183943e4465ad74740bca98cb86aeafa70",
+    "parity.json": "96561290c1e239a63728bdfbb3a6a9480905bf03aa40de5b28c65ff01d96b763"
+   }
+  },
+  {
+   "actual_sha256": "b9fa22113a821cef8c8bd5b6026d1285b627bda91d6a9b44f9e1a2bc9dc09fb1",
+   "ok": true,
+   "path": "fixture-07",
+   "config": {
+    "core_fmt": "ternary",
+    "ctx": 8,
+    "d": 32,
+    "d_ff": 48,
+    "delta": 0.5,
+    "emb_fmt": "4bit",
+    "mlp": "gelu",
+    "n_heads": 2,
+    "n_layers": 1,
+    "qk_norm": true,
+    "scale_policy": "row8log",
+    "vocab": 256
+   },
+   "seed": 19,
+   "hardware_gpu": true,
+   "dispatches": 130,
+   "hashes": {
+    "fixture.json": "6f4a7ae3c928ab68a3bbfb9f6b779720388eee034dedf819d2911fcea26eed0c",
+    "expected.json": "f208b6684fdea0efca0ed7726f54c2a03bc45318959afa23e702eee555f0e456",
+    "actual.json": "b9fa22113a821cef8c8bd5b6026d1285b627bda91d6a9b44f9e1a2bc9dc09fb1",
+    "parity.json": "574487c5cdd8324b827f465a8b8c6a3b78a9c2f0069929696f978fbb23b4ce98"
+   }
+  },
+  {
+   "actual_sha256": "9d633974417911cddc4202d145323bbbf18434440d8c8d432064f60ba6c78811",
+   "ok": true,
+   "path": "fixture-08",
+   "config": {
+    "core_fmt": "ternary",
+    "ctx": 8,
+    "d": 32,
+    "d_ff": 48,
+    "delta": 0.5,
+    "emb_fmt": "4bit",
+    "mlp": "relu2",
+    "n_heads": 2,
+    "n_layers": 1,
+    "qk_norm": false,
+    "scale_policy": "row8log",
+    "vocab": 256
+   },
+   "seed": 19,
+   "hardware_gpu": true,
+   "dispatches": 122,
+   "hashes": {
+    "fixture.json": "cd2a1c3e7bd406c49147f07b1c8b260f28911ad8d3811d516a551fd024de0d59",
+    "expected.json": "a7401692bb04af542c5ee6191273fb81209480da6d16cf3a61e8b2d43a4084bd",
+    "actual.json": "9d633974417911cddc4202d145323bbbf18434440d8c8d432064f60ba6c78811",
+    "parity.json": "c97ca01a76379298ce7a5b96dcc10e1aded4257aa73f85f9447615ff459485ed"
+   }
+  },
+  {
+   "actual_sha256": "4f5e2e2fb68a1cc44c23cca898cd8d2c802d091899629ebf076fcbf0eb0a763b",
+   "ok": true,
+   "path": "fixture-09",
+   "config": {
+    "core_fmt": "ternary",
+    "ctx": 8,
+    "d": 32,
+    "d_ff": 48,
+    "delta": 0.5,
+    "emb_fmt": "4bit",
+    "mlp": "relu2",
+    "n_heads": 2,
+    "n_layers": 1,
+    "qk_norm": true,
+    "scale_policy": "row8log",
+    "vocab": 256
+   },
+   "seed": 19,
+   "hardware_gpu": true,
+   "dispatches": 130,
+   "hashes": {
+    "fixture.json": "5383909bf37816301e6f7352f58198aad169475ce410c8e1f4c7b747c733a6ad",
+    "expected.json": "b90c70fc5ef3d3c513a153170d5de13278ca7721abda79ef86fe4c6f59cae0c9",
+    "actual.json": "4f5e2e2fb68a1cc44c23cca898cd8d2c802d091899629ebf076fcbf0eb0a763b",
+    "parity.json": "451d8e1d287399abe5c11592e4732209874eb2a38029ae99252ea034ee4b1e82"
+   }
+  },
+  {
+   "actual_sha256": "8997f15ca1bcbf5552a1c824acc9a812b949fc5b24a2b7fcf538b46180e1d03f",
+   "ok": true,
+   "path": "fixture-10",
+   "config": {
+    "core_fmt": "ternary",
+    "ctx": 8,
+    "d": 32,
+    "d_ff": 48,
+    "delta": 0.5,
+    "emb_fmt": "4bit",
+    "mlp": "swiglu",
+    "n_heads": 2,
+    "n_layers": 1,
+    "qk_norm": false,
+    "scale_policy": "row8log",
+    "vocab": 256
+   },
+   "seed": 19,
+   "hardware_gpu": true,
+   "dispatches": 138,
+   "hashes": {
+    "fixture.json": "f09985e108119db9df31785fc8315d293fe42101cf95ca8a1065f79898b08170",
+    "expected.json": "e6ea414394f13a73c93f036386998e2c5425b8a344ce507762c4f7f40a4b8a56",
+    "actual.json": "8997f15ca1bcbf5552a1c824acc9a812b949fc5b24a2b7fcf538b46180e1d03f",
+    "parity.json": "456dca0763195814675496488a9a4bbc34d5c8a4dd94c671282d695a4b7793a7"
+   }
+  },
+  {
+   "actual_sha256": "63638519d969db68f91e932a7df7f057571f84314060f71a2c14cb5a5ea5b371",
+   "ok": true,
+   "path": "fixture-11",
+   "config": {
+    "core_fmt": "ternary",
+    "ctx": 8,
+    "d": 32,
+    "d_ff": 48,
+    "delta": 0.5,
+    "emb_fmt": "4bit",
+    "mlp": "swiglu",
+    "n_heads": 2,
+    "n_layers": 1,
+    "qk_norm": true,
+    "scale_policy": "row8log",
+    "vocab": 256
+   },
+   "seed": 19,
+   "hardware_gpu": true,
+   "dispatches": 146,
+   "hashes": {
+    "fixture.json": "c58ef9ba01935338e49bc14876157a1e3a4be07ec82b0e0be2c8f8e1dd8d7171",
+    "expected.json": "a8862d9a7e580ad893bbc1c2cf54e9acd07773dc6c308d99bf0640a20781fb30",
+    "actual.json": "63638519d969db68f91e932a7df7f057571f84314060f71a2c14cb5a5ea5b371",
+    "parity.json": "fbd138f52b417a90fd09f4b5ef47b78d4391bd4bc9c453bea93a0f4ff267d960"
+   }
+  },
+  {
+   "actual_sha256": "3bd0cc013030f28929f1b05699390384bfe91ab99d9f34739ff557d3b0f18319",
+   "ok": true,
+   "path": "fixture-12",
+   "config": {
+    "core_fmt": "ternary",
+    "ctx": 8,
+    "d": 32,
+    "d_ff": 48,
+    "delta": 0.5,
+    "emb_fmt": "4bit",
+    "mlp": "gelu",
+    "n_heads": 2,
+    "n_layers": 1,
+    "qk_norm": false,
+    "scale_policy": "tensor16",
+    "vocab": 256
+   },
+   "seed": 19,
+   "hardware_gpu": true,
+   "dispatches": 122,
+   "hashes": {
+    "fixture.json": "f4ad99af84bb5fdd413a86219aca105c34937f7b332ef2a496bb3abe74b36328",
+    "expected.json": "9b03f0d67a87f903600ca02dd5082e708d4af5f1b998e112d29ddab1a57be350",
+    "actual.json": "3bd0cc013030f28929f1b05699390384bfe91ab99d9f34739ff557d3b0f18319",
+    "parity.json": "abca517de47603810494688fefcc0e93c309bb94dd14cd16fa60bf5d17dd731d"
+   }
+  },
+  {
+   "actual_sha256": "d24d1906f4295265ab9775697c6f038aa8293029283e97581ed81d77d158e3f9",
+   "ok": true,
+   "path": "fixture-13",
+   "config": {
+    "core_fmt": "ternary",
+    "ctx": 8,
+    "d": 32,
+    "d_ff": 48,
+    "delta": 0.5,
+    "emb_fmt": "4bit",
+    "mlp": "gelu",
+    "n_heads": 2,
+    "n_layers": 1,
+    "qk_norm": true,
+    "scale_policy": "tensor16",
+    "vocab": 256
+   },
+   "seed": 19,
+   "hardware_gpu": true,
+   "dispatches": 130,
+   "hashes": {
+    "fixture.json": "3d6bc9d975b8679dca21084752f884bf23755a2b68311a2aa3413c45fbc39581",
+    "expected.json": "15bae9c67cf93c1cbbd7081aa36eed60cc75ebc594c81650b2d5e089de8b2397",
+    "actual.json": "d24d1906f4295265ab9775697c6f038aa8293029283e97581ed81d77d158e3f9",
+    "parity.json": "13fb01dd56a1ceb2a696aa06f6fe05a73b4ac6df664848056d246efa20f3874c"
+   }
+  },
+  {
+   "actual_sha256": "5ba541f33369e0939493954dd0230a4f65a733d497b845119a0bc6f385d66f26",
+   "ok": true,
+   "path": "fixture-14",
+   "config": {
+    "core_fmt": "ternary",
+    "ctx": 8,
+    "d": 32,
+    "d_ff": 48,
+    "delta": 0.5,
+    "emb_fmt": "4bit",
+    "mlp": "relu2",
+    "n_heads": 2,
+    "n_layers": 1,
+    "qk_norm": false,
+    "scale_policy": "tensor16",
+    "vocab": 256
+   },
+   "seed": 19,
+   "hardware_gpu": true,
+   "dispatches": 122,
+   "hashes": {
+    "fixture.json": "e3f987fc0257f1880c9e6a9e7aff92b8094c7568d483a78ef357f9f260e7abac",
+    "expected.json": "1d76edecc9946b67a5c42be40ccac0ae67fa830e7c2090aa7c475cbb488bd14f",
+    "actual.json": "5ba541f33369e0939493954dd0230a4f65a733d497b845119a0bc6f385d66f26",
+    "parity.json": "daa6041d0e49bc9c0468d330fef3f8f902f8eff14517013b7b4b0598c4d3e11e"
+   }
+  },
+  {
+   "actual_sha256": "e12f0e9f4fa485d68daa2ea47c5a14bc965e92abf990ce5c38e151437ac2f042",
+   "ok": true,
+   "path": "fixture-15",
+   "config": {
+    "core_fmt": "ternary",
+    "ctx": 8,
+    "d": 32,
+    "d_ff": 48,
+    "delta": 0.5,
+    "emb_fmt": "4bit",
+    "mlp": "relu2",
+    "n_heads": 2,
+    "n_layers": 1,
+    "qk_norm": true,
+    "scale_policy": "tensor16",
+    "vocab": 256
+   },
+   "seed": 19,
+   "hardware_gpu": true,
+   "dispatches": 130,
+   "hashes": {
+    "fixture.json": "885f765308bfff64eff1e70a09f7d64782acdddc3fb0129f5a47aef193521620",
+    "expected.json": "0926e48710a7101418869dffa17417ad492d3552b5854c0d71970304c2855e24",
+    "actual.json": "e12f0e9f4fa485d68daa2ea47c5a14bc965e92abf990ce5c38e151437ac2f042",
+    "parity.json": "00f487af7fc673df9f8b34b248866415a32632d1b6a2d66da4fe5ec1e9d0397e"
+   }
+  },
+  {
+   "actual_sha256": "b9085c690148e9ce7425c3e38d00a808b9c8162c2c90a4714c8fb125fb25dee7",
+   "ok": true,
+   "path": "fixture-16",
+   "config": {
+    "core_fmt": "ternary",
+    "ctx": 8,
+    "d": 32,
+    "d_ff": 48,
+    "delta": 0.5,
+    "emb_fmt": "4bit",
+    "mlp": "swiglu",
+    "n_heads": 2,
+    "n_layers": 1,
+    "qk_norm": false,
+    "scale_policy": "tensor16",
+    "vocab": 256
+   },
+   "seed": 19,
+   "hardware_gpu": true,
+   "dispatches": 138,
+   "hashes": {
+    "fixture.json": "73af22550e7cadb587a253ca870b455495973f1ac17f6c5da50b1a79cba7fc77",
+    "expected.json": "837d29166966b87d1d6b4a36588f753d65fa28812908a0eaef3abff8b2d0e33e",
+    "actual.json": "b9085c690148e9ce7425c3e38d00a808b9c8162c2c90a4714c8fb125fb25dee7",
+    "parity.json": "914e8ca8d9b28dd2e14132c4b4f0c80404ed58acc9b07a4b902f844fb41d92f7"
+   }
+  },
+  {
+   "actual_sha256": "e460e8d854c6cfbae5b4da967ac53a9988e0a60497845893eb2c1ab2fe74f3c6",
+   "ok": true,
+   "path": "fixture-17",
+   "config": {
+    "core_fmt": "ternary",
+    "ctx": 8,
+    "d": 32,
+    "d_ff": 48,
+    "delta": 0.5,
+    "emb_fmt": "4bit",
+    "mlp": "swiglu",
+    "n_heads": 2,
+    "n_layers": 1,
+    "qk_norm": true,
+    "scale_policy": "tensor16",
+    "vocab": 256
+   },
+   "seed": 19,
+   "hardware_gpu": true,
+   "dispatches": 146,
+   "hashes": {
+    "fixture.json": "24bd1d481e0f7ef48f8e6e9de808cb0c25e3b7f9b5494b6bc0ec52e31cf64b4b",
+    "expected.json": "0a8fdd334f1169bc0f3f39db0bb34e76fad7d117d82fbf1782e5d69738ae7ed1",
+    "actual.json": "e460e8d854c6cfbae5b4da967ac53a9988e0a60497845893eb2c1ab2fe74f3c6",
+    "parity.json": "76ac587a389f7911aee11463a40d23a31e8a301eaa76540c6f103cea934043aa"
+   }
+  },
+  {
+   "actual_sha256": "57ace80f5d2d751fedf6ce3fbf2d3f8fc25c7420c3666155e32ea8dcef86e212",
+   "ok": true,
+   "path": "fixture-18",
+   "config": {
+    "core_fmt": "2bit",
+    "ctx": 8,
+    "d": 32,
+    "d_ff": 48,
+    "delta": 0.5,
+    "emb_fmt": "4bit",
+    "mlp": "gelu",
+    "n_heads": 2,
+    "n_layers": 1,
+    "qk_norm": false,
+    "scale_policy": "row16",
+    "vocab": 256
+   },
+   "seed": 19,
+   "hardware_gpu": true,
+   "dispatches": 122,
+   "hashes": {
+    "fixture.json": "0792464d6c706861d9c5d1ebdba4e33757dfb38a9444fb65f1fcc8cc2e18c5d8",
+    "expected.json": "39417dba55e8116f70835766c6a080ac2bc0bce7a23d85074c2dbfabd5f03769",
+    "actual.json": "57ace80f5d2d751fedf6ce3fbf2d3f8fc25c7420c3666155e32ea8dcef86e212",
+    "parity.json": "812f8c105b0a0d8ce55ce47031db3ae0495e8fbd6e8aa3cc15832ca243d625e4"
+   }
+  },
+  {
+   "actual_sha256": "74d5d13ff2aefd3e17d332308b04fe14de41280656fd767975c86a5894502b31",
+   "ok": true,
+   "path": "fixture-19",
+   "config": {
+    "core_fmt": "2bit",
+    "ctx": 8,
+    "d": 32,
+    "d_ff": 48,
+    "delta": 0.5,
+    "emb_fmt": "4bit",
+    "mlp": "gelu",
+    "n_heads": 2,
+    "n_layers": 1,
+    "qk_norm": true,
+    "scale_policy": "row16",
+    "vocab": 256
+   },
+   "seed": 19,
+   "hardware_gpu": true,
+   "dispatches": 130,
+   "hashes": {
+    "fixture.json": "79e467d5625f5b7eb7a35ed7d9191a5b2c2cb202a08a543d34b6ab83731ac363",
+    "expected.json": "a1c1b0c3b95e2c5fd18f25914c908ca060ca4d01b09bcea3570a76b1a0fcfa9c",
+    "actual.json": "74d5d13ff2aefd3e17d332308b04fe14de41280656fd767975c86a5894502b31",
+    "parity.json": "bfd1079ed086b4d3e1732703c6881fc5a20cb6db904032345dc3b526acb32674"
+   }
+  },
+  {
+   "actual_sha256": "d2ff34892465590d865aa22c8e6ede1b25af9d1d96083218221f5bd28b7eb904",
+   "ok": true,
+   "path": "fixture-20",
+   "config": {
+    "core_fmt": "2bit",
+    "ctx": 8,
+    "d": 32,
+    "d_ff": 48,
+    "delta": 0.5,
+    "emb_fmt": "4bit",
+    "mlp": "relu2",
+    "n_heads": 2,
+    "n_layers": 1,
+    "qk_norm": false,
+    "scale_policy": "row16",
+    "vocab": 256
+   },
+   "seed": 19,
+   "hardware_gpu": true,
+   "dispatches": 122,
+   "hashes": {
+    "fixture.json": "b17861a218c456b186a56b160f7f5f16ce1dc42923aed12a83015598661e9041",
+    "expected.json": "9441d16d342187f49dcbfc2b72c5e73bbd848302c9b353f3c55655ca55d021df",
+    "actual.json": "d2ff34892465590d865aa22c8e6ede1b25af9d1d96083218221f5bd28b7eb904",
+    "parity.json": "9387de3b3c1058999b192e8e5e2fb07c6f8e4cd4ab95eba547c29846d22fcfde"
+   }
+  },
+  {
+   "actual_sha256": "85915eb0f01160d770c7b33f885bbcc2496f8547f6bb958265b9fe756c76ebb7",
+   "ok": true,
+   "path": "fixture-21",
+   "config": {
+    "core_fmt": "2bit",
+    "ctx": 8,
+    "d": 32,
+    "d_ff": 48,
+    "delta": 0.5,
+    "emb_fmt": "4bit",
+    "mlp": "relu2",
+    "n_heads": 2,
+    "n_layers": 1,
+    "qk_norm": true,
+    "scale_policy": "row16",
+    "vocab": 256
+   },
+   "seed": 19,
+   "hardware_gpu": true,
+   "dispatches": 130,
+   "hashes": {
+    "fixture.json": "584a86af5652712ec2a051c3d7cd15adc99bc6b8a9f229eb5b0520506c4c7f21",
+    "expected.json": "483c6033fe278a4be6b8582490e043d60ce3acf356cf2ae5bb0e59dc62e50ee2",
+    "actual.json": "85915eb0f01160d770c7b33f885bbcc2496f8547f6bb958265b9fe756c76ebb7",
+    "parity.json": "9f33a6bf070885ba0fdbd344aa8ba60a92d5b064b49bbd3ba47887a15fb33323"
+   }
+  },
+  {
+   "actual_sha256": "639b3de17ff91ce65075e5533dd72baa85622e3dbb0021fa66f7b8f04bc529d5",
+   "ok": true,
+   "path": "fixture-22",
+   "config": {
+    "core_fmt": "2bit",
+    "ctx": 8,
+    "d": 32,
+    "d_ff": 48,
+    "delta": 0.5,
+    "emb_fmt": "4bit",
+    "mlp": "swiglu",
+    "n_heads": 2,
+    "n_layers": 1,
+    "qk_norm": false,
+    "scale_policy": "row16",
+    "vocab": 256
+   },
+   "seed": 19,
+   "hardware_gpu": true,
+   "dispatches": 138,
+   "hashes": {
+    "fixture.json": "48b3c2cc646754845cc015f6e712cb673b3f21d15c956ad7f0493e6a3175b180",
+    "expected.json": "4700e7d46f38fe96aa278fd5ba3fb7eebe922f00251279645b6e04080dd7c965",
+    "actual.json": "639b3de17ff91ce65075e5533dd72baa85622e3dbb0021fa66f7b8f04bc529d5",
+    "parity.json": "6e94ed11ff782f0a0278bc36c94acd69fbb913b4115ae15d7e46ebe37c902018"
+   }
+  },
+  {
+   "actual_sha256": "2837697f0f0a1485e2ff94adaba82560e4ca867236be5e8283fb276fb1e84752",
+   "ok": true,
+   "path": "fixture-23",
+   "config": {
+    "core_fmt": "2bit",
+    "ctx": 8,
+    "d": 32,
+    "d_ff": 48,
+    "delta": 0.5,
+    "emb_fmt": "4bit",
+    "mlp": "swiglu",
+    "n_heads": 2,
+    "n_layers": 1,
+    "qk_norm": true,
+    "scale_policy": "row16",
+    "vocab": 256
+   },
+   "seed": 19,
+   "hardware_gpu": true,
+   "dispatches": 146,
+   "hashes": {
+    "fixture.json": "bf77289cf3d027d6cd5c6b7d9922c4875107d994251ca5f102b53749acf211d6",
+    "expected.json": "06f4df5d5b449f8123e2cbf8208a2c0a3be63fe10a48f3c8087b157ee3513eea",
+    "actual.json": "2837697f0f0a1485e2ff94adaba82560e4ca867236be5e8283fb276fb1e84752",
+    "parity.json": "0785c063e37956a72af6d5db0cda0844d3944214cebedbb6a6374d0938f2384a"
+   }
+  },
+  {
+   "actual_sha256": "a0335b68c3742f8c69a1b9d681ede5b5f1f44bd45bece021838c12430b92b07d",
+   "ok": true,
+   "path": "fixture-24",
+   "config": {
+    "core_fmt": "2bit",
+    "ctx": 8,
+    "d": 32,
+    "d_ff": 48,
+    "delta": 0.5,
+    "emb_fmt": "4bit",
+    "mlp": "gelu",
+    "n_heads": 2,
+    "n_layers": 1,
+    "qk_norm": false,
+    "scale_policy": "row8log",
+    "vocab": 256
+   },
+   "seed": 19,
+   "hardware_gpu": true,
+   "dispatches": 122,
+   "hashes": {
+    "fixture.json": "9d7e7e6021dc20549a8b93ce39f63a366ae6a1cf21818a5c42bdbe6d362e925b",
+    "expected.json": "bfab1444c0c9f2fdbf3c0b72f9b9cde196d2bda4b90cca0f11a5a8272b448c22",
+    "actual.json": "a0335b68c3742f8c69a1b9d681ede5b5f1f44bd45bece021838c12430b92b07d",
+    "parity.json": "da878c1f5a9da033c92ee595d23382fe7e2e48771fa0856006160fb39ca23ae9"
+   }
+  },
+  {
+   "actual_sha256": "3a45c86bccc6942c255334e55dfb20a38dc8baa9ad476ddf5795c98de0e9fc15",
+   "ok": true,
+   "path": "fixture-25",
+   "config": {
+    "core_fmt": "2bit",
+    "ctx": 8,
+    "d": 32,
+    "d_ff": 48,
+    "delta": 0.5,
+    "emb_fmt": "4bit",
+    "mlp": "gelu",
+    "n_heads": 2,
+    "n_layers": 1,
+    "qk_norm": true,
+    "scale_policy": "row8log",
+    "vocab": 256
+   },
+   "seed": 19,
+   "hardware_gpu": true,
+   "dispatches": 130,
+   "hashes": {
+    "fixture.json": "4d620ddd2de4307bf659170821ce351cf3ac99d22a74c46955087f18b982a598",
+    "expected.json": "e075348aa786973aa5b8b7ae2f46635f6cacad90098a8eeb203d4da4e40af830",
+    "actual.json": "3a45c86bccc6942c255334e55dfb20a38dc8baa9ad476ddf5795c98de0e9fc15",
+    "parity.json": "0c8c81dbca7d87680f6b473e583a66681576b7290078c365280ab825070acfa2"
+   }
+  },
+  {
+   "actual_sha256": "11dbfd1e54b6428aedd3e961951f5c628b9c753613d7d89d1694fea90b38a096",
+   "ok": true,
+   "path": "fixture-26",
+   "config": {
+    "core_fmt": "2bit",
+    "ctx": 8,
+    "d": 32,
+    "d_ff": 48,
+    "delta": 0.5,
+    "emb_fmt": "4bit",
+    "mlp": "relu2",
+    "n_heads": 2,
+    "n_layers": 1,
+    "qk_norm": false,
+    "scale_policy": "row8log",
+    "vocab": 256
+   },
+   "seed": 19,
+   "hardware_gpu": true,
+   "dispatches": 122,
+   "hashes": {
+    "fixture.json": "9efaa810557e480fb6ea894f9adaa4a3c7bcec38f4bd8913e193b921fb6652ce",
+    "expected.json": "afb402363a1805f014e04ac5cf8a3cc7bf0a04dd1a6f2796d6d907fe4d2c9672",
+    "actual.json": "11dbfd1e54b6428aedd3e961951f5c628b9c753613d7d89d1694fea90b38a096",
+    "parity.json": "5be828400b3f833569f9e0a25405f2e45bcc3cc43993b707584229613ac4d015"
+   }
+  },
+  {
+   "actual_sha256": "90e359596beee3f10ba533180a2a4b7f7653ebeb75ce8db8a896bb598bdfb785",
+   "ok": true,
+   "path": "fixture-27",
+   "config": {
+    "core_fmt": "2bit",
+    "ctx": 8,
+    "d": 32,
+    "d_ff": 48,
+    "delta": 0.5,
+    "emb_fmt": "4bit",
+    "mlp": "relu2",
+    "n_heads": 2,
+    "n_layers": 1,
+    "qk_norm": true,
+    "scale_policy": "row8log",
+    "vocab": 256
+   },
+   "seed": 19,
+   "hardware_gpu": true,
+   "dispatches": 130,
+   "hashes": {
+    "fixture.json": "7bed03967655ec3dd045dbf72bf280bbc7dffbfafb4c20375cb0d66cdaa75668",
+    "expected.json": "fc98828cddaf039b35c271274b527d2bbd11ff1c5d6a9a2a7a82e3f89002e79d",
+    "actual.json": "90e359596beee3f10ba533180a2a4b7f7653ebeb75ce8db8a896bb598bdfb785",
+    "parity.json": "14ca8212e6bd10fffe1c8418c05a3e0757dce0f805a0c790bc26fd5cb0f17210"
+   }
+  },
+  {
+   "actual_sha256": "7753cac995990ee3fe8b239ea10ce5df0f4b77bb7554818a2e1b5d7db62f9e95",
+   "ok": true,
+   "path": "fixture-28",
+   "config": {
+    "core_fmt": "2bit",
+    "ctx": 8,
+    "d": 32,
+    "d_ff": 48,
+    "delta": 0.5,
+    "emb_fmt": "4bit",
+    "mlp": "swiglu",
+    "n_heads": 2,
+    "n_layers": 1,
+    "qk_norm": false,
+    "scale_policy": "row8log",
+    "vocab": 256
+   },
+   "seed": 19,
+   "hardware_gpu": true,
+   "dispatches": 138,
+   "hashes": {
+    "fixture.json": "8091fee6edc2ebba65100245abba905c58fda2c784570fd16623b4f927a87c58",
+    "expected.json": "30c2b1dd335fd25c20af49090ab8232500a1454b35f01a146df354a1d0b657b5",
+    "actual.json": "7753cac995990ee3fe8b239ea10ce5df0f4b77bb7554818a2e1b5d7db62f9e95",
+    "parity.json": "5bd1f0a897ce7ba387bf297fb75ef7b32370379076b9b403659dac075b830d05"
+   }
+  },
+  {
+   "actual_sha256": "270e158e9aa7666e7ab154574b01e6fb0df4c64b6c987e5dc4a9951c4a9268a0",
+   "ok": true,
+   "path": "fixture-29",
+   "config": {
+    "core_fmt": "2bit",
+    "ctx": 8,
+    "d": 32,
+    "d_ff": 48,
+    "delta": 0.5,
+    "emb_fmt": "4bit",
+    "mlp": "swiglu",
+    "n_heads": 2,
+    "n_layers": 1,
+    "qk_norm": true,
+    "scale_policy": "row8log",
+    "vocab": 256
+   },
+   "seed": 19,
+   "hardware_gpu": true,
+   "dispatches": 146,
+   "hashes": {
+    "fixture.json": "a821b1c2d0a2db5175da43cb1e1e1b5ae98829f05b263ff8d04daae88213b745",
+    "expected.json": "ee7a7d2a4e0c4ce6c28d56b67e4469bc89602731cdea46ff70263d7f524b2872",
+    "actual.json": "270e158e9aa7666e7ab154574b01e6fb0df4c64b6c987e5dc4a9951c4a9268a0",
+    "parity.json": "fe7714d2496565f83ebd31eea9a2a4298b8dd2f9bb69f251c65f913edd892d0e"
+   }
+  },
+  {
+   "actual_sha256": "cd3b587a116d230708e670f564a009ef460f284f6b94b3abb11e55cabc7f7776",
+   "ok": true,
+   "path": "fixture-30",
+   "config": {
+    "core_fmt": "2bit",
+    "ctx": 8,
+    "d": 32,
+    "d_ff": 48,
+    "delta": 0.5,
+    "emb_fmt": "4bit",
+    "mlp": "gelu",
+    "n_heads": 2,
+    "n_layers": 1,
+    "qk_norm": false,
+    "scale_policy": "tensor16",
+    "vocab": 256
+   },
+   "seed": 19,
+   "hardware_gpu": true,
+   "dispatches": 122,
+   "hashes": {
+    "fixture.json": "a025b47800871afa58874d0835a26a240c47e2c91c7f2998a2b0792438862023",
+    "expected.json": "a82fd9cf0830ac7f9fd1e92cf5b6f8abb92b0b8b45ccf608f77dc831bb40529b",
+    "actual.json": "cd3b587a116d230708e670f564a009ef460f284f6b94b3abb11e55cabc7f7776",
+    "parity.json": "d41a74b14c2a13a92b7d23489a15cba5845e6f3fc4405de2976c1d50186e9356"
+   }
+  },
+  {
+   "actual_sha256": "f364a46952565d1a3d0022dbdad3eeef75dad5f80aa0b30d4abaa2744d3fad88",
+   "ok": true,
+   "path": "fixture-31",
+   "config": {
+    "core_fmt": "2bit",
+    "ctx": 8,
+    "d": 32,
+    "d_ff": 48,
+    "delta": 0.5,
+    "emb_fmt": "4bit",
+    "mlp": "gelu",
+    "n_heads": 2,
+    "n_layers": 1,
+    "qk_norm": true,
+    "scale_policy": "tensor16",
+    "vocab": 256
+   },
+   "seed": 19,
+   "hardware_gpu": true,
+   "dispatches": 130,
+   "hashes": {
+    "fixture.json": "d0c6fd0542e263d3771aab03498c0f50ab0f492bb26ea1f714ec46b243329026",
+    "expected.json": "8220663decbcf193d65f12480fa6205f62439474afe6145d615639c2e6f78e70",
+    "actual.json": "f364a46952565d1a3d0022dbdad3eeef75dad5f80aa0b30d4abaa2744d3fad88",
+    "parity.json": "5a8f8576e5b5c378a786a8fdb64200f77702799c433353247ccf60390f4f4208"
+   }
+  },
+  {
+   "actual_sha256": "92ab6cac9aad43b0c988b75cbc375b98f62cd69fd7dfc39f44b1a124676d7005",
+   "ok": true,
+   "path": "fixture-32",
+   "config": {
+    "core_fmt": "2bit",
+    "ctx": 8,
+    "d": 32,
+    "d_ff": 48,
+    "delta": 0.5,
+    "emb_fmt": "4bit",
+    "mlp": "relu2",
+    "n_heads": 2,
+    "n_layers": 1,
+    "qk_norm": false,
+    "scale_policy": "tensor16",
+    "vocab": 256
+   },
+   "seed": 19,
+   "hardware_gpu": true,
+   "dispatches": 122,
+   "hashes": {
+    "fixture.json": "62e660790a6770146d44079a56773d51bcd432838c01dfbbfb58cd0eb4618b51",
+    "expected.json": "69192f4373ed2f372743c313e485409b99c0f0428cd9a81fc702e3b6ba006c49",
+    "actual.json": "92ab6cac9aad43b0c988b75cbc375b98f62cd69fd7dfc39f44b1a124676d7005",
+    "parity.json": "04e6f30161a72c924c8a65bcd408839d3fca8a08674a433c1360a11dd7c857dc"
+   }
+  },
+  {
+   "actual_sha256": "6fe3bdb6ecbd5c4bae70ee542cc2a049947fbc916ea8ac846df315f7cf519dba",
+   "ok": true,
+   "path": "fixture-33",
+   "config": {
+    "core_fmt": "2bit",
+    "ctx": 8,
+    "d": 32,
+    "d_ff": 48,
+    "delta": 0.5,
+    "emb_fmt": "4bit",
+    "mlp": "relu2",
+    "n_heads": 2,
+    "n_layers": 1,
+    "qk_norm": true,
+    "scale_policy": "tensor16",
+    "vocab": 256
+   },
+   "seed": 19,
+   "hardware_gpu": true,
+   "dispatches": 130,
+   "hashes": {
+    "fixture.json": "a84c3d5ae1699cd58454d2e08829fbd2fc0a6bc414dd782df9f2d46a111ab232",
+    "expected.json": "252074d843e26bb282b18d4be4228c620fd6b040b9d6008de249fe9ba9e4ffa1",
+    "actual.json": "6fe3bdb6ecbd5c4bae70ee542cc2a049947fbc916ea8ac846df315f7cf519dba",
+    "parity.json": "3a53c5a718cd81efc9e1bf02add5a87c5d048d2bd8de25b095df5daabdb2ce3e"
+   }
+  },
+  {
+   "actual_sha256": "aa81623ce59bb1281c9480a0eb8f247ad41932075f3805cd7380ab7a8b64b569",
+   "ok": true,
+   "path": "fixture-34",
+   "config": {
+    "core_fmt": "2bit",
+    "ctx": 8,
+    "d": 32,
+    "d_ff": 48,
+    "delta": 0.5,
+    "emb_fmt": "4bit",
+    "mlp": "swiglu",
+    "n_heads": 2,
+    "n_layers": 1,
+    "qk_norm": false,
+    "scale_policy": "tensor16",
+    "vocab": 256
+   },
+   "seed": 19,
+   "hardware_gpu": true,
+   "dispatches": 138,
+   "hashes": {
+    "fixture.json": "3bc3c3fc8f12cd2697e999c3e4f7864e5654a47831e8be912c5339b4fdad20b6",
+    "expected.json": "77a0ce41abe94aaaf7597dff1fd7ffb121057ac2f0e94e8e0f597678c48c9cd5",
+    "actual.json": "aa81623ce59bb1281c9480a0eb8f247ad41932075f3805cd7380ab7a8b64b569",
+    "parity.json": "a59cc3ddddd36de002d2a0fe65c294f8d39ceb3bbd2f3952c83d35123f02d972"
+   }
+  },
+  {
+   "actual_sha256": "a0303b995fae9d56b219c916ed660d28b751f02626d6d6243cac19e11fc48f74",
+   "ok": true,
+   "path": "fixture-35",
+   "config": {
+    "core_fmt": "2bit",
+    "ctx": 8,
+    "d": 32,
+    "d_ff": 48,
+    "delta": 0.5,
+    "emb_fmt": "4bit",
+    "mlp": "swiglu",
+    "n_heads": 2,
+    "n_layers": 1,
+    "qk_norm": true,
+    "scale_policy": "tensor16",
+    "vocab": 256
+   },
+   "seed": 19,
+   "hardware_gpu": true,
+   "dispatches": 146,
+   "hashes": {
+    "fixture.json": "25c4f36b5ce7fe60e817db7f78d3edf6b9f4b01681b22fbeb4cc6fbd9d65cc24",
+    "expected.json": "ad6980e6824915b8470c24bdbf3289bfc5228ae4c0379052a9cd01d9e19dcb38",
+    "actual.json": "a0303b995fae9d56b219c916ed660d28b751f02626d6d6243cac19e11fc48f74",
+    "parity.json": "46ed447ac20d8587de8581a6d168c4089404201827441fa3de575b8f6751a174"
+   }
+  }
+ ],
+ "ok": true,
+ "optimizer": {
+  "gates": {
+   "1:first:blocks.0.fc.weight": {
+    "max_abs": 0.0,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "1:first:blocks.0.fc2.weight": {
+    "max_abs": 0.0,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "1:first:blocks.0.norm1.weight": {
+    "max_abs": 0.0,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "1:first:blocks.0.norm2.weight": {
+    "max_abs": 0.0,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "1:first:blocks.0.proj.weight": {
+    "max_abs": 0.0,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "1:first:blocks.0.qkv.weight": {
+    "max_abs": 0.0,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "1:first:emb.weight": {
+    "max_abs": 0.0,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "1:first:norm.weight": {
+    "max_abs": 0.0,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "1:norm": {
+    "max_abs": 1.1368683772161603e-13,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "1:second:blocks.0.fc.weight": {
+    "max_abs": 0.0,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "1:second:blocks.0.fc2.weight": {
+    "max_abs": 0.0,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "1:second:blocks.0.norm1.weight": {
+    "max_abs": 0.0,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "1:second:blocks.0.norm2.weight": {
+    "max_abs": 0.0,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "1:second:blocks.0.proj.weight": {
+    "max_abs": 0.0,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "1:second:blocks.0.qkv.weight": {
+    "max_abs": 0.0,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "1:second:emb.weight": {
+    "max_abs": 0.0,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "1:second:norm.weight": {
+    "max_abs": 0.0,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "1:weight:blocks.0.fc.weight": {
+    "max_abs": 1.4901161193847656e-08,
+    "max_bound_excess": 0.0,
+    "max_rel": 1.1241083010901602e-07,
+    "ok": true
+   },
+   "1:weight:blocks.0.fc2.weight": {
+    "max_abs": 7.450580596923828e-09,
+    "max_bound_excess": 0.0,
+    "max_rel": 1.0921786791212898e-07,
+    "ok": true
+   },
+   "1:weight:blocks.0.norm1.weight": {
+    "max_abs": 0.0,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "1:weight:blocks.0.norm2.weight": {
+    "max_abs": 0.0,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "1:weight:blocks.0.proj.weight": {
+    "max_abs": 1.4901161193847656e-08,
+    "max_bound_excess": 0.0,
+    "max_rel": 1.0497424666806492e-07,
+    "ok": true
+   },
+   "1:weight:blocks.0.qkv.weight": {
+    "max_abs": 2.9802322387695312e-08,
+    "max_bound_excess": 0.0,
+    "max_rel": 1.1146929912563482e-07,
+    "ok": true
+   },
+   "1:weight:emb.weight": {
+    "max_abs": 2.9802322387695312e-08,
+    "max_bound_excess": 0.0,
+    "max_rel": 1.0835268060739479e-07,
+    "ok": true
+   },
+   "1:weight:norm.weight": {
+    "max_abs": 0.0,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "2:first:blocks.0.fc.weight": {
+    "max_abs": 3.637978807091713e-12,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "2:first:blocks.0.fc2.weight": {
+    "max_abs": 1.8189894035458565e-12,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "2:first:blocks.0.norm1.weight": {
+    "max_abs": 9.094947017729282e-13,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "2:first:blocks.0.norm2.weight": {
+    "max_abs": 1.8189894035458565e-12,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "2:first:blocks.0.proj.weight": {
+    "max_abs": 1.8189894035458565e-12,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "2:first:blocks.0.qkv.weight": {
+    "max_abs": 3.637978807091713e-12,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "2:first:emb.weight": {
+    "max_abs": 3.637978807091713e-12,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "2:first:norm.weight": {
+    "max_abs": 9.094947017729282e-13,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "2:norm": {
+    "max_abs": 9.313225746154785e-10,
+    "max_bound_excess": 0.0,
+    "max_rel": 7.13999196608104e-08,
+    "ok": true
+   },
+   "2:second:blocks.0.fc.weight": {
+    "max_abs": 4.440892098500626e-16,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "2:second:blocks.0.fc2.weight": {
+    "max_abs": 1.1102230246251565e-16,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "2:second:blocks.0.norm1.weight": {
+    "max_abs": 2.7755575615628914e-17,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "2:second:blocks.0.norm2.weight": {
+    "max_abs": 1.1102230246251565e-16,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "2:second:blocks.0.proj.weight": {
+    "max_abs": 1.1102230246251565e-16,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "2:second:blocks.0.qkv.weight": {
+    "max_abs": 2.220446049250313e-16,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "2:second:emb.weight": {
+    "max_abs": 4.440892098500626e-16,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "2:second:norm.weight": {
+    "max_abs": 2.7755575615628914e-17,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "2:weight:blocks.0.fc.weight": {
+    "max_abs": 1.4901161193847656e-08,
+    "max_bound_excess": 0.0,
+    "max_rel": 1.1781893585937131e-07,
+    "ok": true
+   },
+   "2:weight:blocks.0.fc2.weight": {
+    "max_abs": 1.4901161193847656e-08,
+    "max_bound_excess": 0.0,
+    "max_rel": 1.855633564328785e-07,
+    "ok": true
+   },
+   "2:weight:blocks.0.norm1.weight": {
+    "max_abs": 0.0,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "2:weight:blocks.0.norm2.weight": {
+    "max_abs": 0.0,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "2:weight:blocks.0.proj.weight": {
+    "max_abs": 2.9802322387695312e-08,
+    "max_bound_excess": 0.0,
+    "max_rel": 1.5915393766736033e-07,
+    "ok": true
+   },
+   "2:weight:blocks.0.qkv.weight": {
+    "max_abs": 2.9802322387695312e-08,
+    "max_bound_excess": 0.0,
+    "max_rel": 1.8786190421710525e-07,
+    "ok": true
+   },
+   "2:weight:emb.weight": {
+    "max_abs": 2.9802322387695312e-08,
+    "max_bound_excess": 0.0,
+    "max_rel": 1.4888500762216796e-07,
+    "ok": true
+   },
+   "2:weight:norm.weight": {
+    "max_abs": 0.0,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "3:first:blocks.0.fc.weight": {
+    "max_abs": 4.656612873077393e-10,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "3:first:blocks.0.fc2.weight": {
+    "max_abs": 3.4924596548080444e-10,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "3:first:blocks.0.norm1.weight": {
+    "max_abs": 2.3283064365386963e-10,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "3:first:blocks.0.norm2.weight": {
+    "max_abs": 1.1641532182693481e-10,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "3:first:blocks.0.proj.weight": {
+    "max_abs": 3.4924596548080444e-10,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "3:first:blocks.0.qkv.weight": {
+    "max_abs": 4.656612873077393e-10,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "3:first:emb.weight": {
+    "max_abs": 4.656612873077393e-10,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "3:first:norm.weight": {
+    "max_abs": 3.4924596548080444e-10,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "3:norm": {
+    "max_abs": 2.384185791015625e-07,
+    "max_bound_excess": 0.0,
+    "max_rel": 9.036206362013379e-08,
+    "ok": true
+   },
+   "3:second:blocks.0.fc.weight": {
+    "max_abs": 5.4569682106375694e-12,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "3:second:blocks.0.fc2.weight": {
+    "max_abs": 7.275957614183426e-12,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "3:second:blocks.0.norm1.weight": {
+    "max_abs": 1.3642420526593924e-12,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "3:second:blocks.0.norm2.weight": {
+    "max_abs": 3.637978807091713e-12,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "3:second:blocks.0.proj.weight": {
+    "max_abs": 7.275957614183426e-12,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "3:second:blocks.0.qkv.weight": {
+    "max_abs": 7.275957614183426e-12,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "3:second:emb.weight": {
+    "max_abs": 7.275957614183426e-12,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "3:second:norm.weight": {
+    "max_abs": 3.637978807091713e-12,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "3:weight:blocks.0.fc.weight": {
+    "max_abs": 2.9802322387695312e-08,
+    "max_bound_excess": 0.0,
+    "max_rel": 2.2905463350037016e-07,
+    "ok": true
+   },
+   "3:weight:blocks.0.fc2.weight": {
+    "max_abs": 1.4901161193847656e-08,
+    "max_bound_excess": 0.0,
+    "max_rel": 2.68942204589176e-07,
+    "ok": true
+   },
+   "3:weight:blocks.0.norm1.weight": {
+    "max_abs": 0.0,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "3:weight:blocks.0.norm2.weight": {
+    "max_abs": 0.0,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   },
+   "3:weight:blocks.0.proj.weight": {
+    "max_abs": 2.9802322387695312e-08,
+    "max_bound_excess": 0.0,
+    "max_rel": 1.562361828625781e-07,
+    "ok": true
+   },
+   "3:weight:blocks.0.qkv.weight": {
+    "max_abs": 2.9802322387695312e-08,
+    "max_bound_excess": 0.0,
+    "max_rel": 2.4212954875163455e-07,
+    "ok": true
+   },
+   "3:weight:emb.weight": {
+    "max_abs": 2.9802322387695312e-08,
+    "max_bound_excess": 0.0,
+    "max_rel": 1.9797235395265992e-07,
+    "ok": true
+   },
+   "3:weight:norm.weight": {
+    "max_abs": 0.0,
+    "max_bound_excess": 0.0,
+    "max_rel": 0.0,
+    "ok": true
+   }
+  },
+  "ok": true,
+  "oracle": "PyTorch AdamW, identical input gradients",
+  "purpose": "functional"
+ },
+ "package": "GianlucaMazza.XgpuE0_0.1.0.11_x64__g0p5dcfz4t9z4",
+ "purpose": "functional",
+ "resume": {
+  "ok": true,
+  "reports": [
+   {
+    "adapter": "SraKmd_arden",
+    "branches": [
+     {
+      "artifact": {
+       "bytes": 316829,
+       "path": "results/gate-20260930T165019Z-e00143-full/branch-8.json",
+       "sha256": "07d23edd0236512852b787fc9d3decaeae1facbf12df81e65ab96301c41ea3eb"
+      },
+      "cooldown_seconds": 0.151296355,
+      "cooldown_start": 7,
+      "cooldown_steps": 1,
+      "end_step": 8,
+      "tokens_seen": 128
+     },
+     {
+      "artifact": {
+       "bytes": 316845,
+       "path": "results/gate-20260930T165019Z-e00143-full/branch-16.json",
+       "sha256": "c5b067d790827cde86e90a3406755365af7cf603b78b20ef3e7b73876298b967"
+      },
+      "cooldown_seconds": 0.147611246,
+      "cooldown_start": 15,
+      "cooldown_steps": 1,
+      "end_step": 16,
+      "tokens_seen": 256
+     },
+     {
+      "artifact": {
+       "bytes": 316435,
+       "path": "results/gate-20260930T165019Z-e00143-full/branch-32.json",
+       "sha256": "96ae208439981620138595bbda531cc09cef840bc505b397186312b1f11571d3"
+      },
+      "cooldown_seconds": 0.431796613,
+      "cooldown_start": 29,
+      "cooldown_steps": 3,
+      "end_step": 32,
+      "tokens_seen": 512
+     }
+    ],
+    "checkpoint": {
+     "bytes": 1010567,
+     "path": "results/gate-20260930T165019Z-e00143-full/checkpoint.json",
+     "sha256": "69a252d21f56bffd9e27038f9f16f75a9c157e68f7525632b8d354fe1b4f593f"
+    },
+    "dispatches": 4148,
+    "gpu_seconds": 0.04280108270676681,
+    "hardware_gpu": true,
+    "job_id": "gate-20260930T165019Z-e00143-full",
+    "job_sha256": "75d7f3024f880293f4284c09dc02017ea1ea868e81d45855c03949f9b988047f",
+    "last_loss": 1.5586926341056824,
+    "peak_memory_bytes": 21499904,
+    "schema": "floppylm.e0.result.v1",
+    "state": "completed",
+    "transfer_bytes": 50115456,
+    "trunk_step": 29,
+    "wall_seconds": 4.926959745
+   },
+   {
+    "adapter": "SraKmd_arden",
+    "branches": [
+     {
+      "artifact": {
+       "bytes": 316829,
+       "path": "results/gate-20260930T165019Z-e00143-resumed/branch-8.json",
+       "sha256": "07d23edd0236512852b787fc9d3decaeae1facbf12df81e65ab96301c41ea3eb"
+      },
+      "cooldown_seconds": 0.148120013,
+      "cooldown_start": 7,
+      "cooldown_steps": 1,
+      "end_step": 8,
+      "tokens_seen": 128
+     },
+     {
+      "artifact": {
+       "bytes": 316845,
+       "path": "results/gate-20260930T165019Z-e00143-resumed/branch-16.json",
+       "sha256": "c5b067d790827cde86e90a3406755365af7cf603b78b20ef3e7b73876298b967"
+      },
+      "cooldown_seconds": 0.148092019,
+      "cooldown_start": 15,
+      "cooldown_steps": 1,
+      "end_step": 16,
+      "tokens_seen": 256
+     },
+     {
+      "artifact": {
+       "bytes": 316435,
+       "path": "results/gate-20260930T165019Z-e00143-resumed/branch-32.json",
+       "sha256": "96ae208439981620138595bbda531cc09cef840bc505b397186312b1f11571d3"
+      },
+      "cooldown_seconds": 0.43152765,
+      "cooldown_start": 29,
+      "cooldown_steps": 3,
+      "end_step": 32,
+      "tokens_seen": 512
+     }
+    ],
+    "checkpoint": {
+     "bytes": 1010570,
+     "path": "results/gate-20260930T165019Z-e00143-resumed/checkpoint.json",
+     "sha256": "3bf6589c50f4e130f6fa1f6ed93762ab5a91b3e96c7c36bc05bb286b6ce03c34"
+    },
+    "dispatches": 2928,
+    "gpu_seconds": 0.030211488721804472,
+    "hardware_gpu": true,
+    "job_id": "gate-20260930T165019Z-e00143-resumed",
+    "job_sha256": "cec3cdfd229d9675d621d8980c97a483f5cccfe5019f88a9f4ef6b40dc315f60",
+    "last_loss": 1.5586926341056824,
+    "peak_memory_bytes": 21725184,
+    "schema": "floppylm.e0.result.v1",
+    "state": "completed",
+    "transfer_bytes": 35375616,
+    "trunk_step": 29,
+    "wall_seconds": 3.503869736
+   }
+  ]
+ },
+ "schema": "floppylm.xbox.acceptance.v1",
+ "raw_evidence": "/home/gianluca/Workspace/experiments/floppy_4mb/runs/xbox-acceptance-20260930-ci36746732705",
+ "scope": "functional backend acceptance; S9 policy gate is separate"
+}
