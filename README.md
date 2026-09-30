@@ -29,7 +29,7 @@ Su Xbox Series S|X in **Dev Mode** manca CUDA; DirectML è utile per alcuni graf
 - QAT ternario/2/4-bit, **straight-through estimator (STE)**, **AdamW**, schedule **WSD** con cooldown isolati (Fasi 3–5).
 - GDK / Windows SDK pubblici. **GDKX** / **ID@Xbox** sono percorsi NDA/partner: **non** ne rivendichiamo l’accesso.
 
-Dettaglio: [docs/architecture.md](docs/architecture.md), [docs/adr/0001-architecture.md](docs/adr/0001-architecture.md).
+Dettaglio: [docs/architecture.md](docs/architecture.md), [docs/adr/0001-architecture.md](docs/adr/0001-architecture.md). Fatti piattaforma (Microsoft/Xbox pubblici, non banchi nostri): [Dev Mode](docs/platform/dev-mode.md), [risorse UWP](docs/platform/uwp-resources.md), [DirectX 12 / HLSL](docs/platform/dx12-hlsl-compute.md), [ambito DirectML](docs/platform/directml-scope.md), [GDK vs GDKX](docs/platform/gdk-vs-gdkx.md), [Series S vs X](docs/platform/series-s-vs-x.md), [blocchi Fase 6](docs/platform/blockers-fase6-validation.md).
 
 ### Roadmap (Fase 0–7)
 
@@ -70,7 +70,7 @@ On Xbox Series S|X **Dev Mode** there is **no CUDA**; **DirectML** on console is
 - Ternary / 2-bit / 4-bit **QAT**, **straight-through estimator (STE)**, **AdamW**, **WSD** with isolated cooldowns (Fasi 3–5).
 - Public GDK / Windows SDK. **GDKX** / **ID@Xbox** are NDA/partner paths: this repo does **not** claim access.
 
-See [docs/architecture.md](docs/architecture.md) and [docs/adr/0001-architecture.md](docs/adr/0001-architecture.md).
+See [docs/architecture.md](docs/architecture.md) and [docs/adr/0001-architecture.md](docs/adr/0001-architecture.md). Public Microsoft/Xbox fact packs (not our benches): [Dev Mode](docs/platform/dev-mode.md), [UWP resources](docs/platform/uwp-resources.md), [DirectX 12 / HLSL](docs/platform/dx12-hlsl-compute.md), [DirectML scope](docs/platform/directml-scope.md), [GDK vs GDKX](docs/platform/gdk-vs-gdkx.md), [Series S vs X](docs/platform/series-s-vs-x.md), [Fase 6 blockers](docs/platform/blockers-fase6-validation.md).
 
 ### Roadmap (phases 0–7)
 
@@ -104,6 +104,7 @@ Repository **just founded**. Scaffold, CI, and docs in progress. **No measured G
 | `src/hlsl/` | HLSL compute shader stubs |
 | `src/cpp/` | C++ host stub (`xbox_gpu_host`) |
 | `docs/`, `docs/adr/` | Architecture + ADRs |
+| `docs/platform/` | Public Xbox / Dev Mode / GDK / UWP fact packs |
 | `docs/execution-plan.md` | Cursor phase playbook |
 | `benchmarks/` | Smoke harness (stub JSON only) |
 | `examples/` | Hello compute shader notes |

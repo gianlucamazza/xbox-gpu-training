@@ -20,6 +20,8 @@ We need a research path for quantized training that can be measured honestly aga
 5. **Dev Mode UWP constraints are first-class.** Fase 4 documents App ~1 GB and Game ~5 GB budgets, AppContainer rules, and streaming. Fase 6 is the only phase that may publish console speed/quality tables — or must say `BLOCKED: no console`.
 6. **No quality or tok/s claims until measured.** Stubs report `status: stub`. DirectML may be mentioned as an inference/forward stack; it is not the trainer.
 
+Public Microsoft/Xbox fact packs (not a change of decision): [docs/platform/](../platform/dev-mode.md).
+
 ## Consequences
 
 - CI on `windows-latest` can compile the C++ host and, when `dxc` exists, HLSL. It cannot replace Xbox hardware.

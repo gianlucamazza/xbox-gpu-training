@@ -1,6 +1,6 @@
 # Contributing
 
-Evidence-first research repository. Read [README.md](README.md), [ROADMAP.md](ROADMAP.md), [docs/execution-plan.md](docs/execution-plan.md), and [docs/adr/0001-architecture.md](docs/adr/0001-architecture.md) before opening a pull request.
+Evidence-first research repository. Read [README.md](README.md), [ROADMAP.md](ROADMAP.md), [docs/execution-plan.md](docs/execution-plan.md), [docs/adr/0001-architecture.md](docs/adr/0001-architecture.md), and the public platform packs under [docs/platform/](docs/platform/dev-mode.md) before opening a pull request.
 
 ## Companion repo
 
@@ -27,7 +27,7 @@ The FloppyLM **CPU** path lives in [gianlucamazza/xllama](https://github.com/gia
 - DirectML on console is **inference/forward-focused**. Do not describe DirectML as the trainer.
 - Public **GDK** / Windows SDK / DirectX 12 is the documented host path.
 - **GDKX** / **ID@Xbox** are NDA/partner programmes. This repo does **not** claim access to them.
-- Dev Mode purpose licence: develop and test apps, not run a GPU farm. Dev Mode is limited (≤3 consoles per account, typical public documentation).
+- Dev Mode purpose licence: develop and test apps, not run a GPU farm. Dev Mode is limited (≤3 consoles per account, typical public documentation). Detail: [docs/platform/dev-mode.md](docs/platform/dev-mode.md), [docs/platform/gdk-vs-gdkx.md](docs/platform/gdk-vs-gdkx.md), [docs/platform/directml-scope.md](docs/platform/directml-scope.md).
 
 ## Branch and PR protocol (Cursor and humans)
 

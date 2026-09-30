@@ -13,7 +13,7 @@ Un agente Cursor esegue **una fase alla volta**. Branch `phase-N/<slug>` da `mai
 - Commits: English conventional commits. PR body: objective, commands run, acceptance results (paste), what was **not** done.
 - Report results in the PR and update [ROADMAP.md](../ROADMAP.md) checkboxes / status.
 - Do **not** invent tok/s or quality metrics. Do **not** claim CUDA, ID@Xbox, or that DirectML is the trainer. DirectML = inference/forward note only if used.
-- Prefer the Windows DirectX 12 path; document Xbox Dev Mode steps for Fase 6.
+- Prefer the Windows DirectX 12 path; document Xbox Dev Mode steps for Fase 6. Platform SoT: [docs/platform/blockers-fase6-validation.md](platform/blockers-fase6-validation.md) (Fase 0–5 is not gated by Fase 6).
 
 ## Phase checklist
 
@@ -253,7 +253,7 @@ REM PIX: capture one compute shader dispatch on console if tooling allows
 
 **Do NOT:** Invent console tok/s; claim ID@Xbox/GDKX; merge a fake table.
 
-**Checkpoint:** Stop and wait for a human if no Dev Mode kit. That is a successful honest phase if BLOCKED is explicit.
+**Checkpoint:** Stop and wait for a human if no Dev Mode kit. That is a successful honest phase if BLOCKED is explicit. Blocker summary: [docs/platform/blockers-fase6-validation.md](platform/blockers-fase6-validation.md).
 
 ---
 
