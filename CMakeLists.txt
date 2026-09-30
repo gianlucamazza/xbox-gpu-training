@@ -1,22 +1,56 @@
 cmake_minimum_required(VERSION 3.20)
 project(xbox_gpu_training LANGUAGES CXX)
 
-# Scaffold host only. DirectX 12 device creation is Fase 0 work.
-# This target must compile on Windows (MSVC) and as a no-GPU smoke check elsewhere.
+# Fase 0 host: DirectX 12 device create + hello compute dispatch on Windows.
+# Compiles as a no-GPU smoke check on non-Windows (reports BLOCKED: no D3D12 device).
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-option(XGPU_BUILD_HOST "Build the C++ host stub" ON)
+option(XGPU_BUILD_HOST "Build the C++ host" ON)
+option(XGPU_BUILD_EXAMPLES "Build example hosts (hello_compute)" ON)
 
 # add_subdirectory(src/cpp) otherwise places the exe under build/src/cpp/<Config>/.
-# Put it at the build root so CI and local runs can find xbox_gpu_host consistently.
+# Put binaries at the build root so CI and local runs can find them under
+# build/<Config>/ or (if someone drops the override) build/src/cpp/<Config>/.
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
 foreach(_cfg Debug Release RelWithDebInfo MinSizeRel)
   set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_${_cfg} "${CMAKE_BINARY_DIR}/${_cfg}")
 endforeach()
 
+# Do not pin -G "Visual Studio 17 2022". windows-latest may ship a newer VS.
+# Local: cmake -S . -B build -A x64   (auto-detect generator)
+
+if(WIN32)
+  find_program(XGPU_DXC NAMES dxc dxc.exe)
+  if(NOT XGPU_DXC)
+    file(GLOB _XGPU_DXC_HITS
+      "$ENV{ProgramFiles\(x86\)}/Windows Kits/10/bin/*/x64/dxc.exe")
+    if(_XGPU_DXC_HITS)
+      list(SORT _XGPU_DXC_HITS COMPARE NATURAL ORDER DESCENDING)
+      list(GET _XGPU_DXC_HITS 0 XGPU_DXC)
+    endif()
+  endif()
+  if(XGPU_DXC)
+    message(STATUS "dxc: ${XGPU_DXC}")
+    add_custom_command(
+      OUTPUT "${CMAKE_BINARY_DIR}/hello_compute.cso"
+      COMMAND "${XGPU_DXC}" -T cs_6_0 -E CSMain
+              -Fo "${CMAKE_BINARY_DIR}/hello_compute.cso"
+              "${CMAKE_SOURCE_DIR}/src/hlsl/hello_compute.hlsl"
+      DEPENDS "${CMAKE_SOURCE_DIR}/src/hlsl/hello_compute.hlsl"
+      COMMENT "dxc -T cs_6_0 -E CSMain hello_compute.hlsl"
+    )
+    add_custom_target(xgpu_hello_cso ALL DEPENDS "${CMAKE_BINARY_DIR}/hello_compute.cso")
+  else()
+    message(STATUS "dxc not found — HLSL compile skipped (not a GPU result)")
+  endif()
+endif()
+
 if(XGPU_BUILD_HOST)
   add_subdirectory(src/cpp)
+  if(XGPU_BUILD_EXAMPLES)
+    add_subdirectory(examples/hello-compute)
+  endif()
 endif()

@@ -1,0 +1,200 @@
+#include "dx12_device.h"
+
+#include <cstdio>
+#include <utility>
+
+#ifndef _WIN32
+
+// Non-Windows translation unit stays empty; hello_dispatch.cpp reports BLOCKED.
+
+#else
+
+std::string HrHex(long hr) {
+  char buf[16];
+  std::snprintf(buf, sizeof(buf), "0x%08X", static_cast<unsigned>(hr));
+  return buf;
+}
+
+static std::string WideToUtf8(const wchar_t* text) {
+  if (!text || !text[0]) {
+    return {};
+  }
+  const int n = WideCharToMultiByte(CP_UTF8, 0, text, -1, nullptr, 0, nullptr, nullptr);
+  if (n <= 1) {
+    return {};
+  }
+  std::string out(static_cast<size_t>(n - 1), '\0');
+  WideCharToMultiByte(CP_UTF8, 0, text, -1, out.data(), n, nullptr, nullptr);
+  return out;
+}
+
+static void TryEnableDebugLayer() {
+  Microsoft::WRL::ComPtr<ID3D12Debug> debug;
+  if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debug)))) {
+    debug->EnableDebugLayer();
+  }
+}
+
+Dx12CreateResult CreateDx12Device() {
+  Dx12CreateResult result;
+
+  TryEnableDebugLayer();
+
+  Microsoft::WRL::ComPtr<IDXGIFactory4> factory;
+  HRESULT hr = CreateDXGIFactory1(IID_PPV_ARGS(&factory));
+  if (FAILED(hr)) {
+    result.blocked = true;
+    result.message = "CreateDXGIFactory1 failed (" + HrHex(hr) + ")";
+    return result;
+  }
+
+  auto try_adapter = [&](IDXGIAdapter* adapter, bool warp, const std::string& name) -> bool {
+    Microsoft::WRL::ComPtr<ID3D12Device> device;
+    const HRESULT create_hr =
+        D3D12CreateDevice(adapter, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&device));
+    if (FAILED(create_hr)) {
+      result.message = "D3D12CreateDevice failed on " + name + " (" + HrHex(create_hr) + ")";
+      return false;
+    }
+
+    D3D12_COMMAND_QUEUE_DESC qdesc{};
+    qdesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
+    Microsoft::WRL::ComPtr<ID3D12CommandQueue> queue;
+    hr = device->CreateCommandQueue(&qdesc, IID_PPV_ARGS(&queue));
+    if (FAILED(hr)) {
+      result.message = "CreateCommandQueue failed (" + HrHex(hr) + ")";
+      return false;
+    }
+
+    Microsoft::WRL::ComPtr<ID3D12CommandAllocator> allocator;
+    hr = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&allocator));
+    if (FAILED(hr)) {
+      result.message = "CreateCommandAllocator failed (" + HrHex(hr) + ")";
+      return false;
+    }
+
+    Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> list;
+    hr = device->CreateCommandList(
+        0, D3D12_COMMAND_LIST_TYPE_DIRECT, allocator.Get(), nullptr, IID_PPV_ARGS(&list));
+    if (FAILED(hr)) {
+      result.message = "CreateCommandList failed (" + HrHex(hr) + ")";
+      return false;
+    }
+    hr = list->Close();
+    if (FAILED(hr)) {
+      result.message = "ID3D12GraphicsCommandList::Close failed (" + HrHex(hr) + ")";
+      return false;
+    }
+
+    Microsoft::WRL::ComPtr<ID3D12Fence> fence;
+    hr = device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
+    if (FAILED(hr)) {
+      result.message = "CreateFence failed (" + HrHex(hr) + ")";
+      return false;
+    }
+
+    HANDLE event = CreateEventW(nullptr, FALSE, FALSE, nullptr);
+    if (!event) {
+      result.message = "CreateEventW failed";
+      return false;
+    }
+
+    result.ok = true;
+    result.blocked = false;
+    result.message = warp ? "WARP software adapter" : "hardware adapter";
+    result.ctx.device = std::move(device);
+    result.ctx.queue = std::move(queue);
+    result.ctx.allocator = std::move(allocator);
+    result.ctx.list = std::move(list);
+    result.ctx.fence = std::move(fence);
+    result.ctx.fence_event = event;
+    result.ctx.adapter_name = name;
+    result.ctx.warp = warp;
+    return true;
+  };
+
+  Microsoft::WRL::ComPtr<IDXGIAdapter1> adapter;
+  for (UINT i = 0; factory->EnumAdapters1(i, &adapter) != DXGI_ERROR_NOT_FOUND; ++i) {
+    DXGI_ADAPTER_DESC1 desc{};
+    adapter->GetDesc1(&desc);
+    if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE) {
+      adapter.Reset();
+      continue;
+    }
+    const std::string name = WideToUtf8(desc.Description);
+    if (try_adapter(adapter.Get(), false, name.empty() ? "hardware adapter" : name)) {
+      return result;
+    }
+    adapter.Reset();
+  }
+
+  Microsoft::WRL::ComPtr<IDXGIAdapter> warp;
+  hr = factory->EnumWarpAdapter(IID_PPV_ARGS(&warp));
+  if (SUCCEEDED(hr)) {
+    DXGI_ADAPTER_DESC desc{};
+    std::string name = "WARP";
+    Microsoft::WRL::ComPtr<IDXGIAdapter1> warp1;
+    if (SUCCEEDED(warp.As(&warp1))) {
+      DXGI_ADAPTER_DESC1 d1{};
+      if (SUCCEEDED(warp1->GetDesc1(&d1))) {
+        const std::string decoded = WideToUtf8(d1.Description);
+        if (!decoded.empty()) {
+          name = decoded;
+        }
+      }
+    } else if (SUCCEEDED(warp->GetDesc(&desc))) {
+      const std::string decoded = WideToUtf8(desc.Description);
+      if (!decoded.empty()) {
+        name = decoded;
+      }
+    }
+    if (try_adapter(warp.Get(), true, name)) {
+      return result;
+    }
+  } else {
+    result.message = "EnumWarpAdapter failed (" + HrHex(hr) + ")";
+  }
+
+  result.ok = false;
+  result.blocked = true;
+  if (result.message.empty()) {
+    result.message = "D3D12CreateDevice failed on every adapter, including WARP";
+  }
+  return result;
+}
+
+void DestroyDx12Device(Dx12Device& ctx) {
+  if (ctx.fence_event) {
+    CloseHandle(ctx.fence_event);
+    ctx.fence_event = nullptr;
+  }
+  ctx.list.Reset();
+  ctx.allocator.Reset();
+  ctx.queue.Reset();
+  ctx.fence.Reset();
+  ctx.device.Reset();
+}
+
+bool WaitForGpu(Dx12Device& ctx, std::string& err) {
+  if (!ctx.queue || !ctx.fence || !ctx.fence_event) {
+    err = "WaitForGpu called without a live device";
+    return false;
+  }
+  const UINT64 value = ++ctx.fence_value;
+  HRESULT hr = ctx.queue->Signal(ctx.fence.Get(), value);
+  if (FAILED(hr)) {
+    err = "ID3D12CommandQueue::Signal failed (" + HrHex(hr) + ")";
+    return false;
+  }
+  if (ctx.fence->GetCompletedValue() < value) {
+    hr = ctx.fence->SetEventOnCompletion(value, ctx.fence_event);
+    if (FAILED(hr)) {
+      err = "ID3D12Fence::SetEventOnCompletion failed (" + HrHex(hr) + ")";
+      return false;
+    }
+    WaitForSingleObject(ctx.fence_event, INFINITE);
+  }
+  return true;
+}
+
+#endif  // _WIN32
