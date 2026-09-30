@@ -48,12 +48,12 @@ Playbook Cursor: [docs/execution-plan.md](docs/execution-plan.md). Tabella compl
 
 ### Stato attuale
 
-The separate E0 UWP backend has passed 36 numerical fixtures, identical-input
+The separate E0 UWP backend has passed 52 independent operation cases, 36 model fixtures, identical-input
 AdamW and exact checkpoint resume on a retail **Series S**. The representative
-ctx=256/batch=32 trial measured **961 token/s**, **87 MiB** peak app memory and
-153 seconds wall time. These are synthetic-corpus functional measurements;
+ctx=256/batch=32 trial measured **959 token/s**, **87 MiB** peak app memory and
+154 seconds wall time. These are synthetic-corpus functional measurements;
 scientific E0 remains gated on the FloppyLM tensor16/S9 decision.
-[Evidence and exact package lineage](docs/evidence/e0-20260930/notes.md).
+[Evidence and exact package lineage](docs/evidence/e0-20260930-kernels/notes.md).
 xllama is unchanged; the historical `--qat-smoke` lane remains a separate experiment.
 
 ### Come contribuire
@@ -96,8 +96,8 @@ Cursor playbook: [docs/execution-plan.md](docs/execution-plan.md). Full table: [
 ### Current status
 
 The E0 UWP backend now has measured Series S functional evidence:
-36 numerical fixtures, identical-input AdamW, exact resume and a representative
-throughput trial. [Package, results and limits](docs/evidence/e0-20260930/notes.md).
+52 independent operation cases, 36 model fixtures, identical-input AdamW, exact resume and a representative
+throughput trial. [Package, results and limits](docs/evidence/e0-20260930-kernels/notes.md).
 Scientific E0 remains gated on the companion protocol decision.
 
 ### How to contribute
