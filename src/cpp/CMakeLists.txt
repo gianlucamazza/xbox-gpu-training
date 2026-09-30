@@ -78,6 +78,7 @@ add_library(xgpu_e0 STATIC e0/tensor.cpp e0/model.cpp e0/job.cpp e0/dx12_kernel.
 target_include_directories(xgpu_e0 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/e0
   ${CMAKE_SOURCE_DIR}/vendor)
 if(WIN32)
+  target_compile_definitions(xgpu_e0 PRIVATE NOMINMAX WIN32_LEAN_AND_MEAN)
   target_link_libraries(xgpu_e0 PUBLIC xgpu_dx12 bcrypt)
 else()
   find_package(OpenSSL REQUIRED)
