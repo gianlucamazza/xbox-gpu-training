@@ -97,12 +97,20 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           & $dxc -T cs_6_0 -E CSMain -Fo build/matmul.cso src/hlsl/matmul.hlsl
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & $dxc -T cs_6_0 -E CSMain -Fo build/rmsnorm.cso src/hlsl/rmsnorm.hlsl
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & $dxc -T cs_6_0 -E CSMain -Fo build/rope.cso src/hlsl/rope.hlsl
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & $dxc -T cs_6_0 -E CSMain -Fo build/flp2_decode.cso src/hlsl/flp2_decode.hlsl
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & $dxc -T cs_6_0 -E CSMain -Fo build/flp2_forward.cso src/hlsl/flp2_forward.hlsl
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           foreach ($dir in @("build\Release", "build\src\cpp\Release", "dist\bin")) {
             if (Test-Path $dir) {
               Copy-Item -Force build/hello_compute.cso (Join-Path $dir "hello_compute.cso")
             }
           }
-          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "**HLSL:** compiled ``hello_compute.hlsl`` (Fase 0) and ``matmul.hlsl`` (Fase 1 stub) with dxc."
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "**HLSL:** compiled ``hello_compute.hlsl`` (Fase 0), ``matmul.hlsl`` (Fase 1), and ``rmsnorm`` / ``rope`` / ``flp2_decode`` / ``flp2_forward`` (Fase 2) with dxc."
 
       - name: Run host (hello compute or BLOCKED)
         shell: pwsh
@@ -153,6 +161,20 @@ jobs:
             Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "**C++ host:** ``$exe`` reported ``$blocked``. Not a GPU result. Dispatch log not invented."
           } else {
             Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "**C++ host:** ran ``$exe`` (no STATUS/BLOCKED line). Not treated as a GPU success."
+          }
+          if ($code -ne 0) { exit $code }
+
+          Write-Host "Running $exe --forward-fixture benchmarks/fixtures/tiny_flp2.json"
+          & $exe --forward-fixture benchmarks/fixtures/tiny_flp2.json *>&1 | Tee-Object -FilePath host-flp2.txt
+          $code = $LASTEXITCODE
+          $flp2 = Get-Content host-flp2.txt -ErrorAction SilentlyContinue
+          $flp2text = ($flp2 -join "`n")
+          if ($flp2text -match 'STATUS: flp2 forward dispatched') {
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "**FLP2:** GPU forward dispatched vs CPU fixture. Not a tok/s result. Not a console result."
+          } elseif ($flp2text -match 'STATUS: flp2 cpu-ref ok' -or $flp2text -match 'BLOCKED:') {
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "**FLP2:** CPU fixture matched; GPU path ``BLOCKED`` or not dispatched. Dispatch log not invented."
+          } else {
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "**FLP2:** ``--forward-fixture`` ran (see log). Not treated as a GPU success."
           }
           if ($code -ne 0) { exit $code }
 

@@ -18,6 +18,7 @@ REQUIRED = [
     "docs/architecture.md",
     "docs/setup.md",
     "docs/ggml-baseline.md",
+    "docs/flp2-forward.md",
     "docs/platform/dev-mode.md",
     "docs/platform/uwp-resources.md",
     "docs/platform/dx12-hlsl-compute.md",

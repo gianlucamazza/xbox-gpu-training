@@ -1,9 +1,11 @@
 // xbox-gpu-training host.
 // English comments only. Default path: DirectX 12 device + hello compute dispatch.
 // --bench matmul writes a CSV vs the CPU reference. --cpu-ref is CPU-only.
+// --forward-fixture runs Fase 2 FLP2 decode + tiny forward vs the CPU fixture.
 // --smoke keeps the no-GPU compile check. No CUDA. DirectML is not the trainer.
 
 #include "cpu_matmul.h"
+#include "flp2_dispatch.h"
 #include "hello_dispatch.h"
 #include "matmul_dispatch.h"
 
@@ -12,7 +14,7 @@
 #include <string>
 
 static void PrintBanner() {
-  std::cout << "xbox-gpu-training host (Fase 1)\n";
+  std::cout << "xbox-gpu-training host (Fase 2)\n";
   std::cout << "Target path: DirectX 12 compute shaders (HLSL). No CUDA.\n";
   std::cout << "DirectML is inference/forward-focused on console and is not the trainer.\n";
 }
@@ -30,12 +32,15 @@ static void PrintUsage() {
   std::cout << "  xbox_gpu_host [--smoke] [--hello-compute] [--shader <cso-or-hlsl>]\n";
   std::cout << "  xbox_gpu_host --cpu-ref\n";
   std::cout << "  xbox_gpu_host --bench matmul [--out <csv>] [--shader <cso-or-hlsl>]\n";
-  std::cout << "  --smoke          Print the banner and exit 0 (no device create).\n";
-  std::cout << "  --hello-compute  Create a D3D12 device and dispatch hello_compute once.\n";
-  std::cout << "  --cpu-ref        Run the portable CPU GEMM tests (no GPU).\n";
-  std::cout << "  --bench matmul   CPU baseline + GPU matmul when a D3D12 device exists.\n";
-  std::cout << "                   Writes CSV (schema + status). No invented tok/s.\n";
-  std::cout << "  default          Same as --hello-compute.\n";
+  std::cout << "  xbox_gpu_host --forward-fixture [path]\n";
+  std::cout << "  --smoke            Print the banner and exit 0 (no device create).\n";
+  std::cout << "  --hello-compute    Create a D3D12 device and dispatch hello_compute once.\n";
+  std::cout << "  --cpu-ref          Run the portable CPU GEMM tests (no GPU).\n";
+  std::cout << "  --bench matmul     CPU baseline + GPU matmul when a D3D12 device exists.\n";
+  std::cout << "                     Writes CSV (schema + status). No invented tok/s.\n";
+  std::cout << "  --forward-fixture  Fase 2 FLP2 decode + RMSNorm + RoPE + tiny forward.\n";
+  std::cout << "                     Default path: benchmarks/fixtures/tiny_flp2.json\n";
+  std::cout << "  default            Same as --hello-compute.\n";
 }
 
 int main(int argc, char** argv) {
@@ -43,9 +48,11 @@ int main(int argc, char** argv) {
   bool hello = false;
   bool cpu_ref = false;
   bool bench = false;
+  bool forward_fixture = false;
   std::string bench_name;
   std::filesystem::path shader_hint;
   std::filesystem::path out_csv;
+  std::filesystem::path fixture_path;
 
   for (int i = 1; i < argc; ++i) {
     const std::string arg = argv[i];
@@ -55,6 +62,11 @@ int main(int argc, char** argv) {
       hello = true;
     } else if (arg == "--cpu-ref") {
       cpu_ref = true;
+    } else if (arg == "--forward-fixture") {
+      forward_fixture = true;
+      if (i + 1 < argc && argv[i + 1][0] != '-') {
+        fixture_path = argv[++i];
+      }
     } else if (arg == "--bench") {
       bench = true;
       if (i + 1 < argc) {
@@ -91,6 +103,15 @@ int main(int argc, char** argv) {
       std::cout << cpu.detail << "\n";
     }
     return cpu.ok ? 0 : 1;
+  }
+
+  if (forward_fixture) {
+    Flp2ForwardOptions opt;
+    opt.fixture = fixture_path;
+    opt.shader_hint = shader_hint;
+    const RunReport report = RunFlp2ForwardFixture(opt);
+    PrintReport(report);
+    return report.status == RunStatus::Failed ? 1 : 0;
   }
 
   if (bench) {
