@@ -1,0 +1,157 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint-docs:
+    name: lint-docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify required docs
+        run: python3 scripts/check_required_docs.py
+
+      - name: Glossary claim check
+        run: python3 scripts/check_glossary.py
+
+      - name: Relative Markdown links
+        run: python3 scripts/check_relative_links.py
+
+  build-windows:
+    name: build-windows
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Cache NuGet packages (future C# / packages)
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj', '**/packages.lock.json', '**/nuget.config') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      - name: Cache vcpkg binary cache (if used later)
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/vcpkg_installed
+          key: vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
+          restore-keys: vcpkg-${{ runner.os }}-
+        continue-on-error: true
+
+      # windows-latest (2025/2026 images) ships Visual Studio 2026, not 2022.
+      # Do not pin -G "Visual Studio 17 2022"; CMake auto-detects the newest VS.
+      - name: Configure CMake
+        shell: pwsh
+        run: |
+          cmake --version
+          cmake -S . -B build -A x64
+          $gen = Select-String -Path build/CMakeCache.txt -Pattern '^CMAKE_GENERATOR:INTERNAL=' |
+            ForEach-Object { $_.Line.Split('=', 2)[1] }
+          Write-Host "CMake generator: $gen"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "**CMake generator:** $gen (auto-detected; not pinned to VS 2022)."
+
+      - name: Build C++ host stub
+        run: cmake --build build --config Release --target xbox_gpu_host
+
+      - name: Run host stub
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Continue'
+          cmake --install build --config Release --prefix dist
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "cmake --install returned $LASTEXITCODE; will search the build tree."
+          }
+
+          Write-Host "=== executables under build/ and dist/ ==="
+          Get-ChildItem -Path build,dist -Recurse -Filter *.exe -ErrorAction SilentlyContinue |
+            ForEach-Object { Write-Host $_.FullName }
+
+          $candidates = @(
+            "dist\bin\xbox_gpu_host.exe",
+            "build\src\cpp\Release\xbox_gpu_host.exe",
+            "build\Release\xbox_gpu_host.exe",
+            "build\xbox_gpu_host.exe",
+            "build\src\cpp\xbox_gpu_host.exe"
+          )
+          $exe = $candidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+          if (-not $exe) {
+            $found = Get-ChildItem -Path build,dist -Recurse -Filter xbox_gpu_host.exe -ErrorAction SilentlyContinue |
+              Select-Object -First 1
+            if ($found) { $exe = $found.FullName }
+          }
+
+          $hasDxgi = Test-Path "$env:SystemRoot\System32\dxgi.dll"
+          if (-not $exe) {
+            Write-Host "xbox_gpu_host.exe not found after building target xbox_gpu_host. DXGI present: $hasDxgi"
+            if (-not $hasDxgi) {
+              Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "**C++ host:** skipped run — binary not found and DXGI missing on runner. Not a GPU result."
+              exit 0
+            }
+            throw "xbox_gpu_host.exe not found after build (target xbox_gpu_host). Listed build/dist tree above."
+          }
+
+          Write-Host "Running $exe"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "**C++ host:** ran ``$exe`` (stub)."
+          & $exe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Compile HLSL with dxc (skip if missing)
+        shell: pwsh
+        run: |
+          $dxc = Get-Command dxc -ErrorAction SilentlyContinue
+          if (-not $dxc) {
+            $kits = "${env:ProgramFiles(x86)}\Windows Kits\10\bin"
+            if (Test-Path $kits) {
+              $found = Get-ChildItem -Path $kits -Recurse -Filter dxc.exe -ErrorAction SilentlyContinue |
+                Where-Object { $_.FullName -match '\\x64\\dxc.exe$' } |
+                Sort-Object FullName -Descending |
+                Select-Object -First 1
+              if ($found) { $dxc = $found.FullName }
+            }
+          } else {
+            $dxc = $dxc.Source
+          }
+          if (-not $dxc) {
+            Write-Host "dxc not found on windows-latest — HLSL compile skipped (Windows SDK path missing)."
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "**HLSL:** ``dxc`` missing; compile skipped. Not a GPU result."
+            exit 0
+          }
+          Write-Host "Using dxc: $dxc"
+          New-Item -ItemType Directory -Force -Path build | Out-Null
+          & $dxc -T cs_6_0 -E CSMain -Fo build/hello_compute.cso src/hlsl/hello_compute.hlsl
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & $dxc -T cs_6_0 -E CSMain -Fo build/matmul.cso src/hlsl/matmul.hlsl
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "**HLSL:** compiled ``hello_compute.hlsl`` and ``matmul.hlsl`` (stubs) with dxc."
+
+      # Windows SDK itself is not fully cacheable; NuGet/vcpkg caches above are for later phases.
+
+  notify-failure:
+    name: notify-failure
+    if: failure()
+    needs: [lint-docs, build-windows]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Job summary
+        run: |
+          {
+            echo "## CI failed"
+            echo "Check **lint-docs** and **build-windows**. GitHub native failure is the notification (no external webhooks)."
+          } >> "$GITHUB_STEP_SUMMARY"

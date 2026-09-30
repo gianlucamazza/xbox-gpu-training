@@ -1,2 +1,115 @@
 # xbox-gpu-training
-Research: quantized LLM training on Xbox Series S|X GPU (DirectX 12 / HLSL compute) — no CUDA; companion to FloppyLM CPU path
+
+[![CI](https://github.com/gianlucamazza/xbox-gpu-training/actions/workflows/ci.yml/badge.svg)](https://github.com/gianlucamazza/xbox-gpu-training/actions/workflows/ci.yml)
+[![Benchmark](https://github.com/gianlucamazza/xbox-gpu-training/actions/workflows/benchmark.yml/badge.svg)](https://github.com/gianlucamazza/xbox-gpu-training/actions/workflows/benchmark.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Milestones](https://img.shields.io/badge/milestones-Fase%200–7-blue.svg)](https://github.com/gianlucamazza/xbox-gpu-training/milestones)
+
+**Closing the Xbox GPU training gap with DirectX 12 HLSL compute shaders.**
+
+> **EN.** Xbox has no CUDA. DirectML on console is inference/forward-focused. A UWP App typically sees ~1 GB RAM. This repo researches quantized LLM training on Series S|X GPU via DirectX 12 compute shaders, host-resident fp32 master weights, and FLP2 streaming — measured honestly, or not claimed.
+>
+> **IT.** Su Xbox non c’è CUDA. DirectML in console è orientato a inference/forward. Una UWP App vede in genere ~1 GB di RAM. Questo repo ricerca il training quantizzato di LLM sulla GPU Series S|X con compute shader DirectX 12, pesi master fp32 in system RAM e streaming FLP2 — solo numeri misurati, altrimenti nessun claim.
+
+Companion: FloppyLM **CPU** path lives in [gianlucamazza/xllama](https://github.com/gianlucamazza/xllama). This repository is the **GPU research track**. Do not claim that xllama trains on the GPU. Do not modify xllama from here.
+
+---
+
+## Italiano
+
+### Perché esiste
+
+Su Xbox Series S|X in **Dev Mode** manca CUDA; DirectML è utile per alcuni grafi di inference/forward e **non** è il trainer di questo progetto; una UWP **App** ha un budget RAM tipico di **~1 GB** (designazione **Game** ~**5 GB**); il bus memoria e l’**AppContainer** vincolano i pesi; la licenza Dev Mode serve a sviluppare e testare app (in documentazione pubblica tipicamente **≤3 console**), non a gestire una GPU farm.
+
+### Soluzione architetturale
+
+- Compute shader **HLSL** su **DirectX 12** per matmul, **RMSNorm**, **RoPE** e un forward ricostruito dal codec **FLP2**.
+- Pesi master **fp32** in system RAM; **chunk streaming** e **double buffering** verso la GPU.
+- Baseline numerica e di tempo: **CPU ggml** (Fase 1+).
+- QAT ternario/2/4-bit, **straight-through estimator (STE)**, **AdamW**, schedule **WSD** con cooldown isolati (Fasi 3–5).
+- GDK / Windows SDK pubblici. **GDKX** / **ID@Xbox** sono percorsi NDA/partner: **non** ne rivendichiamo l’accesso.
+
+Dettaglio: [docs/architecture.md](docs/architecture.md), [docs/adr/0001-architecture.md](docs/adr/0001-architecture.md).
+
+### Roadmap (Fase 0–7)
+
+Playbook Cursor: [docs/execution-plan.md](docs/execution-plan.md). Tabella completa: [ROADMAP.md](ROADMAP.md). Milestone GitHub: [elenco](https://github.com/gianlucamazza/xbox-gpu-training/milestones).
+
+| Fase | Milestone | Label |
+| --- | --- | --- |
+| 0 Setup ambiente | [Fase 0 — Setup ambiente](https://github.com/gianlucamazza/xbox-gpu-training/milestone/1) | `phase-0` |
+| 1 Kernel HLSL di base | [Fase 1 — Kernel HLSL di base](https://github.com/gianlucamazza/xbox-gpu-training/milestone/2) | `phase-1` |
+| 2 Forward FLP2 su GPU | [Fase 2 — Forward FLP2 su GPU](https://github.com/gianlucamazza/xbox-gpu-training/milestone/3) | `phase-2` |
+| 3 Backward + AdamW | [Fase 3 — Backward + AdamW](https://github.com/gianlucamazza/xbox-gpu-training/milestone/4) | `phase-3` |
+| 4 Streaming memoria | [Fase 4 — Streaming memoria](https://github.com/gianlucamazza/xbox-gpu-training/milestone/5) | `phase-4` |
+| 5 QAT completo WSD | [Fase 5 — QAT completo WSD](https://github.com/gianlucamazza/xbox-gpu-training/milestone/6) | `phase-5` |
+| 6 Validazione Series S\|X | [Fase 6 — Validazione Series S\|X](https://github.com/gianlucamazza/xbox-gpu-training/milestone/7) | `phase-6` |
+| 7 Pubblicazione | [Fase 7 — Pubblicazione](https://github.com/gianlucamazza/xbox-gpu-training/milestone/8) | `phase-7` |
+
+### Stato attuale
+
+Repo **appena fondato**. Scaffold, CI e documentazione in corso. **Nessun risultato misurato** di training su GPU. Nessun tok/s, nessuna qualità inventata. Gli stub in `src/`, `benchmarks/` e `examples/` compilano o escono con `not implemented` / `status: stub`.
+
+### Come contribuire
+
+[CONTRIBUTING.md](CONTRIBUTING.md). Evidence-first. Inglese per codice e commit; italiano ok nelle discussioni.
+
+---
+
+## English
+
+### Why it exists
+
+On Xbox Series S|X **Dev Mode** there is **no CUDA**; **DirectML** on console is inference/forward-focused and is **not** the trainer here; a UWP **App** typically has **~1 GB** RAM ( **Game** designation ~**5 GB** ); the memory bus and **AppContainer** constrain weights; the Dev Mode purpose licence is to develop and test apps (public docs typically **≤3 consoles**), not to operate a GPU farm.
+
+### Architectural solution
+
+- **HLSL** compute shaders on **DirectX 12** for matmul, **RMSNorm**, **RoPE**, and a forward reconstructed from the **FLP2** codec.
+- **fp32** master weights in system RAM; **chunk streaming** and **double buffering** to the GPU.
+- Numerical and timing baseline: **CPU ggml** (Fase 1+).
+- Ternary / 2-bit / 4-bit **QAT**, **straight-through estimator (STE)**, **AdamW**, **WSD** with isolated cooldowns (Fasi 3–5).
+- Public GDK / Windows SDK. **GDKX** / **ID@Xbox** are NDA/partner paths: this repo does **not** claim access.
+
+See [docs/architecture.md](docs/architecture.md) and [docs/adr/0001-architecture.md](docs/adr/0001-architecture.md).
+
+### Roadmap (phases 0–7)
+
+Cursor playbook: [docs/execution-plan.md](docs/execution-plan.md). Full table: [ROADMAP.md](ROADMAP.md). GitHub milestones: [index](https://github.com/gianlucamazza/xbox-gpu-training/milestones).
+
+| Phase | Milestone | Label |
+| --- | --- | --- |
+| 0 Environment setup | [Fase 0 — Setup ambiente](https://github.com/gianlucamazza/xbox-gpu-training/milestone/1) | `phase-0` |
+| 1 Base HLSL kernels | [Fase 1 — Kernel HLSL di base](https://github.com/gianlucamazza/xbox-gpu-training/milestone/2) | `phase-1` |
+| 2 FLP2 forward on GPU | [Fase 2 — Forward FLP2 su GPU](https://github.com/gianlucamazza/xbox-gpu-training/milestone/3) | `phase-2` |
+| 3 Backward + AdamW | [Fase 3 — Backward + AdamW](https://github.com/gianlucamazza/xbox-gpu-training/milestone/4) | `phase-3` |
+| 4 Memory streaming | [Fase 4 — Streaming memoria](https://github.com/gianlucamazza/xbox-gpu-training/milestone/5) | `phase-4` |
+| 5 Full QAT + WSD | [Fase 5 — QAT completo WSD](https://github.com/gianlucamazza/xbox-gpu-training/milestone/6) | `phase-5` |
+| 6 Series S\|X validation | [Fase 6 — Validazione Series S\|X](https://github.com/gianlucamazza/xbox-gpu-training/milestone/7) | `phase-6` |
+| 7 Publish results | [Fase 7 — Pubblicazione](https://github.com/gianlucamazza/xbox-gpu-training/milestone/8) | `phase-7` |
+
+### Current status
+
+Repository **just founded**. Scaffold, CI, and docs in progress. **No measured GPU training results.** No invented tok/s or quality numbers. Stubs under `src/`, `benchmarks/`, and `examples/` compile or exit with `not implemented` / `status: stub`.
+
+### How to contribute
+
+[CONTRIBUTING.md](CONTRIBUTING.md). Evidence-first. English for code and commits; Italian is fine in discussions.
+
+---
+
+## Layout
+
+| Path | Role |
+| --- | --- |
+| `src/hlsl/` | HLSL compute shader stubs |
+| `src/cpp/` | C++ host stub (`xbox_gpu_host`) |
+| `docs/`, `docs/adr/` | Architecture + ADRs |
+| `docs/execution-plan.md` | Cursor phase playbook |
+| `benchmarks/` | Smoke harness (stub JSON only) |
+| `examples/` | Hello compute shader notes |
+| `.github/workflows/ci.yml` | **CI** — jobs `lint-docs`, `build-windows`, `notify-failure` |
+| `.github/workflows/benchmark.yml` | **Benchmark** — job `benchmark` |
+
+## License
+
+[MIT](LICENSE).

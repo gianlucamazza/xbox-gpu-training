@@ -1,0 +1,62 @@
+name: Research proposal
+description: Hypothesis or experiment for the DirectX 12 / HLSL GPU track.
+title: "[research] "
+labels: ["research"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        FloppyLM CPU path is in xllama — do not propose changes to that repo here.
+        No CUDA. DirectML is inference/forward-focused on console.
+  - type: dropdown
+    id: phase
+    attributes:
+      label: Target phase label
+      options:
+        - phase-0
+        - phase-1
+        - phase-2
+        - phase-3
+        - phase-4
+        - phase-5
+        - phase-6
+        - phase-7
+    validations:
+      required: true
+  - type: dropdown
+    id: topic
+    attributes:
+      label: Topic label
+      options:
+        - kernel
+        - memory
+        - benchmark
+        - adr
+        - research
+    validations:
+      required: true
+  - type: textarea
+    id: hypothesis
+    attributes:
+      label: Hypothesis
+      placeholder: What will we measure? What would falsify it?
+    validations:
+      required: true
+  - type: textarea
+    id: method
+    attributes:
+      label: Method
+      placeholder: DirectX 12 compute shader / fixture / CPU ggml baseline / Dev Mode plan
+    validations:
+      required: true
+  - type: checkboxes
+    id: constraints
+    attributes:
+      label: Constraints
+      options:
+        - label: I will not invent tok/s or quality scores
+          required: true
+        - label: I will not treat DirectML as the trainer
+          required: true
+        - label: I will not modify gianlucamazza/xllama in this work
+          required: true
