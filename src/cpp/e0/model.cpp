@@ -192,6 +192,9 @@ Json Model::optimizer_state() const {
   return {{"tensors", tensors()}, {"moments", moments}};
 }
 Json fixture_report(const Json &f, Kernel &kernel) {
+  kernel.dispatches = kernel.transfer_bytes = kernel.peak_memory_bytes = 0;
+  kernel.gpu_seconds = 0;
+  kernel.observe();
   Model model(f);
   auto result = model.step(kernel, f.at("tokens").get<Values>(),
                            f.at("targets").get<Values>(), f.at("batch"),

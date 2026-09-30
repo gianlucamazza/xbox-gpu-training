@@ -215,6 +215,9 @@ float learning_rate(uint64_t step, uint64_t warmup, float peak,
 } // namespace
 Json run_job(const std::filesystem::path &job_file, Kernel &kernel,
              uint64_t stop_after) {
+  kernel.dispatches = kernel.transfer_bytes = kernel.peak_memory_bytes = 0;
+  kernel.gpu_seconds = 0;
+  kernel.observe();
   const auto root = std::filesystem::absolute(job_file).parent_path();
   Json job = read_json(job_file);
   const std::string id = job.at("job_id");
