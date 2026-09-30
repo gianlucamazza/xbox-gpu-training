@@ -10,3 +10,5 @@ if(MSVC)
 else()
   target_compile_options(xbox_gpu_host PRIVATE -Wall -Wextra -Wpedantic)
 endif()
+
+install(TARGETS xbox_gpu_host RUNTIME DESTINATION bin)

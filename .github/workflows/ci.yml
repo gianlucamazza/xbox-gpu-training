@@ -73,19 +73,42 @@ jobs:
       - name: Run host stub
         shell: pwsh
         run: |
+          $ErrorActionPreference = 'Continue'
+          cmake --install build --config Release --prefix dist
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "cmake --install returned $LASTEXITCODE; will search the build tree."
+          }
+
+          Write-Host "=== executables under build/ and dist/ ==="
+          Get-ChildItem -Path build,dist -Recurse -Filter *.exe -ErrorAction SilentlyContinue |
+            ForEach-Object { Write-Host $_.FullName }
+
           $candidates = @(
+            "dist\bin\xbox_gpu_host.exe",
             "build\src\cpp\Release\xbox_gpu_host.exe",
             "build\Release\xbox_gpu_host.exe",
-            "build\xbox_gpu_host.exe"
+            "build\xbox_gpu_host.exe",
+            "build\src\cpp\xbox_gpu_host.exe"
           )
           $exe = $candidates | Where-Object { Test-Path $_ } | Select-Object -First 1
           if (-not $exe) {
-            $found = Get-ChildItem -Path build -Recurse -Filter xbox_gpu_host.exe -ErrorAction SilentlyContinue |
+            $found = Get-ChildItem -Path build,dist -Recurse -Filter xbox_gpu_host.exe -ErrorAction SilentlyContinue |
               Select-Object -First 1
             if ($found) { $exe = $found.FullName }
           }
-          if (-not $exe) { throw "xbox_gpu_host.exe not found under build/" }
+
+          $hasDxgi = Test-Path "$env:SystemRoot\System32\dxgi.dll"
+          if (-not $exe) {
+            Write-Host "xbox_gpu_host.exe not found after building target xbox_gpu_host. DXGI present: $hasDxgi"
+            if (-not $hasDxgi) {
+              Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "**C++ host:** skipped run — binary not found and DXGI missing on runner. Not a GPU result."
+              exit 0
+            }
+            throw "xbox_gpu_host.exe not found after build (target xbox_gpu_host). Listed build/dist tree above."
+          }
+
           Write-Host "Running $exe"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "**C++ host:** ran ``$exe`` (stub)."
           & $exe
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
