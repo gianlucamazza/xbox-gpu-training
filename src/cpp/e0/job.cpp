@@ -10,6 +10,9 @@
 #include <windows.h>
 
 #include <bcrypt.h>
+#ifdef XGPU_UWP
+#include <fileapifromapp.h>
+#endif
 #else
 #include <openssl/evp.h>
 #endif
@@ -91,8 +94,21 @@ void atomic_json(const std::filesystem::path &path, const Json &value) {
 #ifdef _WIN32
   DWORD error = ERROR_SUCCESS;
   for (unsigned attempt = 0; attempt < 40; ++attempt) {
-    if (MoveFileExW(std::filesystem::path(temporary).c_str(), path.c_str(),
-                    MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH))
+    const DWORD attrs = GetFileAttributesW(path.c_str());
+    bool published = false;
+    if (attrs == INVALID_FILE_ATTRIBUTES && GetLastError() == ERROR_FILE_NOT_FOUND) {
+      published = MoveFileExW(std::filesystem::path(temporary).c_str(), path.c_str(),
+                              MOVEFILE_WRITE_THROUGH);
+    } else {
+#ifdef XGPU_UWP
+      published = ReplaceFileFromAppW(path.c_str(), std::filesystem::path(temporary).c_str(),
+                                      nullptr, 0, nullptr, nullptr);
+#else
+      published = ReplaceFileW(path.c_str(), std::filesystem::path(temporary).c_str(),
+                               nullptr, 0, nullptr, nullptr);
+#endif
+    }
+    if (published)
       return;
     error = GetLastError();
     // Device Portal can briefly hold a reader without FILE_SHARE_DELETE.

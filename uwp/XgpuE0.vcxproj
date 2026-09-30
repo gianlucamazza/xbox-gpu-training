@@ -28,7 +28,7 @@
       <Optimization>MaxSpeed</Optimization><RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
-    <Link><AdditionalDependencies>WindowsApp.lib;d3d12.lib;dxgi.lib;bcrypt.lib;%(AdditionalDependencies)</AdditionalDependencies></Link>
+    <Link><AdditionalDependencies>WindowsApp.lib;d3d12.lib;dxgi.lib;bcrypt.lib;OneCore.lib;%(AdditionalDependencies)</AdditionalDependencies></Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <Midl Include="app.idl" /><AppxManifest Include="AppxManifest.xml" />
