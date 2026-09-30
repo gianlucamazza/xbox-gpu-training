@@ -74,11 +74,17 @@ jobs:
         shell: pwsh
         run: |
           $candidates = @(
+            "build\src\cpp\Release\xbox_gpu_host.exe",
             "build\Release\xbox_gpu_host.exe",
             "build\xbox_gpu_host.exe"
           )
           $exe = $candidates | Where-Object { Test-Path $_ } | Select-Object -First 1
-          if (-not $exe) { throw "xbox_gpu_host.exe not found after build" }
+          if (-not $exe) {
+            $found = Get-ChildItem -Path build -Recurse -Filter xbox_gpu_host.exe -ErrorAction SilentlyContinue |
+              Select-Object -First 1
+            if ($found) { $exe = $found.FullName }
+          }
+          if (-not $exe) { throw "xbox_gpu_host.exe not found under build/" }
           Write-Host "Running $exe"
           & $exe
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
