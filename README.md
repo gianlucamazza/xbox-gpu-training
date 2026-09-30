@@ -48,7 +48,7 @@ Playbook Cursor: [docs/execution-plan.md](docs/execution-plan.md). Tabella compl
 
 ### Stato attuale
 
-Fase 2: RMSNorm / RoPE / decode FLP2 scalare + tiny forward (`xbox_gpu_host --forward-fixture`). Contratto e tolleranza: [docs/flp2-forward.md](docs/flp2-forward.md). Fixture: [benchmarks/fixtures/tiny_flp2.json](benchmarks/fixtures/tiny_flp2.json). Su Windows, dispatch DX12 quando c’è un device; altrimenti `BLOCKED: no D3D12 device` con test CPU verdi. Setup: [docs/setup.md](docs/setup.md). **Nessun tok/s inventato.** Nessun numero console. xllama **non** modificato. Il smoke `benchmarks/run_smoke.py` resta stub.
+Fase 3: FakeQuant ternario (absmean) + STE + un passo AdamW sui pesi master fp32 (`xbox_gpu_host --grad-check`, `--train-step 1`). Contratto: [docs/adr/0002-ste-qat-mapping.md](docs/adr/0002-ste-qat-mapping.md), [docs/ste-adamw.md](docs/ste-adamw.md). Fase 2 resta verde (`--forward-fixture`). Su Windows, dispatch DX12 quando c’è un device; altrimenti `BLOCKED: no D3D12 device` con test CPU verdi. Setup: [docs/setup.md](docs/setup.md). **Nessun tok/s inventato.** Nessuna curva di loss di qualità. Nessun numero console. xllama **non** modificato. Il smoke `benchmarks/run_smoke.py` resta stub.
 
 ### Come contribuire
 
@@ -89,7 +89,7 @@ Cursor playbook: [docs/execution-plan.md](docs/execution-plan.md). Full table: [
 
 ### Current status
 
-Fase 2: RMSNorm / RoPE / scalar FLP2 decode + tiny forward (`xbox_gpu_host --forward-fixture`). Contract and tolerance: [docs/flp2-forward.md](docs/flp2-forward.md). Fixture: [benchmarks/fixtures/tiny_flp2.json](benchmarks/fixtures/tiny_flp2.json). On Windows, DX12 dispatch when a device exists; otherwise `BLOCKED: no D3D12 device` with CPU tests green. Setup: [docs/setup.md](docs/setup.md). **No invented tok/s.** No console numbers. xllama **not** modified. `benchmarks/run_smoke.py` remains a stub.
+Fase 3: ternary FakeQuant (absmean) + STE + one AdamW step on master fp32 (`xbox_gpu_host --grad-check`, `--train-step 1`). Contract: [docs/adr/0002-ste-qat-mapping.md](docs/adr/0002-ste-qat-mapping.md), [docs/ste-adamw.md](docs/ste-adamw.md). Fase 2 stays green (`--forward-fixture`). On Windows, DX12 dispatch when a device exists; otherwise `BLOCKED: no D3D12 device` with CPU tests green. Setup: [docs/setup.md](docs/setup.md). **No invented tok/s.** No quality loss curves. No console numbers. xllama **not** modified. `benchmarks/run_smoke.py` remains a stub.
 
 ### How to contribute
 
@@ -101,12 +101,13 @@ Fase 2: RMSNorm / RoPE / scalar FLP2 decode + tiny forward (`xbox_gpu_host --for
 
 | Path | Role |
 | --- | --- |
-| `src/hlsl/` | HLSL compute shaders (`hello_compute` Fase 0; `matmul` Fase 1; RMSNorm / RoPE / FLP2 Fase 2) |
-| `src/cpp/` | C++ host (`xbox_gpu_host`) — DX12 hello + matmul + `--forward-fixture` |
+| `src/hlsl/` | HLSL compute shaders (`hello_compute` Fase 0; `matmul` Fase 1; RMSNorm / RoPE / FLP2 Fase 2; FakeQuant / grad / STE Fase 3) |
+| `src/cpp/` | C++ host (`xbox_gpu_host`) — DX12 hello + matmul + `--forward-fixture` + `--grad-check` / `--train-step` |
 | `docs/setup.md` | Toolchain + run notes |
 | `docs/ggml-baseline.md` | How the CPU GEMM compares; ggml is not vendored |
 | `docs/flp2-forward.md` | Fase 2 decode contract, tolerances, envelope non-goals |
-| `docs/`, `docs/adr/` | Architecture + ADRs |
+| `docs/ste-adamw.md` | Fase 3 FakeQuant / STE / AdamW contract + grad-check tolerances |
+| `docs/`, `docs/adr/` | Architecture + ADRs (`0001`, `0002`) |
 | `docs/platform/` | Public Xbox / Dev Mode / GDK / UWP fact packs |
 | `docs/execution-plan.md` | Cursor phase playbook |
 | `benchmarks/` | Smoke stub + Fase 1 CSV + Fase 2 `fixtures/tiny_flp2.json` |

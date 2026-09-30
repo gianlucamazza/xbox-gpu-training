@@ -44,8 +44,12 @@ No tok/s or quality numbers until Fase 6 measures them on Dev Mode hardware (or 
 
 ## Phase 3 — backward + AdamW on GPU with straight-through estimator
 
-- Backward kernels, AdamW, STE for quantized weights.
-- Acceptance: gradient check on a tiny net; one train step runs.
+- [x] STE / FakeQuant mapping written: [docs/adr/0002-ste-qat-mapping.md](docs/adr/0002-ste-qat-mapping.md). Master fp32; ternary absmean FakeQuant; STE `∂Q/∂W ≈ 1` with `|W/s| ≤ 1` clip. Contract: [docs/ste-adamw.md](docs/ste-adamw.md).
+- [x] HLSL grad path: [`fakequant_ternary.hlsl`](src/hlsl/fakequant_ternary.hlsl), [`matmul_grad.hlsl`](src/hlsl/matmul_grad.hlsl), [`relu2_grad.hlsl`](src/hlsl/relu2_grad.hlsl), [`ste_backward.hlsl`](src/hlsl/ste_backward.hlsl).
+- [x] Host AdamW on master fp32 (`lr=1e-3`, `β1=0.9`, `β2=0.999`, `ε=1e-8`, `wd=0.01`). DirectML is not the optimizer.
+- [x] `--grad-check` tiny relu2 net: STE-identity analytic vs central finite-diff. Chosen TBD: max-abs `1e-3`; max-rel `2e-2` when `|analytic| ≥ 1e-2` (smaller grads are abs-gated).
+- [x] `--train-step 1` runs without crash (measured loss before/after only; not a quality curve).
+- Status: **Fase 3 implementation**. Execution: [docs/execution-plan.md](docs/execution-plan.md#fase-3--backward--adamw--ste). GPU dispatch is **BLOCKED** on hosts without D3D12 (CPU grad-check / one step stay green). Label: `kernel`, `research`, `adr`, `phase-3`.
 
 ## Phase 4 — memory streaming, double buffering, ~1 GB UWP App RAM discipline
 

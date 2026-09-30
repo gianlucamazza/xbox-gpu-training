@@ -37,7 +37,7 @@ The on-disk **FLP2 envelope** (`"FLP2"` magic, canonical header JSON, shared sec
 
 Fase 2 fixtures carry **already-unpacked symbols + row16 scales**. A `research` issue tracks envelope byte-parity until xllama publishes a stable on-`main` contract.
 
-Also not in this phase: GELU / SwiGLU / QK-norm / `row8log` / `tensor16` / AdamW / STE / QAT (Fase 3–5).
+Also not in this phase: GELU / SwiGLU / QK-norm / `row8log` / `tensor16`. AdamW / STE / ternary FakeQuant are Fase 3 ([ste-adamw.md](ste-adamw.md), [adr/0002-ste-qat-mapping.md](adr/0002-ste-qat-mapping.md)). Full QAT + WSD is Fase 5.
 
 ## Commands
 

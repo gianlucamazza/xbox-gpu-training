@@ -19,6 +19,8 @@ REQUIRED = [
     "docs/setup.md",
     "docs/ggml-baseline.md",
     "docs/flp2-forward.md",
+    "docs/ste-adamw.md",
+    "docs/adr/0002-ste-qat-mapping.md",
     "docs/platform/dev-mode.md",
     "docs/platform/uwp-resources.md",
     "docs/platform/dx12-hlsl-compute.md",

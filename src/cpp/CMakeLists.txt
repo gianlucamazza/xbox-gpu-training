@@ -3,9 +3,11 @@ add_library(xgpu_dx12 STATIC
   hello_dispatch.cpp
   cpu_matmul.cpp
   cpu_flp2.cpp
+  cpu_ste.cpp
   fixture_loader.cpp
   matmul_dispatch.cpp
   flp2_dispatch.cpp
+  ste_dispatch.cpp
 )
 
 target_include_directories(xgpu_dx12 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
@@ -45,7 +47,19 @@ add_custom_command(TARGET xbox_gpu_host POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_if_different
     "${CMAKE_SOURCE_DIR}/src/hlsl/flp2_forward.hlsl"
     "$<TARGET_FILE_DIR:xbox_gpu_host>/flp2_forward.hlsl"
-  COMMENT "Copy Fase 0–2 HLSL next to xbox_gpu_host"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${CMAKE_SOURCE_DIR}/src/hlsl/fakequant_ternary.hlsl"
+    "$<TARGET_FILE_DIR:xbox_gpu_host>/fakequant_ternary.hlsl"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${CMAKE_SOURCE_DIR}/src/hlsl/matmul_grad.hlsl"
+    "$<TARGET_FILE_DIR:xbox_gpu_host>/matmul_grad.hlsl"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${CMAKE_SOURCE_DIR}/src/hlsl/relu2_grad.hlsl"
+    "$<TARGET_FILE_DIR:xbox_gpu_host>/relu2_grad.hlsl"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${CMAKE_SOURCE_DIR}/src/hlsl/ste_backward.hlsl"
+    "$<TARGET_FILE_DIR:xbox_gpu_host>/ste_backward.hlsl"
+  COMMENT "Copy Fase 0–3 HLSL next to xbox_gpu_host"
 )
 
 install(TARGETS xbox_gpu_host RUNTIME DESTINATION bin)

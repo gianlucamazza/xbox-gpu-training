@@ -161,7 +161,7 @@ dxc -T cs_6_0 -E CSMain -Fo build\matmul.cso src\hlsl\matmul.hlsl
 
 **Do NOT:** Publish quality metrics; call DirectML the optimizer.
 
-**Checkpoint:** Paste grad-check table. Stop if STE/QAT mapping is unspecified — ADR first.
+**Checkpoint:** Paste grad-check table. STE/QAT mapping: [docs/adr/0002-ste-qat-mapping.md](adr/0002-ste-qat-mapping.md). Stop if that mapping is unspecified — ADR first.
 
 ---
 

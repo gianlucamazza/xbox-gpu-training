@@ -15,6 +15,7 @@ Platform facts (Microsoft/Xbox public documentation, not our benches) live under
 | Report `BLOCKED: …` honestly | Invent tok/s, PIX captures, or console numbers |
 | Fase 1: real matmul HLSL + CPU baseline + CSV | Treat DirectML as the matmul trainer; vendor ggml unless documented |
 | Fase 2: RMSNorm / RoPE / FLP2 decode + tiny fixture | Unpack a guessed binary FLP2 envelope; modify xllama |
+| Fase 3: STE + host AdamW + `--grad-check` / `--train-step 1` | Invent loss curves / tok/s; treat DirectML as the optimizer |
 
 Fase 0–5 Windows work is **not** gated on a Dev Mode console. Console validation is Fase 6: [blockers-fase6-validation.md](platform/blockers-fase6-validation.md).
 
@@ -175,6 +176,34 @@ Linux / no D3D12:
 ```
 
 Tolerance (chosen TBD): max-abs `1e-5` / max-rel `1e-4`. Binary FLP2 envelope is **not** unpacked.
+
+## STE + AdamW (Fase 3)
+
+| Piece | Path |
+| --- | --- |
+| Mapping | [`docs/adr/0002-ste-qat-mapping.md`](adr/0002-ste-qat-mapping.md) |
+| Contract | [`docs/ste-adamw.md`](ste-adamw.md) |
+| Shaders | [`src/hlsl/fakequant_ternary.hlsl`](../src/hlsl/fakequant_ternary.hlsl), [`matmul_grad.hlsl`](../src/hlsl/matmul_grad.hlsl), [`relu2_grad.hlsl`](../src/hlsl/relu2_grad.hlsl), [`ste_backward.hlsl`](../src/hlsl/ste_backward.hlsl) |
+| Host | `xbox_gpu_host --grad-check` / `--train-step 1` (AdamW on master fp32) |
+
+```bat
+dxc -T cs_6_0 -E CSMain -Fo build\fakequant_ternary.cso src\hlsl\fakequant_ternary.hlsl
+dxc -T cs_6_0 -E CSMain -Fo build\matmul_grad.cso       src\hlsl\matmul_grad.hlsl
+dxc -T cs_6_0 -E CSMain -Fo build\relu2_grad.cso        src\hlsl\relu2_grad.hlsl
+dxc -T cs_6_0 -E CSMain -Fo build\ste_backward.cso      src\hlsl\ste_backward.hlsl
+.\build\Release\xbox_gpu_host.exe --grad-check
+.\build\Release\xbox_gpu_host.exe --train-step 1
+```
+
+Linux / no D3D12:
+
+```bash
+./build/xbox_gpu_host --grad-check
+./build/xbox_gpu_host --train-step 1
+# CPU table / one step, then BLOCKED: no D3D12 device. Dispatch log not invented.
+```
+
+Grad-check tolerance (chosen TBD): STE-identity max-abs `1e-3`; max-rel `2e-2` when `|analytic| ≥ 1e-2` (smaller grads are abs-gated). One measured train-step loss pair is **not** a quality curve.
 
 ## Docs lint
 
