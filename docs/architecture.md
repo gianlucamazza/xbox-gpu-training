@@ -18,7 +18,7 @@ Retail Xbox Series S|X in **Dev Mode** expose a capable RDNA 2 GPU, but:
 2. **fp32 master weights** stay in system RAM.
 3. **Chunk streaming** plus **double buffering** move working tiles to the GPU.
 4. **Quantized** forward/backward (QAT ternary / 2-bit / 4-bit) with a **straight-through estimator (STE)** and **AdamW**, later a **WSD** schedule with isolated cooldowns.
-5. **CPU ggml** remains the numerical and timing baseline until console numbers exist. Fase 1 uses a portable GEMM with the same `C = A @ B` contract; ggml is not vendored yet ([ggml-baseline.md](ggml-baseline.md)). Fase 2 reconstructs scalar FLP2 decode + RMSNorm + RoPE + a tiny forward ([flp2-forward.md](flp2-forward.md)); it does not unpack a binary FLP2 envelope. Fase 3 FakeQuant + STE + host AdamW: [ste-adamw.md](ste-adamw.md), [adr/0002-ste-qat-mapping.md](adr/0002-ste-qat-mapping.md).
+5. **CPU ggml** remains the numerical and timing baseline until console numbers exist. Fase 1 uses a portable GEMM with the same `C = A @ B` contract; ggml is not vendored yet ([ggml-baseline.md](ggml-baseline.md)). Fase 2 reconstructs scalar FLP2 decode + RMSNorm + RoPE + a tiny forward ([flp2-forward.md](flp2-forward.md)); it does not unpack a binary FLP2 envelope. Fase 3 FakeQuant + STE + host AdamW: [ste-adamw.md](ste-adamw.md), [adr/0002-ste-qat-mapping.md](adr/0002-ste-qat-mapping.md). Fase 4 streams a logical corpus through a 2-slot double buffer under the App ~1 GB planning budget ([memory-budget.md](memory-budget.md)); Game ~5 GB is documented only. Console AppContainer is unvalidated on desktop RAM.
 
 ```
   system RAM (fp32 master weights + AdamW moments)
@@ -28,7 +28,7 @@ Retail Xbox Series S|X in **Dev Mode** expose a capable RDNA 2 GPU, but:
        + FakeQuant / matmul_grad / relu2_grad / STE mask)
            |
            v
-    host (STE policy, AdamW on master — Fase 3; QAT / WSD — Fase 5)
+    host (STE policy, AdamW on master — Fase 3; stream + budget — Fase 4; QAT / WSD — Fase 5)
 ```
 
 ## Companion

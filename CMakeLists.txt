@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.20)
 project(xbox_gpu_training LANGUAGES CXX)
 
-# Fase 3 host: DirectX 12 hello compute + matmul + FLP2 forward + STE/AdamW on Windows.
+# Fase 4 host: DirectX 12 hello + matmul + FLP2 + STE/AdamW + memory stream stress.
 # Compiles as a no-GPU smoke check on non-Windows (reports BLOCKED: no D3D12 device).
-# CPU tests (--cpu-ref / --bench matmul / --forward-fixture / --grad-check / --train-step)
-# stay green without a GPU.
+# CPU tests (--cpu-ref / --bench matmul / --forward-fixture / --grad-check /
+# --train-step / --stream-stress) stay green without a GPU.
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

@@ -11,6 +11,7 @@ Honest measurement only. This folder does **not** contain measured Xbox GPU tok/
 | `python3 benchmarks/run_matmul.py` | same CSV | Finds the host and runs `--bench matmul`; writes `status=blocked` if the host is missing. |
 | `xbox_gpu_host --forward-fixture fixtures/tiny_flp2.json` | stdout | Fase 2 CPU fixture match; GPU dispatch only on D3D12. |
 | `python3 benchmarks/gen_tiny_flp2.py` | `fixtures/tiny_flp2.json` | Regenerates the tiny fixture (not a tok/s result). |
+| `xbox_gpu_host --stream-stress --budget-mb 1024` | stdout | Fase 4 chunk stream + double buffer. Peak working-set vs App ~1 GB planning. Console AppContainer unvalidated. |
 
 Never invent tok/s, latency-as-quality, or console scores. `gpu_dispatch_ms` is a **measured host wall** (upload + dispatch + readback) only when a D3D12 device actually ran. Empty / omitted GPU time means the GPU path did not run.
 

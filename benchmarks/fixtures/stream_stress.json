@@ -1,0 +1,12 @@
+{
+  "schema": "xbox-gpu-training.fixture.stream.v1",
+  "name": "stream_stress_app_1gb",
+  "note": "Fase 4 stress fixture. Logical 2 GiB corpus streamed through a 16 MiB host double buffer. The full master is never allocated. App planning budget is 1024 MiB. Game designation 5120 MiB is documented only — do not assume Game in an App package. Console AppContainer is unvalidated on desktop RAM. Debugger can mask OOM; the non-debug package is the gate. Not a tok/s result. Not a Series S|X number.",
+  "designation": "App",
+  "planning_budget_mb": 1024,
+  "game_designation_budget_mb": 5120,
+  "logical_bytes": 2147483648,
+  "chunk_bytes": 16777216,
+  "passes": 1,
+  "console_budget": "unvalidated"
+}

@@ -44,3 +44,4 @@ App Mode is **not** full title GPU. See [dx12-hlsl-compute.md](dx12-hlsl-compute
 
 - [dev-mode.md](dev-mode.md) — Dev Mode purpose and limits
 - [blockers-fase6-validation.md](blockers-fase6-validation.md) — Fase 6 memory blocker
+- [docs/memory-budget.md](../memory-budget.md) — Fase 4 streaming contract (App ~1 GB plan; Game ~5 GB documented only)

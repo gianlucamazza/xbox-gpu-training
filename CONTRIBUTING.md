@@ -54,6 +54,7 @@ cmake -S . -B build && cmake --build build
 ./build/xbox_gpu_host --forward-fixture benchmarks/fixtures/tiny_flp2.json
 ./build/xbox_gpu_host --grad-check
 ./build/xbox_gpu_host --train-step 1
+./build/xbox_gpu_host --stream-stress --budget-mb 1024
 ```
 
 On Windows with the Windows SDK, compile HLSL with `dxc` and run the host (see [docs/setup.md](docs/setup.md) and `src/hlsl/README.md`). CMake must auto-detect the Visual Studio generator (`cmake -S . -B build -A x64`); do not pin `-G "Visual Studio 17 2022"`.

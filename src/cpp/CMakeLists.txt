@@ -8,12 +8,14 @@ add_library(xgpu_dx12 STATIC
   matmul_dispatch.cpp
   flp2_dispatch.cpp
   ste_dispatch.cpp
+  stream_buffer.cpp
+  stream_stress.cpp
 )
 
 target_include_directories(xgpu_dx12 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 if(WIN32)
-  target_link_libraries(xgpu_dx12 PUBLIC d3d12 dxgi)
+  target_link_libraries(xgpu_dx12 PUBLIC d3d12 dxgi psapi)
 endif()
 
 if(MSVC)
@@ -59,7 +61,10 @@ add_custom_command(TARGET xbox_gpu_host POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_if_different
     "${CMAKE_SOURCE_DIR}/src/hlsl/ste_backward.hlsl"
     "$<TARGET_FILE_DIR:xbox_gpu_host>/ste_backward.hlsl"
-  COMMENT "Copy Fase 0–3 HLSL next to xbox_gpu_host"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${CMAKE_SOURCE_DIR}/benchmarks/fixtures/stream_stress.json"
+    "$<TARGET_FILE_DIR:xbox_gpu_host>/stream_stress.json"
+  COMMENT "Copy Fase 0–3 HLSL and the Fase 4 stream fixture next to xbox_gpu_host"
 )
 
 install(TARGETS xbox_gpu_host RUNTIME DESTINATION bin)
