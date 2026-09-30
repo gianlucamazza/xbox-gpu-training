@@ -71,9 +71,11 @@ No tok/s or quality numbers until Fase 6 measures them on Dev Mode hardware (or 
 
 ## Phase 6 — Series S|X Dev Mode validation; speed/quality vs CPU-only
 
-- Deploy package, run benches, PIX notes. Fill a results table from hardware **or** write `BLOCKED: no console` with reason.
-- Stop for a human if no Dev Mode kit.
-- Known blockers (UWP memory, no DirectML-as-trainer SoT, public GDK Windows-only, Dev Mode ≠ GDKX): [docs/platform/blockers-fase6-validation.md](docs/platform/blockers-fase6-validation.md). Public SKU specs only: [docs/platform/series-s-vs-x.md](docs/platform/series-s-vs-x.md).
+- [x] Deploy notes + PIX checklist scaffolding: [docs/console.md](docs/console.md) (pointer in [docs/setup.md](docs/setup.md)). Win32 host is **not** a UWP package; no AppX was deployed.
+- [x] Results table present with explicit **`BLOCKED: no console`** (empty metric cells). Reason: **no Dev Mode kit** in this lane; **GDKX / ID@Xbox not claimed**. No invented tok/s or Series benches.
+- [ ] Real Series S|X Dev Mode benches — **UNVALIDATED**. No kit; table not filled from hardware. Console validation is **not** complete.
+- [ ] CPU-only vs console comparison — not filled (both sides not measured on the same kit).
+- Status: **`BLOCKED: no console`**. Honest checkpoint (stop for a human with a kit). Known blockers stay accurate: [docs/platform/blockers-fase6-validation.md](docs/platform/blockers-fase6-validation.md) (UWP memory + debugger mask; no DirectML-as-trainer SoT; public GDK Windows-only; Dev Mode ≠ GDKX). Public SKU specs only: [docs/platform/series-s-vs-x.md](docs/platform/series-s-vs-x.md). Execution: [docs/execution-plan.md](docs/execution-plan.md#fase-6--series-sx-dev-mode-validation). Label: `phase-6`, `benchmark`.
 
 ## Phase 7 — publish results (paper/blog), public BitNet/peer comparison
 

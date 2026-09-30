@@ -48,7 +48,7 @@ Playbook Cursor: [docs/execution-plan.md](docs/execution-plan.md). Tabella compl
 
 ### Stato attuale
 
-Fase 5: QAT + WSD + cooldown isolati sul host (`xbox_gpu_host --qat-smoke --steps 16`, N=16). Contratto: [docs/qat-wsd.md](docs/qat-wsd.md). Config: [examples/qat-wsd-smoke.json](examples/qat-wsd-smoke.json). FakeQuant di default **ternario** (ADR 0002); 2/4-bit solo host. **Nessun kernel HLSL nuovo.** Fase 4 resta verde (`--stream-stress --budget-mb 1024`). Senza D3D12: `BLOCKED: no D3D12 device`. Setup: [docs/setup.md](docs/setup.md). **Nessun tok/s o curva di qualità inventata.** xllama **non** modificato. Il smoke `benchmarks/run_smoke.py` resta stub.
+Fase 6: **`BLOCKED: no console`** — nessun kit Dev Mode in questa lane; GDKX / ID@Xbox non rivendicati. Pagina: [docs/console.md](docs/console.md) (deploy / PIX / tabella vuota). I quattro blocker restano veri: [docs/platform/blockers-fase6-validation.md](docs/platform/blockers-fase6-validation.md). Fase 5 resta il massimo host (`--qat-smoke --steps 16`). Setup: [docs/setup.md](docs/setup.md). **Nessun tok/s o banco Series S|X inventato.** xllama **non** modificato. Il smoke `benchmarks/run_smoke.py` resta stub.
 
 ### Come contribuire
 
@@ -89,7 +89,7 @@ Cursor playbook: [docs/execution-plan.md](docs/execution-plan.md). Full table: [
 
 ### Current status
 
-Fase 5: QAT + WSD + isolated cooldowns on the host (`xbox_gpu_host --qat-smoke --steps 16`, N=16). Contract: [docs/qat-wsd.md](docs/qat-wsd.md). Config: [examples/qat-wsd-smoke.json](examples/qat-wsd-smoke.json). Default FakeQuant is **ternary** (ADR 0002); 2/4-bit are host-only. **No new HLSL kernels.** Fase 4 stays green (`--stream-stress --budget-mb 1024`). Without D3D12: `BLOCKED: no D3D12 device`. Setup: [docs/setup.md](docs/setup.md). **No invented tok/s or quality curves.** xllama **not** modified. `benchmarks/run_smoke.py` remains a stub.
+Fase 6: **`BLOCKED: no console`** — no Dev Mode kit in this lane; GDKX / ID@Xbox not claimed. Page: [docs/console.md](docs/console.md) (deploy / PIX / empty table). The four blockers stay accurate: [docs/platform/blockers-fase6-validation.md](docs/platform/blockers-fase6-validation.md). Fase 5 remains the host ceiling (`--qat-smoke --steps 16`). Setup: [docs/setup.md](docs/setup.md). **No invented tok/s or Series S|X benches.** xllama **not** modified. `benchmarks/run_smoke.py` remains a stub.
 
 ### How to contribute
 
@@ -109,6 +109,7 @@ Fase 5: QAT + WSD + isolated cooldowns on the host (`xbox_gpu_host --qat-smoke -
 | `docs/ste-adamw.md` | Fase 3 FakeQuant / STE / AdamW contract + grad-check tolerances |
 | `docs/memory-budget.md` | Fase 4 App ~1 GB / Game ~5 GB streaming contract |
 | `docs/qat-wsd.md` | Fase 5 QAT bit-widths + WSD + isolated cooldowns (N=16) |
+| `docs/console.md` | Fase 6 Dev Mode deploy / PIX / `BLOCKED: no console` table |
 | `docs/`, `docs/adr/` | Architecture + ADRs (`0001`, `0002`) |
 | `docs/platform/` | Public Xbox / Dev Mode / GDK / UWP fact packs |
 | `docs/execution-plan.md` | Cursor phase playbook |

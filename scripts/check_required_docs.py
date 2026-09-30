@@ -23,6 +23,7 @@ REQUIRED = [
     "docs/adr/0002-ste-qat-mapping.md",
     "docs/memory-budget.md",
     "docs/qat-wsd.md",
+    "docs/console.md",
     "docs/platform/dev-mode.md",
     "docs/platform/uwp-resources.md",
     "docs/platform/dx12-hlsl-compute.md",
