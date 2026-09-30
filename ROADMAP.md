@@ -6,7 +6,7 @@ Milestones (Italian titles, already on GitHub): [Fase 0–7](https://github.com/
 
 Phase labels (English kebab-case): `phase-0` … `phase-7`. Topic labels: `research`, `kernel`, `memory`, `benchmark`, `adr`.
 
-No tok/s or quality numbers until Fase 6 measures them on Dev Mode hardware (or the phase reports `BLOCKED: no console`).
+No tok/s or quality numbers until Fase 6 measures them on Dev Mode hardware (or the phase reports `BLOCKED: no console`). Fase 0–5 Windows / public-GDK work is **not** gated by Fase 6. Explicit console blockers: [docs/platform/blockers-fase6-validation.md](docs/platform/blockers-fase6-validation.md).
 
 | Phase | Milestone | Branch pattern | Gate |
 | --- | --- | --- | --- |
@@ -43,6 +43,7 @@ No tok/s or quality numbers until Fase 6 measures them on Dev Mode hardware (or 
 ## Phase 4 — memory streaming, double buffering, ~1 GB UWP App RAM discipline
 
 - Also document Game designation ~5 GB. AppContainer + VRAM budgets.
+- Public SoT: [docs/platform/uwp-resources.md](docs/platform/uwp-resources.md) (debugger can mask OOM; non-debug is the gate).
 - Label: `memory`, `phase-4`.
 
 ## Phase 5 — full QAT ternary/2/4-bit on GPU with WSD + isolated cooldowns
@@ -53,6 +54,7 @@ No tok/s or quality numbers until Fase 6 measures them on Dev Mode hardware (or 
 
 - Deploy package, run benches, PIX notes. Fill a results table from hardware **or** write `BLOCKED: no console` with reason.
 - Stop for a human if no Dev Mode kit.
+- Known blockers (UWP memory, no DirectML-as-trainer SoT, public GDK Windows-only, Dev Mode ≠ GDKX): [docs/platform/blockers-fase6-validation.md](docs/platform/blockers-fase6-validation.md). Public SKU specs only: [docs/platform/series-s-vs-x.md](docs/platform/series-s-vs-x.md).
 
 ## Phase 7 — publish results (paper/blog), public BitNet/peer comparison
 
