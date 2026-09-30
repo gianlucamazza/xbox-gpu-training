@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10" xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10" IgnorableNamespaces="uap">
+<Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10" xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10" xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest" IgnorableNamespaces="uap mp">
   <Identity Name="GianlucaMazza.XgpuE0" Publisher="CN=uwp-crossbuild-dev" Version="0.1.0.0" ProcessorArchitecture="x64" />
+  <mp:PhoneIdentity PhoneProductId="a9102b27-0e20-4ba0-85f1-912b386a2ea4" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
   <Properties><DisplayName>FloppyLM E0 GPU trainer</DisplayName><PublisherDisplayName>Gianluca Mazza</PublisherDisplayName><Logo>Assets\StoreLogo.png</Logo></Properties>
   <Dependencies>
     <TargetDeviceFamily Name="Windows.Xbox" MinVersion="10.0.19041.0" MaxVersionTested="10.0.26100.0" />
