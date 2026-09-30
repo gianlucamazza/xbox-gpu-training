@@ -102,6 +102,10 @@ public:
     static_assert(sizeof(Command) == 44, "HLSL constant layout");
     if (!p.count)
       throw std::runtime_error("empty E0 dispatch");
+    const uint64_t elements = p.op == Op::Softmax ? p.rows : p.count;
+    const uint64_t groups = (elements + 63) / 64;
+    if (!groups || groups > 65535)
+      throw std::runtime_error("E0 tensor exceeds one dispatch dimension");
     std::array<const Values *, 5> inputs{&x, &w, &z, &y, &dy};
     std::array<ComPtr<ID3D12Resource>, 5> uploads;
     for (size_t i = 0; i < 5; ++i) {
@@ -133,11 +137,8 @@ public:
           i + 1, uploads[i]->GetGPUVirtualAddress());
     ctx_.list->SetComputeRootUnorderedAccessView(
         6, output->GetGPUVirtualAddress());
-    const UINT groups = ((p.op == Op::Softmax ? p.rows : p.count) + 63) / 64;
-    if (groups > 65535)
-      throw std::runtime_error("E0 tensor exceeds one dispatch dimension");
     ctx_.list->EndQuery(timestamps_.Get(), D3D12_QUERY_TYPE_TIMESTAMP, 0);
-    ctx_.list->Dispatch(groups, 1, 1);
+    ctx_.list->Dispatch(UINT(groups), 1, 1);
     ctx_.list->EndQuery(timestamps_.Get(), D3D12_QUERY_TYPE_TIMESTAMP, 1);
     ctx_.list->ResolveQueryData(timestamps_.Get(), D3D12_QUERY_TYPE_TIMESTAMP,
                                 0, 2, timing.Get(), 0);

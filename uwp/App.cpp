@@ -4,6 +4,7 @@
 #include "pch.h"
 #include <atomic>
 #include <chrono>
+#include <condition_variable>
 #include <filesystem>
 #include <fstream>
 #include <mutex>
@@ -15,6 +16,7 @@
 namespace {
 std::filesystem::path inbox;
 std::mutex active_mutex;
+std::condition_variable active_changed;
 std::filesystem::path active_job;
 void worker() {
   winrt::init_apartment();
@@ -60,6 +62,9 @@ void worker() {
         }
         try {
           const auto content = e0::read_json(job);
+          if (content.contains("job_id") &&
+              content.at("job_id").get<std::string>() != winrt::to_string(stem))
+            throw std::runtime_error("job_id must match job file name");
           if (content.value("schema", "") == "floppylm.e0.fixture.v1")
             e0::atomic_json(inbox / (stem + L".actual.json"),
                             e0::fixture_report(content, *kernel));
@@ -88,6 +93,7 @@ void worker() {
           std::lock_guard<std::mutex> lock(active_mutex);
           active_job.clear();
         }
+        active_changed.notify_all();
       }
       std::this_thread::sleep_for(std::chrono::seconds(1));
     }
@@ -106,13 +112,23 @@ void worker() {
 } // namespace
 namespace winrt::Xgpu::implementation {
 App::App() {
-  Suspending([](auto const &, auto const &) {
-    std::lock_guard<std::mutex> lock(active_mutex);
-    if (!active_job.empty()) {
-      std::ofstream file(active_job.parent_path() /
-                         (active_job.stem().stem().wstring() + L".cancel"));
-      file << "suspend";
+  Suspending([](auto const &, auto const &args) {
+    auto deferral = args.SuspendingOperation().GetDeferral();
+    {
+      std::lock_guard<std::mutex> lock(active_mutex);
+      if (!active_job.empty()) {
+        std::ofstream file(active_job.parent_path() /
+                           (active_job.stem().stem().wstring() + L".cancel"));
+        file << "suspend";
+      }
     }
+    std::thread([deferral]() mutable {
+      std::unique_lock<std::mutex> lock(active_mutex);
+      active_changed.wait_for(lock, std::chrono::seconds(4),
+                              [] { return active_job.empty(); });
+      lock.unlock();
+      deferral.Complete();
+    }).detach();
   });
 }
 void App::OnLaunched(
