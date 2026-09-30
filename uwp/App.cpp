@@ -63,6 +63,9 @@ void worker() {
           if (content.value("schema", "") == "floppylm.e0.fixture.v1")
             e0::atomic_json(inbox / (stem + L".actual.json"),
                             e0::fixture_report(content, *kernel));
+          else if (content.value("schema", "") == "floppylm.e0.optimizer.v1")
+            e0::atomic_json(inbox / (stem + L".actual.json"),
+                            e0::optimizer_fixture_report(content));
           else
             e0::run_job(job, *kernel, content.value("stop_after", uint64_t(0)));
         } catch (const std::exception &error) {
