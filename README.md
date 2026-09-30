@@ -48,7 +48,7 @@ Playbook Cursor: [docs/execution-plan.md](docs/execution-plan.md). Tabella compl
 
 ### Stato attuale
 
-Repo **appena fondato**. Scaffold, CI e documentazione in corso. **Nessun risultato misurato** di training su GPU. Nessun tok/s, nessuna qualità inventata. Gli stub in `src/`, `benchmarks/` e `examples/` compilano o escono con `not implemented` / `status: stub`.
+Fase 0: host DirectX 12 e hello compute su Windows, oppure `BLOCKED: no D3D12 device` se il device manca. Setup: [docs/setup.md](docs/setup.md). **Nessun risultato misurato** di training su GPU. Nessun tok/s, nessuna qualità inventata. `matmul.hlsl` e il bench smoke restano stub.
 
 ### Come contribuire
 
@@ -89,7 +89,7 @@ Cursor playbook: [docs/execution-plan.md](docs/execution-plan.md). Full table: [
 
 ### Current status
 
-Repository **just founded**. Scaffold, CI, and docs in progress. **No measured GPU training results.** No invented tok/s or quality numbers. Stubs under `src/`, `benchmarks/`, and `examples/` compile or exit with `not implemented` / `status: stub`.
+Fase 0: DirectX 12 host + hello compute on Windows, or `BLOCKED: no D3D12 device` when no device exists. Setup: [docs/setup.md](docs/setup.md). **No measured GPU training results.** No invented tok/s or quality numbers. `matmul.hlsl` and the bench smoke remain stubs.
 
 ### How to contribute
 
@@ -101,13 +101,14 @@ Repository **just founded**. Scaffold, CI, and docs in progress. **No measured G
 
 | Path | Role |
 | --- | --- |
-| `src/hlsl/` | HLSL compute shader stubs |
-| `src/cpp/` | C++ host stub (`xbox_gpu_host`) |
+| `src/hlsl/` | HLSL compute shaders (`hello_compute` Fase 0; `matmul` stub) |
+| `src/cpp/` | C++ host (`xbox_gpu_host`) — DX12 device + hello dispatch |
+| `docs/setup.md` | Fase 0 toolchain + run notes |
 | `docs/`, `docs/adr/` | Architecture + ADRs |
 | `docs/platform/` | Public Xbox / Dev Mode / GDK / UWP fact packs |
 | `docs/execution-plan.md` | Cursor phase playbook |
 | `benchmarks/` | Smoke harness (stub JSON only) |
-| `examples/` | Hello compute shader notes |
+| `examples/hello-compute/` | Hello compute host (`hello_compute`) |
 | `.github/workflows/ci.yml` | **CI** — jobs `lint-docs`, `build-windows`, `notify-failure` |
 | `.github/workflows/benchmark.yml` | **Benchmark** — job `benchmark` |
 

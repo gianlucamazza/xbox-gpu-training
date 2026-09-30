@@ -21,9 +21,10 @@ No tok/s or quality numbers until Fase 6 measures them on Dev Mode hardware (or 
 
 ## Phase 0 — env setup (GDK/Windows SDK, DirectX 12, HLSL compute, PIX profiling)
 
-- Public GDK / Windows SDK. DirectX 12 device create. `dxc` for HLSL. PIX install notes.
-- Hello compute shader dispatch. CI `windows-latest` smoke already in `.github/workflows/ci.yml`.
-- Status: **scaffold only** (this PR). Execution: [docs/execution-plan.md](docs/execution-plan.md#fase-0--setup-ambiente).
+- [x] Public GDK / Windows SDK documented in [docs/setup.md](docs/setup.md) (links [docs/platform/gdk-vs-gdkx.md](docs/platform/gdk-vs-gdkx.md), [dev-mode.md](docs/platform/dev-mode.md)). DirectX 12 device create. `dxc` for HLSL. PIX install notes (no invented capture).
+- [x] Hello compute shader dispatch on Windows DX12 **or** explicit `BLOCKED: no D3D12 device` / missing-shader reason (no invented dispatch log).
+- [x] CI `windows-latest` smoke: jobs `lint-docs` / `build-windows` (ids unchanged). HLSL compile when `dxc` exists; skip notice when missing.
+- Status: **Fase 0 implementation**. Execution: [docs/execution-plan.md](docs/execution-plan.md#fase-0--setup-ambiente).
 
 ## Phase 1 — base HLSL kernels (matmul FP16/FP32, bench vs CPU ggml)
 

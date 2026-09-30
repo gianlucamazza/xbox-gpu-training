@@ -16,6 +16,7 @@ REQUIRED = [
     "docs/execution-plan.md",
     "docs/adr/0001-architecture.md",
     "docs/architecture.md",
+    "docs/setup.md",
     "docs/platform/dev-mode.md",
     "docs/platform/uwp-resources.md",
     "docs/platform/dx12-hlsl-compute.md",

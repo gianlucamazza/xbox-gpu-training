@@ -67,10 +67,44 @@ jobs:
           Write-Host "CMake generator: $gen"
           Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "**CMake generator:** $gen (auto-detected; not pinned to VS 2022)."
 
-      - name: Build C++ host stub
-        run: cmake --build build --config Release --target xbox_gpu_host
+      - name: Build C++ host and hello_compute
+        run: cmake --build build --config Release
 
-      - name: Run host stub
+      - name: Compile HLSL with dxc (skip if missing)
+        shell: pwsh
+        run: |
+          $dxc = Get-Command dxc -ErrorAction SilentlyContinue
+          if (-not $dxc) {
+            $kits = "${env:ProgramFiles(x86)}\Windows Kits\10\bin"
+            if (Test-Path $kits) {
+              $found = Get-ChildItem -Path $kits -Recurse -Filter dxc.exe -ErrorAction SilentlyContinue |
+                Where-Object { $_.FullName -match '\\x64\\dxc.exe$' } |
+                Sort-Object FullName -Descending |
+                Select-Object -First 1
+              if ($found) { $dxc = $found.FullName }
+            }
+          } else {
+            $dxc = $dxc.Source
+          }
+          if (-not $dxc) {
+            Write-Host "dxc not found on windows-latest — HLSL compile skipped (Windows SDK path missing)."
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "**HLSL:** ``dxc`` missing; compile skipped. Not a GPU result."
+            exit 0
+          }
+          Write-Host "Using dxc: $dxc"
+          New-Item -ItemType Directory -Force -Path build | Out-Null
+          & $dxc -T cs_6_0 -E CSMain -Fo build/hello_compute.cso src/hlsl/hello_compute.hlsl
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & $dxc -T cs_6_0 -E CSMain -Fo build/matmul.cso src/hlsl/matmul.hlsl
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          foreach ($dir in @("build\Release", "build\src\cpp\Release", "dist\bin")) {
+            if (Test-Path $dir) {
+              Copy-Item -Force build/hello_compute.cso (Join-Path $dir "hello_compute.cso")
+            }
+          }
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "**HLSL:** compiled ``hello_compute.hlsl`` (Fase 0) and ``matmul.hlsl`` (Fase 1 stub) with dxc."
+
+      - name: Run host (hello compute or BLOCKED)
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Continue'
@@ -108,38 +142,34 @@ jobs:
           }
 
           Write-Host "Running $exe"
-          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "**C++ host:** ran ``$exe`` (stub)."
-          & $exe
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-      - name: Compile HLSL with dxc (skip if missing)
-        shell: pwsh
-        run: |
-          $dxc = Get-Command dxc -ErrorAction SilentlyContinue
-          if (-not $dxc) {
-            $kits = "${env:ProgramFiles(x86)}\Windows Kits\10\bin"
-            if (Test-Path $kits) {
-              $found = Get-ChildItem -Path $kits -Recurse -Filter dxc.exe -ErrorAction SilentlyContinue |
-                Where-Object { $_.FullName -match '\\x64\\dxc.exe$' } |
-                Sort-Object FullName -Descending |
-                Select-Object -First 1
-              if ($found) { $dxc = $found.FullName }
-            }
+          & $exe *>&1 | Tee-Object -FilePath host-run.txt
+          $code = $LASTEXITCODE
+          $output = Get-Content host-run.txt -ErrorAction SilentlyContinue
+          $text = ($output -join "`n")
+          if ($text -match 'STATUS: hello_compute dispatched') {
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "**C++ host:** ``$exe`` reported ``STATUS: hello_compute dispatched`` (Windows D3D12; WARP is software, not console)."
+          } elseif ($text -match 'BLOCKED:') {
+            $blocked = ($output | Where-Object { $_ -match 'BLOCKED:' } | Select-Object -First 1)
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "**C++ host:** ``$exe`` reported ``$blocked``. Not a GPU result. Dispatch log not invented."
           } else {
-            $dxc = $dxc.Source
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "**C++ host:** ran ``$exe`` (no STATUS/BLOCKED line). Not treated as a GPU success."
           }
-          if (-not $dxc) {
-            Write-Host "dxc not found on windows-latest — HLSL compile skipped (Windows SDK path missing)."
-            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "**HLSL:** ``dxc`` missing; compile skipped. Not a GPU result."
-            exit 0
+          if ($code -ne 0) { exit $code }
+
+          $helloCandidates = @(
+            "dist\bin\hello_compute.exe",
+            "build\examples\hello-compute\Release\hello_compute.exe",
+            "build\Release\hello_compute.exe",
+            "build\hello_compute.exe"
+          )
+          $hello = $helloCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+          if ($hello) {
+            Write-Host "Running $hello"
+            & $hello
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          } else {
+            Write-Host "hello_compute.exe not found; xbox_gpu_host already exercised the dispatch path."
           }
-          Write-Host "Using dxc: $dxc"
-          New-Item -ItemType Directory -Force -Path build | Out-Null
-          & $dxc -T cs_6_0 -E CSMain -Fo build/hello_compute.cso src/hlsl/hello_compute.hlsl
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          & $dxc -T cs_6_0 -E CSMain -Fo build/matmul.cso src/hlsl/matmul.hlsl
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "**HLSL:** compiled ``hello_compute.hlsl`` and ``matmul.hlsl`` (stubs) with dxc."
 
       # Windows SDK itself is not fully cacheable; NuGet/vcpkg caches above are for later phases.
 

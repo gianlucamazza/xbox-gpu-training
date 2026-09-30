@@ -50,7 +50,7 @@ python3 benchmarks/run_smoke.py
 cmake -S . -B build && cmake --build build
 ```
 
-On Windows with the Windows SDK, compile HLSL with `dxc` (see `src/hlsl/README.md`).
+On Windows with the Windows SDK, compile HLSL with `dxc` and run the host (see [docs/setup.md](docs/setup.md) and `src/hlsl/README.md`). CMake must auto-detect the Visual Studio generator (`cmake -S . -B build -A x64`); do not pin `-G "Visual Studio 17 2022"`.
 
 ## Canonical glossary
 

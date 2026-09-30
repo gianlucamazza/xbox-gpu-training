@@ -1,9 +1,12 @@
-// STUB compute shader — Fase 0 hello dispatch.
-// English comments only. Intentionally a no-op. Not a performance claim.
+// Hello compute shader — Fase 0.
+// Each thread writes (SV_DispatchThreadID.x + 1) into a structured UAV.
+// Compile: dxc -T cs_6_0 -E CSMain -Fo hello_compute.cso src/hlsl/hello_compute.hlsl
+// English comments only. Not a benchmark. No tok/s. Not a console result.
 
-[numthreads(8, 8, 1)]
+RWStructuredBuffer<uint> Output : register(u0);
+
+[numthreads(64, 1, 1)]
 void CSMain(uint3 dtid : SV_DispatchThreadID)
 {
-    // No UAV writes. Host may dispatch this to prove a DirectX 12 pipeline exists.
-    (void)dtid;
+    Output[dtid.x] = dtid.x + 1u;
 }

@@ -1,6 +1,6 @@
 # Architecture (high-level)
 
-This is the GPU research track for quantized LLM work on Xbox Series S|X. Decisions and constraints are recorded in [docs/adr/0001-architecture.md](adr/0001-architecture.md). Execution order is [docs/execution-plan.md](execution-plan.md). Public Microsoft/Xbox constraints (not measured results) live under [docs/platform/](platform/dev-mode.md).
+This is the GPU research track for quantized LLM work on Xbox Series S|X. Decisions and constraints are recorded in [docs/adr/0001-architecture.md](adr/0001-architecture.md). Execution order is [docs/execution-plan.md](execution-plan.md). Fase 0 install and host run: [docs/setup.md](setup.md). Public Microsoft/Xbox constraints (not measured results) live under [docs/platform/](platform/dev-mode.md).
 
 ## Problem
 

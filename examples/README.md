@@ -1,9 +1,9 @@
 # `examples/`
 
-Small, runnable samples. Stubs until Fase 0 implements a real hello compute shader dispatch.
+Small, runnable samples. Do not treat example output as a benchmark. No tok/s claims.
 
 | Path | Status |
 | --- | --- |
-| `hello-compute/` | Scaffold notes + pointer to `src/hlsl/hello_compute.hlsl`. |
+| `hello-compute/` | Fase 0 host (`hello_compute`) that dispatches `src/hlsl/hello_compute.hlsl` on Windows DX12, or prints `BLOCKED: no D3D12 device`. |
 
-Do not treat example output as a benchmark. No tok/s claims.
+See [docs/setup.md](../docs/setup.md).

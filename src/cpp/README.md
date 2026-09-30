@@ -1,12 +1,14 @@
-# `src/cpp/` — C++ host stub
+# `src/cpp/` — C++ host (Fase 0)
 
-Minimal portable host used as the compile smoke target for job **`build-windows`**.
+Portable host for CI job **`build-windows`** and the Windows DirectX 12 hello-compute path.
 
 | File | Role |
 | --- | --- |
-| `main.cpp` | Prints a not-implemented banner and exits 0. |
-| `CMakeLists.txt` | Builds `xbox_gpu_host`. |
+| `main.cpp` | `xbox_gpu_host`: default = device + dispatch; `--smoke` skips GPU. |
+| `dx12_device.*` | D3D12 device / queue / fence (Windows). |
+| `hello_dispatch.*` | Load or `dxc`-compile hello_compute, PSO, one dispatch, UAV verify. |
+| `CMakeLists.txt` | Static lib `xgpu_dx12` + `xbox_gpu_host`. |
 
-DirectX 12 device creation, PIX markers, chunk streaming, and HLSL dispatch belong to later phases ([docs/execution-plan.md](../../docs/execution-plan.md)). This folder must not pull CUDA, cuDNN, or a DirectML trainer path.
+On non-Windows the same sources compile and `RunHelloCompute` prints `BLOCKED: no D3D12 device`. That is not a GPU success.
 
-C# host is omitted on purpose (one real C++ stub is enough).
+This folder must not pull CUDA, cuDNN, or a DirectML trainer path. DirectML is inference/forward-focused: [docs/platform/directml-scope.md](../../docs/platform/directml-scope.md). Setup: [docs/setup.md](../../docs/setup.md).
