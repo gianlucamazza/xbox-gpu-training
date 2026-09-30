@@ -48,7 +48,7 @@ Playbook Cursor: [docs/execution-plan.md](docs/execution-plan.md). Tabella compl
 
 ### Stato attuale
 
-Fase 0: host DirectX 12 e hello compute su Windows, oppure `BLOCKED: no D3D12 device` se il device manca. Setup: [docs/setup.md](docs/setup.md). **Nessun risultato misurato** di training su GPU. Nessun tok/s, nessuna qualità inventata. `matmul.hlsl` e il bench smoke restano stub.
+Fase 1: kernel matmul HLSL FP16/FP32, harness host e baseline CPU portabile (ggml **non** vendored: [docs/ggml-baseline.md](docs/ggml-baseline.md)). Su Windows, dispatch DX12 quando c’è un device; altrimenti `BLOCKED: no D3D12 device` con test CPU verdi e CSV `status=blocked`. Setup: [docs/setup.md](docs/setup.md). **Nessun tok/s inventato.** Nessun numero console. Il smoke `benchmarks/run_smoke.py` resta stub.
 
 ### Come contribuire
 
@@ -89,7 +89,7 @@ Cursor playbook: [docs/execution-plan.md](docs/execution-plan.md). Full table: [
 
 ### Current status
 
-Fase 0: DirectX 12 host + hello compute on Windows, or `BLOCKED: no D3D12 device` when no device exists. Setup: [docs/setup.md](docs/setup.md). **No measured GPU training results.** No invented tok/s or quality numbers. `matmul.hlsl` and the bench smoke remain stubs.
+Fase 1: real HLSL FP16/FP32 matmul, host harness, portable CPU baseline (ggml **not** vendored: [docs/ggml-baseline.md](docs/ggml-baseline.md)). On Windows, DX12 dispatch when a device exists; otherwise `BLOCKED: no D3D12 device` with CPU tests green and CSV `status=blocked`. Setup: [docs/setup.md](docs/setup.md). **No invented tok/s.** No console numbers. `benchmarks/run_smoke.py` remains a stub.
 
 ### How to contribute
 
@@ -101,13 +101,14 @@ Fase 0: DirectX 12 host + hello compute on Windows, or `BLOCKED: no D3D12 device
 
 | Path | Role |
 | --- | --- |
-| `src/hlsl/` | HLSL compute shaders (`hello_compute` Fase 0; `matmul` stub) |
-| `src/cpp/` | C++ host (`xbox_gpu_host`) — DX12 device + hello dispatch |
-| `docs/setup.md` | Fase 0 toolchain + run notes |
+| `src/hlsl/` | HLSL compute shaders (`hello_compute` Fase 0; `matmul` Fase 1) |
+| `src/cpp/` | C++ host (`xbox_gpu_host`) — DX12 hello + matmul harness + CPU ref |
+| `docs/setup.md` | Toolchain + run notes |
+| `docs/ggml-baseline.md` | How the CPU GEMM compares; ggml is not vendored |
 | `docs/`, `docs/adr/` | Architecture + ADRs |
 | `docs/platform/` | Public Xbox / Dev Mode / GDK / UWP fact packs |
 | `docs/execution-plan.md` | Cursor phase playbook |
-| `benchmarks/` | Smoke harness (stub JSON only) |
+| `benchmarks/` | Smoke stub JSON + Fase 1 matmul CSV |
 | `examples/hello-compute/` | Hello compute host (`hello_compute`) |
 | `.github/workflows/ci.yml` | **CI** — jobs `lint-docs`, `build-windows`, `notify-failure` |
 | `.github/workflows/benchmark.yml` | **Benchmark** — job `benchmark` |

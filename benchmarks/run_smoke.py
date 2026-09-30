@@ -29,7 +29,8 @@ def main() -> int:
         "status": "stub",
         "note": (
             "Not implemented. No GPU kernel timed. No tok/s. "
-            "Fase 1 will record matmul vs CPU ggml when kernels exist. "
+            "Fase 1 matmul CSV is written by xbox_gpu_host --bench matmul "
+            "(or benchmarks/run_matmul.py). This smoke JSON stays stub. "
             "Xbox Series S|X numbers require Dev Mode hardware (Fase 6)."
         ),
         "generated_at_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),

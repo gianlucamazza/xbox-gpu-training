@@ -13,6 +13,7 @@ Platform facts (Microsoft/Xbox public documentation, not our benches) live under
 | Compile HLSL with `dxc` when the tool is present | Treat a missing `dxc` as a GPU success |
 | Keep CI jobs `lint-docs` and `build-windows` | Pin CMake to `-G "Visual Studio 17 2022"` |
 | Report `BLOCKED: …` honestly | Invent tok/s, PIX captures, or console numbers |
+| Fase 1: real matmul HLSL + CPU baseline + CSV | Treat DirectML as the matmul trainer; vendor ggml unless documented |
 
 Fase 0–5 Windows work is **not** gated on a Dev Mode console. Console validation is Fase 6: [blockers-fase6-validation.md](platform/blockers-fase6-validation.md).
 
@@ -51,10 +52,12 @@ Compile the Fase 0 shader with the Windows SDK `dxc`:
 dxc -T cs_6_0 -E CSMain -Fo build\hello_compute.cso src\hlsl\hello_compute.hlsl
 ```
 
-Also supported (Fase 1 stub only — not a real matmul):
+Fase 1 matmul (real kernel, not a no-op). `CSMain` is the FP32 alias so CI can keep `-E CSMain`:
 
 ```bat
-dxc -T cs_6_0 -E CSMain -Fo build\matmul.cso src\hlsl\matmul.hlsl
+dxc -T cs_6_0 -E CSMain     -Fo build\matmul.cso      src\hlsl\matmul.hlsl
+dxc -T cs_6_0 -E CSMainFP32 -Fo build\matmul_fp32.cso src\hlsl\matmul.hlsl
+dxc -T cs_6_0 -E CSMainFP16 -Fo build\matmul_fp16.cso src\hlsl\matmul.hlsl
 ```
 
 If `dxc` is missing, CI and CMake print a skip notice. That is a missing-toolchain signal, **not** a GPU result.
@@ -123,7 +126,28 @@ Honest first lines:
 
 Do **not** invent a dispatch log when the process never created a device.
 
-`matmul.hlsl` stays a Fase 1 stub.
+## Matmul (Fase 1)
+
+| Piece | Path |
+| --- | --- |
+| Shader | [`src/hlsl/matmul.hlsl`](../src/hlsl/matmul.hlsl) — `CSMain` / `CSMainFP32` / `CSMainFP16` |
+| CPU reference | [`src/cpp/cpu_matmul.*`](../src/cpp/cpu_matmul.h) — portable GEMM; ggml not vendored ([docs/ggml-baseline.md](ggml-baseline.md)) |
+| Harness | `xbox_gpu_host --bench matmul --out benchmarks\results\matmul.csv` |
+
+```bat
+.\build\Release\xbox_gpu_host.exe --cpu-ref
+.\build\Release\xbox_gpu_host.exe --bench matmul --out benchmarks\results\matmul.csv
+```
+
+Linux / no D3D12:
+
+```bash
+./build/xbox_gpu_host --cpu-ref
+./build/xbox_gpu_host --bench matmul --out benchmarks/results/matmul.csv
+# BLOCKED: no D3D12 device — CSV status=blocked. CPU tests still run. Dispatch log not invented.
+```
+
+Tolerances (chosen TBD): FP32 max-abs `1e-4` / max-rel `1e-3`; FP16 max-abs `5e-2` / max-rel `5e-2`. No tok/s column.
 
 ## Docs lint
 

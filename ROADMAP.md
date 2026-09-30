@@ -28,8 +28,11 @@ No tok/s or quality numbers until Fase 6 measures them on Dev Mode hardware (or 
 
 ## Phase 1 — base HLSL kernels (matmul FP16/FP32, bench vs CPU ggml)
 
-- Real matmul compute shaders. Host harness. CPU ggml baseline (vendor or stub interface).
-- Bench CSV under `benchmarks/`. Label: `kernel`, `benchmark`, `phase-1`.
+- [x] Real matmul compute shaders (`CSMain` / `CSMainFP32` / `CSMainFP16` in [src/hlsl/matmul.hlsl](src/hlsl/matmul.hlsl)). Host harness uploads A/B, dispatches, reads back C.
+- [x] CPU baseline: portable GEMM interface ([src/cpp/cpu_matmul.cpp](src/cpp/cpu_matmul.cpp)); ggml **not vendored** — [docs/ggml-baseline.md](docs/ggml-baseline.md).
+- [x] Bench CSV under [benchmarks/results/matmul.csv](benchmarks/results/matmul.csv) (`xbox-gpu-training.benchmark.matmul.v1` + `status`). No invented tok/s.
+- [x] Chosen TBD tolerances: FP32 max-abs `1e-4` / max-rel `1e-3`; FP16 max-abs `5e-2` / max-rel `5e-2`.
+- Status: **Fase 1 implementation**. Execution: [docs/execution-plan.md](docs/execution-plan.md#fase-1--kernel-matmul-fp16fp32). GPU dispatch is **BLOCKED** on hosts without D3D12 (CPU-only tests stay green). Label: `kernel`, `benchmark`, `phase-1`.
 
 ## Phase 2 — FLP2-codec reconstructed forward on GPU
 

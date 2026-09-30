@@ -1,8 +1,9 @@
 cmake_minimum_required(VERSION 3.20)
 project(xbox_gpu_training LANGUAGES CXX)
 
-# Fase 0 host: DirectX 12 device create + hello compute dispatch on Windows.
+# Fase 1 host: DirectX 12 hello compute + matmul dispatch on Windows.
 # Compiles as a no-GPU smoke check on non-Windows (reports BLOCKED: no D3D12 device).
+# CPU reference tests (--cpu-ref / --bench matmul) stay green without a GPU.
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -42,7 +43,35 @@ if(WIN32)
       DEPENDS "${CMAKE_SOURCE_DIR}/src/hlsl/hello_compute.hlsl"
       COMMENT "dxc -T cs_6_0 -E CSMain hello_compute.hlsl"
     )
+    add_custom_command(
+      OUTPUT "${CMAKE_BINARY_DIR}/matmul.cso"
+      COMMAND "${XGPU_DXC}" -T cs_6_0 -E CSMain
+              -Fo "${CMAKE_BINARY_DIR}/matmul.cso"
+              "${CMAKE_SOURCE_DIR}/src/hlsl/matmul.hlsl"
+      DEPENDS "${CMAKE_SOURCE_DIR}/src/hlsl/matmul.hlsl"
+      COMMENT "dxc -T cs_6_0 -E CSMain matmul.hlsl"
+    )
+    add_custom_command(
+      OUTPUT "${CMAKE_BINARY_DIR}/matmul_fp32.cso"
+      COMMAND "${XGPU_DXC}" -T cs_6_0 -E CSMainFP32
+              -Fo "${CMAKE_BINARY_DIR}/matmul_fp32.cso"
+              "${CMAKE_SOURCE_DIR}/src/hlsl/matmul.hlsl"
+      DEPENDS "${CMAKE_SOURCE_DIR}/src/hlsl/matmul.hlsl"
+      COMMENT "dxc -T cs_6_0 -E CSMainFP32 matmul.hlsl"
+    )
+    add_custom_command(
+      OUTPUT "${CMAKE_BINARY_DIR}/matmul_fp16.cso"
+      COMMAND "${XGPU_DXC}" -T cs_6_0 -E CSMainFP16
+              -Fo "${CMAKE_BINARY_DIR}/matmul_fp16.cso"
+              "${CMAKE_SOURCE_DIR}/src/hlsl/matmul.hlsl"
+      DEPENDS "${CMAKE_SOURCE_DIR}/src/hlsl/matmul.hlsl"
+      COMMENT "dxc -T cs_6_0 -E CSMainFP16 matmul.hlsl"
+    )
     add_custom_target(xgpu_hello_cso ALL DEPENDS "${CMAKE_BINARY_DIR}/hello_compute.cso")
+    add_custom_target(xgpu_matmul_cso ALL DEPENDS
+      "${CMAKE_BINARY_DIR}/matmul.cso"
+      "${CMAKE_BINARY_DIR}/matmul_fp32.cso"
+      "${CMAKE_BINARY_DIR}/matmul_fp16.cso")
   else()
     message(STATUS "dxc not found — HLSL compile skipped (not a GPU result)")
   endif()

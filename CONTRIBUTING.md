@@ -17,7 +17,7 @@ The FloppyLM **CPU** path lives in [gianlucamazza/xllama](https://github.com/gia
 
 - Do **not** invent tok/s, latency, perplexity, or quality scores.
 - Stubs must say `not implemented` / `status: stub`.
-- CPU ggml is the numerical and timing baseline once Fase 1 exists.
+- CPU ggml is the numerical and timing baseline once Fase 1 exists. ggml is **not vendored**; the portable GEMM in `src/cpp/cpu_matmul.*` is the current interface ([docs/ggml-baseline.md](docs/ggml-baseline.md)).
 - Xbox Series S|X numbers are valid only after Fase 6 Dev Mode measurement (or an explicit `BLOCKED: no console` note).
 - Architecture changes need a new or updated file under `docs/adr/` and the `adr` label.
 
@@ -47,7 +47,10 @@ python3 scripts/check_required_docs.py
 python3 scripts/check_glossary.py
 python3 scripts/check_relative_links.py
 python3 benchmarks/run_smoke.py
+python3 benchmarks/run_matmul.py
 cmake -S . -B build && cmake --build build
+./build/xbox_gpu_host --cpu-ref
+./build/xbox_gpu_host --bench matmul --out benchmarks/results/matmul.csv
 ```
 
 On Windows with the Windows SDK, compile HLSL with `dxc` and run the host (see [docs/setup.md](docs/setup.md) and `src/hlsl/README.md`). CMake must auto-detect the Visual Studio generator (`cmake -S . -B build -A x64`); do not pin `-G "Visual Studio 17 2022"`.
