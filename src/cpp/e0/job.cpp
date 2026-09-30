@@ -104,8 +104,28 @@ std::filesystem::path asset(const std::filesystem::path &root,
   for (const auto &part : relative)
     if (part == "..")
       throw std::runtime_error("asset escapes job directory");
+#ifdef XGPU_UWP
+  // Canonicalization probes ancestors outside LocalState, which AppContainer
+  // denies. Walk only the owned subtree and reject all reparse points,
+  // including symlinks.
+  auto path = (root / relative).lexically_normal();
+  auto component = root;
+  for (const auto &part : relative) {
+    component /= part;
+    const DWORD attrs = GetFileAttributesW(component.c_str());
+    if (attrs == INVALID_FILE_ATTRIBUTES) {
+      const DWORD error = GetLastError();
+      if (error != ERROR_FILE_NOT_FOUND && error != ERROR_PATH_NOT_FOUND)
+        throw std::runtime_error("asset attributes denied: " +
+                                 std::to_string(error));
+    } else if (attrs & FILE_ATTRIBUTE_REPARSE_POINT)
+      throw std::runtime_error("asset reparse point rejected");
+  }
+  auto prefix = root.lexically_normal();
+#else
   auto path = std::filesystem::weakly_canonical(root / relative);
   auto prefix = std::filesystem::weakly_canonical(root);
+#endif
   auto rel = path.lexically_relative(prefix);
   for (const auto &part : rel)
     if (part == "..")
