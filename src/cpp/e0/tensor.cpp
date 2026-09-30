@@ -255,6 +255,8 @@ Values CpuKernel::run(const Command &p, const Values &x, const Values &w,
           v += x[row * T + j] * w[(base + j) * K + c];
       } else if (p.mode == 1) {
         auto row = n / T, key = n % T, base = row - row % T;
+        if (key > row % T)
+          break;
         for (uint32_t c = 0; c < K; ++c)
           v += dy[row * K + c] * w[(base + key) * K + c];
       } else {
@@ -273,7 +275,7 @@ Values CpuKernel::run(const Command &p, const Values &x, const Values &w,
         sum += std::exp(x[r * K + k] - maximum);
       v = p.mode ? dy[r] * (std::exp(x[n] - maximum) / sum -
                             (uint32_t(w[r]) == c ? 1 : 0))
-                 : std::log(sum) + maximum - x[r * K + uint32_t(w[r])];
+                 : std::log(sum) - (x[r * K + uint32_t(w[r])] - maximum);
       break;
     }
     }

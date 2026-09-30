@@ -104,14 +104,14 @@ void CSMain(uint3 id:SV_DispatchThreadID) {
     v/=sqrt(float(K));
   } else if(op==14) {
     if(mode==0) { uint row=n/K,c=n%K,base=row-row%T;for(uint j=0;j<=row%T;++j) v+=X[row*T+j]*W[(base+j)*K+c]; }
-    else if(mode==1) { uint row=n/T,key=n%T,base=row-row%T;for(uint c=0;c<K;++c) v+=G[row*K+c]*W[(base+key)*K+c]; }
+    else if(mode==1) { uint row=n/T,key=n%T,base=row-row%T;if(key<=row%T) for(uint c=0;c<K;++c) v+=G[row*K+c]*W[(base+key)*K+c]; }
     else { uint row=n/K,c=n%K,key=row%T,base=row-key;for(uint i=key;i<T;++i) v+=X[(base+i)*T+key]*G[(base+i)*K+c]; }
   } else if(op==11) {
     uint r=mode?n/K:n,c=n%K; float maximum=-3.402823466e+38f,sum=0;
     for(uint k=0;k<K;++k) maximum=max(maximum,X[r*K+k]);
     for(uint k=0;k<K;++k) sum+=exp(X[r*K+k]-maximum);
     v=mode?G[r]*(exp(X[n]-maximum)/sum-(uint(W[r])==c?1:0)):
-      log(sum)+maximum-X[r*K+uint(W[r])];
+      log(sum)-(X[r*K+uint(W[r])]-maximum);
   }
   Result[n]=v;
 }

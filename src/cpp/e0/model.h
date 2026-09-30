@@ -55,5 +55,6 @@ void atomic_json(const std::filesystem::path &, const Json &);
 Json read_json(const std::filesystem::path &);
 Json fixture_report(const Json &, Kernel &);
 Json optimizer_fixture_report(const Json &);
+Json kernel_fixture_report(const Json &, Kernel &);
 Json run_job(const std::filesystem::path &, Kernel &, uint64_t stop_after = 0);
 } // namespace e0

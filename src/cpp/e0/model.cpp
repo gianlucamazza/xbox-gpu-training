@@ -212,6 +212,51 @@ Json fixture_report(const Json &f, Kernel &kernel) {
   result["quantization"] = coded;
   return result;
 }
+Json kernel_fixture_report(const Json &fixture, Kernel &kernel) {
+  kernel.dispatches = kernel.transfer_bytes = kernel.peak_memory_bytes = 0;
+  kernel.gpu_seconds = 0;
+  kernel.observe();
+  Json results = Json::array();
+  for (const auto &item : fixture.at("cases")) {
+    const auto &spec = item.at("command");
+    const auto op = spec.at("op").get<uint32_t>();
+    if (op > uint32_t(Op::Weighted))
+      throw std::runtime_error("invalid kernel fixture operation");
+    Command command{Op(op)};
+    command.mode = spec.value("mode", 0u);
+    command.count = spec.at("count");
+    command.rows = spec.value("rows", 0u);
+    command.cols = spec.value("cols", 0u);
+    command.out = spec.value("out", 0u);
+    command.batch = spec.value("batch", 0u);
+    command.seq = spec.value("seq", 0u);
+    command.heads = spec.value("heads", 0u);
+    command.aux = spec.value("aux", 0u);
+    command.epsilon = spec.value("epsilon", 1.1920928955078125e-7f);
+    if (!command.count || command.count > (1u << 24) || command.mode > 3)
+      throw std::runtime_error("invalid kernel fixture command");
+    const auto &inputs = item.at("inputs");
+    if (inputs.size() != 5)
+      throw std::runtime_error("kernel fixture requires five input buffers");
+    std::vector<Values> buffers;
+    for (const auto &input : inputs)
+      buffers.push_back(input.get<Values>());
+    const auto before = kernel.dispatches;
+    auto values = kernel.run(command, buffers[0], buffers[1], buffers[2],
+                             buffers[3], buffers[4]);
+    results.push_back({{"id", item.at("id")},
+                       {"values", values},
+                       {"dispatches", kernel.dispatches - before}});
+  }
+  return {{"schema", "floppylm.e0.kernels.result.v1"},
+          {"cases", results},
+          {"hardware_gpu", kernel.hardware()},
+          {"adapter", kernel.adapter()},
+          {"dispatches", kernel.dispatches},
+          {"gpu_seconds", kernel.gpu_seconds},
+          {"transfer_bytes", kernel.transfer_bytes},
+          {"peak_memory_bytes", kernel.peak_memory_bytes}};
+}
 Json optimizer_fixture_report(const Json &f) {
   Model model(f);
   Json results = Json::array();
