@@ -14,6 +14,7 @@ Platform facts (Microsoft/Xbox public documentation, not our benches) live under
 | Keep CI jobs `lint-docs` and `build-windows` | Pin CMake to `-G "Visual Studio 17 2022"` |
 | Report `BLOCKED: …` honestly | Invent tok/s, PIX captures, or console numbers |
 | Fase 1: real matmul HLSL + CPU baseline + CSV | Treat DirectML as the matmul trainer; vendor ggml unless documented |
+| Fase 2: RMSNorm / RoPE / FLP2 decode + tiny fixture | Unpack a guessed binary FLP2 envelope; modify xllama |
 
 Fase 0–5 Windows work is **not** gated on a Dev Mode console. Console validation is Fase 6: [blockers-fase6-validation.md](platform/blockers-fase6-validation.md).
 
@@ -148,6 +149,32 @@ Linux / no D3D12:
 ```
 
 Tolerances (chosen TBD): FP32 max-abs `1e-4` / max-rel `1e-3`; FP16 max-abs `5e-2` / max-rel `5e-2`. No tok/s column.
+
+## FLP2 forward (Fase 2)
+
+| Piece | Path |
+| --- | --- |
+| Shaders | [`src/hlsl/rmsnorm.hlsl`](../src/hlsl/rmsnorm.hlsl), [`rope.hlsl`](../src/hlsl/rope.hlsl), [`flp2_decode.hlsl`](../src/hlsl/flp2_decode.hlsl), [`flp2_forward.hlsl`](../src/hlsl/flp2_forward.hlsl) |
+| CPU reference | [`src/cpp/cpu_flp2.*`](../src/cpp/cpu_flp2.h) |
+| Fixture | [`benchmarks/fixtures/tiny_flp2.json`](../benchmarks/fixtures/tiny_flp2.json) |
+| Contract | [`docs/flp2-forward.md`](flp2-forward.md) |
+
+```bat
+dxc -T cs_6_0 -E CSMain -Fo build\rmsnorm.cso      src\hlsl\rmsnorm.hlsl
+dxc -T cs_6_0 -E CSMain -Fo build\rope.cso         src\hlsl\rope.hlsl
+dxc -T cs_6_0 -E CSMain -Fo build\flp2_decode.cso  src\hlsl\flp2_decode.hlsl
+dxc -T cs_6_0 -E CSMain -Fo build\flp2_forward.cso src\hlsl\flp2_forward.hlsl
+.\build\Release\xbox_gpu_host.exe --forward-fixture fixtures\tiny_flp2.json
+```
+
+Linux / no D3D12:
+
+```bash
+./build/xbox_gpu_host --forward-fixture benchmarks/fixtures/tiny_flp2.json
+# CPU fixture match, then BLOCKED: no D3D12 device. Dispatch log not invented.
+```
+
+Tolerance (chosen TBD): max-abs `1e-5` / max-rel `1e-4`. Binary FLP2 envelope is **not** unpacked.
 
 ## Docs lint
 

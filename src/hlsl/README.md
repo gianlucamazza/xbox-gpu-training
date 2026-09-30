@@ -4,10 +4,16 @@
 | --- | --- | --- |
 | `hello_compute.hlsl` | Fase 0 | `[numthreads(64, 1, 1)]` `CSMain` writes `Output[i] = i + 1`. |
 | `matmul.hlsl` | Fase 1 | Naive row-major `C = A @ B`. Entry points: `CSMain` (= FP32), `CSMainFP32`, `CSMainFP16`. |
+| `rmsnorm.hlsl` | Fase 2 | RMSNorm, `1/sqrt(mean(x^2)+eps) * gamma`. |
+| `rope.hlsl` | Fase 2 | RoPE even/odd pairing, `theta=10000`. |
+| `flp2_decode.hlsl` | Fase 2 | Scalar decode `(sym-half)*row_scale` (ternary / 2-bit / 4-bit). |
+| `flp2_forward.hlsl` | Fase 2 | Tiny 1-layer relu2 forward from packed symbols. |
 
 Hello compute is a real UAV write used to prove the DirectX 12 pipeline. It is **not** a benchmark and **not** a console result.
 
 Matmul is a real compute shader (not a no-op). It is a **correctness** kernel for Fase 1 parity vs the CPU reference. It is **not** a tok/s result and **not** a console result. Research path: [docs/platform/dx12-hlsl-compute.md](../../docs/platform/dx12-hlsl-compute.md). Host: [docs/setup.md](../../docs/setup.md). CPU baseline: [docs/ggml-baseline.md](../../docs/ggml-baseline.md).
+
+Fase 2 shaders are real correctness kernels for RMSNorm, RoPE, and scalar FLP2 decode / tiny forward. Contract: [docs/flp2-forward.md](../../docs/flp2-forward.md). They do **not** unpack a binary FLP2 envelope.
 
 ## Entry points (`matmul.hlsl`)
 
@@ -28,6 +34,10 @@ dxc -T cs_6_0 -E CSMain     -Fo hello_compute.cso src\hlsl\hello_compute.hlsl
 dxc -T cs_6_0 -E CSMain     -Fo matmul.cso        src\hlsl\matmul.hlsl
 dxc -T cs_6_0 -E CSMainFP32 -Fo matmul_fp32.cso   src\hlsl\matmul.hlsl
 dxc -T cs_6_0 -E CSMainFP16 -Fo matmul_fp16.cso   src\hlsl\matmul.hlsl
+dxc -T cs_6_0 -E CSMain     -Fo rmsnorm.cso       src\hlsl\rmsnorm.hlsl
+dxc -T cs_6_0 -E CSMain     -Fo rope.cso          src\hlsl\rope.hlsl
+dxc -T cs_6_0 -E CSMain     -Fo flp2_decode.cso   src\hlsl\flp2_decode.hlsl
+dxc -T cs_6_0 -E CSMain     -Fo flp2_forward.cso  src\hlsl\flp2_forward.hlsl
 ```
 
 If `dxc` is missing, CI prints a clear skip notice. That is a missing-toolchain signal, not a green-wash of GPU work.

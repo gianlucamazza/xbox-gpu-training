@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.20)
 project(xbox_gpu_training LANGUAGES CXX)
 
-# Fase 1 host: DirectX 12 hello compute + matmul dispatch on Windows.
+# Fase 2 host: DirectX 12 hello compute + matmul + FLP2 forward on Windows.
 # Compiles as a no-GPU smoke check on non-Windows (reports BLOCKED: no D3D12 device).
-# CPU reference tests (--cpu-ref / --bench matmul) stay green without a GPU.
+# CPU reference tests (--cpu-ref / --bench matmul / --forward-fixture) stay green without a GPU.
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -72,6 +72,43 @@ if(WIN32)
       "${CMAKE_BINARY_DIR}/matmul.cso"
       "${CMAKE_BINARY_DIR}/matmul_fp32.cso"
       "${CMAKE_BINARY_DIR}/matmul_fp16.cso")
+    add_custom_command(
+      OUTPUT "${CMAKE_BINARY_DIR}/rmsnorm.cso"
+      COMMAND "${XGPU_DXC}" -T cs_6_0 -E CSMain
+              -Fo "${CMAKE_BINARY_DIR}/rmsnorm.cso"
+              "${CMAKE_SOURCE_DIR}/src/hlsl/rmsnorm.hlsl"
+      DEPENDS "${CMAKE_SOURCE_DIR}/src/hlsl/rmsnorm.hlsl"
+      COMMENT "dxc -T cs_6_0 -E CSMain rmsnorm.hlsl"
+    )
+    add_custom_command(
+      OUTPUT "${CMAKE_BINARY_DIR}/rope.cso"
+      COMMAND "${XGPU_DXC}" -T cs_6_0 -E CSMain
+              -Fo "${CMAKE_BINARY_DIR}/rope.cso"
+              "${CMAKE_SOURCE_DIR}/src/hlsl/rope.hlsl"
+      DEPENDS "${CMAKE_SOURCE_DIR}/src/hlsl/rope.hlsl"
+      COMMENT "dxc -T cs_6_0 -E CSMain rope.hlsl"
+    )
+    add_custom_command(
+      OUTPUT "${CMAKE_BINARY_DIR}/flp2_decode.cso"
+      COMMAND "${XGPU_DXC}" -T cs_6_0 -E CSMain
+              -Fo "${CMAKE_BINARY_DIR}/flp2_decode.cso"
+              "${CMAKE_SOURCE_DIR}/src/hlsl/flp2_decode.hlsl"
+      DEPENDS "${CMAKE_SOURCE_DIR}/src/hlsl/flp2_decode.hlsl"
+      COMMENT "dxc -T cs_6_0 -E CSMain flp2_decode.hlsl"
+    )
+    add_custom_command(
+      OUTPUT "${CMAKE_BINARY_DIR}/flp2_forward.cso"
+      COMMAND "${XGPU_DXC}" -T cs_6_0 -E CSMain
+              -Fo "${CMAKE_BINARY_DIR}/flp2_forward.cso"
+              "${CMAKE_SOURCE_DIR}/src/hlsl/flp2_forward.hlsl"
+      DEPENDS "${CMAKE_SOURCE_DIR}/src/hlsl/flp2_forward.hlsl"
+      COMMENT "dxc -T cs_6_0 -E CSMain flp2_forward.hlsl"
+    )
+    add_custom_target(xgpu_flp2_cso ALL DEPENDS
+      "${CMAKE_BINARY_DIR}/rmsnorm.cso"
+      "${CMAKE_BINARY_DIR}/rope.cso"
+      "${CMAKE_BINARY_DIR}/flp2_decode.cso"
+      "${CMAKE_BINARY_DIR}/flp2_forward.cso")
   else()
     message(STATUS "dxc not found — HLSL compile skipped (not a GPU result)")
   endif()

@@ -36,8 +36,11 @@ No tok/s or quality numbers until Fase 6 measures them on Dev Mode hardware (or 
 
 ## Phase 2 — FLP2-codec reconstructed forward on GPU
 
-- Reconstruct forward from the FLP2 codec. Reference FloppyLM/xllama docs conceptually. **Do not modify xllama.**
-- Acceptance: forward match vs CPU reference on a tiny fixture.
+- [x] HLSL RMSNorm, RoPE, FLP2 scalar decode, tiny forward ([src/hlsl/rmsnorm.hlsl](src/hlsl/rmsnorm.hlsl), [rope.hlsl](src/hlsl/rope.hlsl), [flp2_decode.hlsl](src/hlsl/flp2_decode.hlsl), [flp2_forward.hlsl](src/hlsl/flp2_forward.hlsl)).
+- [x] Host `--forward-fixture` + fixture loader ([src/cpp/fixture_loader.cpp](src/cpp/fixture_loader.cpp)). Tiny CPU fixture [benchmarks/fixtures/tiny_flp2.json](benchmarks/fixtures/tiny_flp2.json).
+- [x] Chosen TBD tolerance: max-abs `1e-5` / max-rel `1e-4` (FloppyLM ADR 0004 forward gate). Contract: [docs/flp2-forward.md](docs/flp2-forward.md).
+- [x] xllama **not** modified. Binary FLP2 envelope (rANS) **not** guessed — `research` issue for envelope byte-parity.
+- Status: **Fase 2 implementation**. Execution: [docs/execution-plan.md](docs/execution-plan.md#fase-2--forward-flp2-on-gpu). GPU dispatch is **BLOCKED** on hosts without D3D12 (CPU fixture tests stay green). Label: `kernel`, `research`, `phase-2`.
 
 ## Phase 3 — backward + AdamW on GPU with straight-through estimator
 
