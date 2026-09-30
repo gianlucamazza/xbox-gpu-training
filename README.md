@@ -48,7 +48,7 @@ Playbook Cursor: [docs/execution-plan.md](docs/execution-plan.md). Tabella compl
 
 ### Stato attuale
 
-Fase 4: streaming a chunk + double buffer sotto il budget di pianificazione App **~1 GB** (`xbox_gpu_host --stream-stress --budget-mb 1024`). Contratto: [docs/memory-budget.md](docs/memory-budget.md). La designazione **Game ~5 GB** è documentata, **non** assunta per un pacchetto App. AppContainer console **non validato** su RAM desktop/CI — nessun numero Series S|X inventato. Fase 3 resta verde (`--grad-check`, `--train-step 1`). Su Windows, copie GPU a due tile se c’è un device; altrimenti `gpu_double_buffer: BLOCKED: no D3D12 device`. Setup: [docs/setup.md](docs/setup.md). **Nessun tok/s inventato.** xllama **non** modificato. Il smoke `benchmarks/run_smoke.py` resta stub.
+Fase 5: QAT + WSD + cooldown isolati sul host (`xbox_gpu_host --qat-smoke --steps 16`, N=16). Contratto: [docs/qat-wsd.md](docs/qat-wsd.md). Config: [examples/qat-wsd-smoke.json](examples/qat-wsd-smoke.json). FakeQuant di default **ternario** (ADR 0002); 2/4-bit solo host. **Nessun kernel HLSL nuovo.** Fase 4 resta verde (`--stream-stress --budget-mb 1024`). Senza D3D12: `BLOCKED: no D3D12 device`. Setup: [docs/setup.md](docs/setup.md). **Nessun tok/s o curva di qualità inventata.** xllama **non** modificato. Il smoke `benchmarks/run_smoke.py` resta stub.
 
 ### Come contribuire
 
@@ -89,7 +89,7 @@ Cursor playbook: [docs/execution-plan.md](docs/execution-plan.md). Full table: [
 
 ### Current status
 
-Fase 4: chunk stream + double buffer under the App **~1 GB** planning budget (`xbox_gpu_host --stream-stress --budget-mb 1024`). Contract: [docs/memory-budget.md](docs/memory-budget.md). **Game ~5 GB** is documented as the other designation — **not** assumed for an App package. Console AppContainer is **unvalidated** on desktop / CI RAM — no invented Series S|X numbers. Fase 3 stays green (`--grad-check`, `--train-step 1`). On Windows, two-tile GPU copies when a device exists; otherwise `gpu_double_buffer: BLOCKED: no D3D12 device`. Setup: [docs/setup.md](docs/setup.md). **No invented tok/s.** xllama **not** modified. `benchmarks/run_smoke.py` remains a stub.
+Fase 5: QAT + WSD + isolated cooldowns on the host (`xbox_gpu_host --qat-smoke --steps 16`, N=16). Contract: [docs/qat-wsd.md](docs/qat-wsd.md). Config: [examples/qat-wsd-smoke.json](examples/qat-wsd-smoke.json). Default FakeQuant is **ternary** (ADR 0002); 2/4-bit are host-only. **No new HLSL kernels.** Fase 4 stays green (`--stream-stress --budget-mb 1024`). Without D3D12: `BLOCKED: no D3D12 device`. Setup: [docs/setup.md](docs/setup.md). **No invented tok/s or quality curves.** xllama **not** modified. `benchmarks/run_smoke.py` remains a stub.
 
 ### How to contribute
 
@@ -101,18 +101,20 @@ Fase 4: chunk stream + double buffer under the App **~1 GB** planning budget (`x
 
 | Path | Role |
 | --- | --- |
-| `src/hlsl/` | HLSL compute shaders (`hello_compute` Fase 0; `matmul` Fase 1; RMSNorm / RoPE / FLP2 Fase 2; FakeQuant / grad / STE Fase 3). Fase 4 adds none. |
-| `src/cpp/` | C++ host (`xbox_gpu_host`) — DX12 hello + matmul + `--forward-fixture` + `--grad-check` / `--train-step` + `--stream-stress` |
+| `src/hlsl/` | HLSL compute shaders (`hello_compute` Fase 0; `matmul` Fase 1; RMSNorm / RoPE / FLP2 Fase 2; FakeQuant / grad / STE Fase 3). Fase 4–5 add none. |
+| `src/cpp/` | C++ host (`xbox_gpu_host`) — DX12 hello + matmul + `--forward-fixture` + `--grad-check` / `--train-step` + `--stream-stress` + `--qat-smoke` |
 | `docs/setup.md` | Toolchain + run notes |
 | `docs/ggml-baseline.md` | How the CPU GEMM compares; ggml is not vendored |
 | `docs/flp2-forward.md` | Fase 2 decode contract, tolerances, envelope non-goals |
 | `docs/ste-adamw.md` | Fase 3 FakeQuant / STE / AdamW contract + grad-check tolerances |
 | `docs/memory-budget.md` | Fase 4 App ~1 GB / Game ~5 GB streaming contract |
+| `docs/qat-wsd.md` | Fase 5 QAT bit-widths + WSD + isolated cooldowns (N=16) |
 | `docs/`, `docs/adr/` | Architecture + ADRs (`0001`, `0002`) |
 | `docs/platform/` | Public Xbox / Dev Mode / GDK / UWP fact packs |
 | `docs/execution-plan.md` | Cursor phase playbook |
 | `benchmarks/` | Smoke stub + Fase 1 CSV + Fase 2 `fixtures/tiny_flp2.json` + Fase 4 `fixtures/stream_stress.json` |
 | `examples/hello-compute/` | Hello compute host (`hello_compute`) |
+| `examples/qat-wsd-smoke.json` | Fase 5 QAT/WSD schedule (isolated cooldown overlay) |
 | `.github/workflows/ci.yml` | **CI** — jobs `lint-docs`, `build-windows`, `notify-failure` |
 | `.github/workflows/benchmark.yml` | **Benchmark** — job `benchmark` |
 

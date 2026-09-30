@@ -4,6 +4,7 @@ add_library(xgpu_dx12 STATIC
   cpu_matmul.cpp
   cpu_flp2.cpp
   cpu_ste.cpp
+  qat_schedule.cpp
   fixture_loader.cpp
   matmul_dispatch.cpp
   flp2_dispatch.cpp
@@ -64,7 +65,10 @@ add_custom_command(TARGET xbox_gpu_host POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_if_different
     "${CMAKE_SOURCE_DIR}/benchmarks/fixtures/stream_stress.json"
     "$<TARGET_FILE_DIR:xbox_gpu_host>/stream_stress.json"
-  COMMENT "Copy Fase 0–3 HLSL and the Fase 4 stream fixture next to xbox_gpu_host"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${CMAKE_SOURCE_DIR}/examples/qat-wsd-smoke.json"
+    "$<TARGET_FILE_DIR:xbox_gpu_host>/qat-wsd-smoke.json"
+  COMMENT "Copy Fase 0–3 HLSL, Fase 4 stream fixture, and Fase 5 QAT/WSD schedule next to xbox_gpu_host"
 )
 
 install(TARGETS xbox_gpu_host RUNTIME DESTINATION bin)

@@ -1,5 +1,7 @@
 #include "cpu_ste.h"
 
+#include "qat_schedule.h"
+
 #include <algorithm>
 #include <cfenv>
 #include <cmath>
@@ -75,20 +77,49 @@ bool FakeQuantTernaryAbsmean(const float* w, std::size_t n, float* wq, float* ma
   return true;
 }
 
+bool FakeQuantMidriseAbsmean(const float* w, std::size_t n, std::uint32_t levels, float* wq,
+                             float* mask, float& scale, std::string& err) {
+  if (w == nullptr || wq == nullptr || n == 0 || levels < 2) {
+    err = "FakeQuant midrise: empty weight or levels < 2";
+    return false;
+  }
+  const float half = (static_cast<float>(levels) - 1.0f) * 0.5f;
+  const float max_code = static_cast<float>(levels - 1);
+  scale = AbsMean(w, n);
+  for (std::size_t i = 0; i < n; ++i) {
+    const float nrm = w[i] / scale;
+    float code = RoundNearestEven(nrm + half);
+    if (code < 0.0f) {
+      code = 0.0f;
+    } else if (code > max_code) {
+      code = max_code;
+    }
+    wq[i] = (code - half) * scale;
+    if (mask != nullptr) {
+      mask[i] = (std::fabs(nrm) <= half) ? 1.0f : 0.0f;
+    }
+  }
+  return true;
+}
+
+bool FakeQuant2BitAbsmean(const float* w, std::size_t n, float* wq, float* mask, float& scale,
+                          std::string& err) {
+  return FakeQuantMidriseAbsmean(w, n, 4, wq, mask, scale, err);
+}
+
+bool FakeQuant4BitAbsmean(const float* w, std::size_t n, float* wq, float* mask, float& scale,
+                          std::string& err) {
+  return FakeQuantMidriseAbsmean(w, n, 16, wq, mask, scale, err);
+}
+
 bool FakeQuant2BitStub(const float* w, std::size_t n, float* wq, std::string& err) {
-  (void)w;
-  (void)n;
-  (void)wq;
-  err = "FakeQuant 2-bit is a Fase 5 stub — not used for Fase 3 acceptance";
-  return false;
+  float scale = 0.0f;
+  return FakeQuant2BitAbsmean(w, n, wq, nullptr, scale, err);
 }
 
 bool FakeQuant4BitStub(const float* w, std::size_t n, float* wq, std::string& err) {
-  (void)w;
-  (void)n;
-  (void)wq;
-  err = "FakeQuant 4-bit is a Fase 5 stub — not used for Fase 3 acceptance";
-  return false;
+  float scale = 0.0f;
+  return FakeQuant4BitAbsmean(w, n, wq, nullptr, scale, err);
 }
 
 bool FakeQuant(FakeQuantScheme scheme, const float* w, std::size_t n, float* wq, float* mask,
@@ -96,10 +127,10 @@ bool FakeQuant(FakeQuantScheme scheme, const float* w, std::size_t n, float* wq,
   switch (scheme) {
     case FakeQuantScheme::TernaryAbsmean:
       return FakeQuantTernaryAbsmean(w, n, wq, mask, scale, err);
-    case FakeQuantScheme::Bits2Stub:
-      return FakeQuant2BitStub(w, n, wq, err);
-    case FakeQuantScheme::Bits4Stub:
-      return FakeQuant4BitStub(w, n, wq, err);
+    case FakeQuantScheme::Bits2:
+      return FakeQuant2BitAbsmean(w, n, wq, mask, scale, err);
+    case FakeQuantScheme::Bits4:
+      return FakeQuant4BitAbsmean(w, n, wq, mask, scale, err);
   }
   err = "FakeQuant: unknown scheme";
   return false;
@@ -187,7 +218,7 @@ TinySteNet MakeDefaultTinySteNet() {
 }
 
 bool TinySteForwardBackward(const TinySteNet& net, bool identity_ste, TinySteTensors& io,
-                            std::string& err) {
+                            std::string& err, FakeQuantScheme scheme) {
   const std::size_t n1 = static_cast<std::size_t>(net.H) * net.In;
   const std::size_t n2 = static_cast<std::size_t>(net.Out) * net.H;
   const std::size_t nh = static_cast<std::size_t>(net.B) * net.H;
@@ -214,10 +245,8 @@ bool TinySteForwardBackward(const TinySteNet& net, bool identity_ste, TinySteTen
     io.scale1 = AbsMean(net.W1.data(), n1);
     io.scale2 = AbsMean(net.W2.data(), n2);
   } else {
-    if (!FakeQuantTernaryAbsmean(net.W1.data(), n1, io.W1q.data(), io.mask1.data(), io.scale1,
-                                 err) ||
-        !FakeQuantTernaryAbsmean(net.W2.data(), n2, io.W2q.data(), io.mask2.data(), io.scale2,
-                                 err)) {
+    if (!FakeQuant(scheme, net.W1.data(), n1, io.W1q.data(), io.mask1.data(), io.scale1, err) ||
+        !FakeQuant(scheme, net.W2.data(), n2, io.W2q.data(), io.mask2.data(), io.scale2, err)) {
       return false;
     }
   }
@@ -277,6 +306,26 @@ bool TernaryCodesOk(const std::vector<float>& wq, float scale, std::string& err)
   return true;
 }
 
+bool MidriseCodesOk(const std::vector<float>& wq, float scale, std::uint32_t levels,
+                    std::string& err) {
+  if (scale <= 0.0f) {
+    err = "FakeQuant: non-positive scale";
+    return false;
+  }
+  const float half = (static_cast<float>(levels) - 1.0f) * 0.5f;
+  for (float v : wq) {
+    const float q = v / scale;
+    const float code = q + half;
+    const float nearest = std::round(code);
+    if (std::fabs(code - nearest) > 1.0e-5f || nearest < -1.0e-5f ||
+        nearest > static_cast<float>(levels - 1) + 1.0e-5f) {
+      err = "FakeQuant: code not on midrise lattice";
+      return false;
+    }
+  }
+  return true;
+}
+
 void AppendRow(std::ostringstream& os, const GradCheckRow& row) {
   os << std::left << std::setw(10) << row.name << std::right << std::scientific
      << std::setprecision(4) << "  " << std::setw(12) << row.analytic << "  " << std::setw(12)
@@ -324,14 +373,29 @@ SteCpuReport RunSteGradCheck() {
          << std::count(qio.mask1.begin(), qio.mask1.end(), 0.0f)
          << " W2 zeros=" << std::count(qio.mask2.begin(), qio.mask2.end(), 0.0f) << "\n";
 
-  std::string stub_err;
-  if (FakeQuant2BitStub(net.W1.data(), net.W1.size(), io.W1q.data(), stub_err)) {
+  TinySteTensors io2;
+  TinySteTensors io4;
+  if (!TinySteForwardBackward(net, false, io2, err, FakeQuantScheme::Bits2) ||
+      !MidriseCodesOk(io2.W1q, io2.scale1, 4, err) ||
+      !MidriseCodesOk(io2.W2q, io2.scale2, 4, err)) {
     report.ok = false;
-    report.line = "FAILED: 2-bit stub should not succeed";
-    report.detail = stub_err;
+    report.line = "FAILED: 2-bit FakeQuant";
+    report.detail = err;
     return report;
   }
-  detail << "2/4-bit FakeQuant stubs present (Fase 5): " << stub_err << "\n";
+  if (!TinySteForwardBackward(net, false, io4, err, FakeQuantScheme::Bits4) ||
+      !MidriseCodesOk(io4.W1q, io4.scale1, 16, err) ||
+      !MidriseCodesOk(io4.W2q, io4.scale2, 16, err)) {
+    report.ok = false;
+    report.line = "FAILED: 4-bit FakeQuant";
+    report.detail = err;
+    return report;
+  }
+  detail << "2-bit FakeQuant midrise host: scale1=" << io2.scale1 << " scale2=" << io2.scale2
+         << "\n";
+  detail << "4-bit FakeQuant midrise host: scale1=" << io4.scale1 << " scale2=" << io4.scale2
+         << "\n";
+  detail << "2/4-bit are host FakeQuant (no new HLSL). Grad-check gate stays ternary STE-identity.\n";
 
   std::vector<float> W1 = net.W1;
   std::vector<float> W2 = net.W2;
@@ -465,6 +529,169 @@ SteCpuReport RunSteTrainStep(std::uint32_t steps) {
 
   report.ok = true;
   report.line = "STATUS: train-step ok";
+  report.detail = detail.str();
+  return report;
+}
+
+namespace {
+
+FakeQuantScheme SchemeFromBitWidth(QatBitWidth w) {
+  switch (w) {
+    case QatBitWidth::Bits2:
+      return FakeQuantScheme::Bits2;
+    case QatBitWidth::Bits4:
+      return FakeQuantScheme::Bits4;
+    case QatBitWidth::Ternary:
+    default:
+      return FakeQuantScheme::TernaryAbsmean;
+  }
+}
+
+const char* SchemeName(FakeQuantScheme s) {
+  switch (s) {
+    case FakeQuantScheme::Bits2:
+      return "2";
+    case FakeQuantScheme::Bits4:
+      return "4";
+    case FakeQuantScheme::TernaryAbsmean:
+    default:
+      return "ternary";
+  }
+}
+
+void AppendLrTable(std::ostringstream& os, const std::vector<LrSample>& table) {
+  os << "step  phase                    lr\n";
+  for (const LrSample& row : table) {
+    os << std::setw(4) << row.step << "  " << std::left << std::setw(22) << row.phase << std::right
+       << "  " << std::scientific << std::setprecision(8) << row.lr << "\n";
+  }
+}
+
+}  // namespace
+
+SteCpuReport RunQatSmoke(const QatSmokeOptions& options) {
+  SteCpuReport report;
+  const std::filesystem::path resolved = ResolveQatSchedule(options.config);
+  if (resolved.empty()) {
+    report.ok = false;
+    report.line = "FAILED: qat-schedule not found";
+    report.detail = "looked for examples/qat-wsd-smoke.json (see docs/qat-wsd.md)";
+    return report;
+  }
+
+  QatSchedule sched;
+  std::string err;
+  if (!LoadQatSchedule(resolved, sched, err)) {
+    report.ok = false;
+    report.line = "FAILED: qat-schedule validation";
+    report.detail = err + "\nconfig " + resolved.u8string();
+    return report;
+  }
+
+  std::uint32_t steps = options.steps > 0 ? options.steps : sched.smoke_steps;
+  if (!ValidateSmokeSteps(sched, steps, err)) {
+    report.ok = false;
+    report.line = "FAILED: qat-smoke steps";
+    report.detail = err;
+    return report;
+  }
+
+  FakeQuantScheme scheme = SchemeFromBitWidth(sched.bit_width);
+  if (options.bit_width_set) {
+    scheme = options.bit_width;
+  }
+
+  std::vector<LrSample> table;
+  BuildLrTable(sched, steps, table);
+
+  std::ostringstream detail;
+  detail << std::scientific << std::setprecision(4);
+  detail << "Fase 5 QAT + WSD smoke (tiny relu2 MLP, host AdamW)\n";
+  detail << "config " << resolved.u8string() << "\n";
+  detail << "N=" << steps << " WsdLength=" << WsdLength(sched) << " decay=linear min_lr="
+         << sched.min_lr << "\n";
+  detail << "bit_width=" << SchemeName(scheme)
+         << " (default smoke path is ternary; 2/4-bit are host FakeQuant)\n";
+  detail << "AdamW ADR 0002: beta1=" << sched.beta1 << " beta2=" << sched.beta2
+         << " eps=" << sched.eps << " wd=" << sched.weight_decay << "\n";
+  detail << "isolated cooldown count=" << sched.cooldowns.size()
+         << " (overlay; not merged into WSD decay)\n";
+  AppendLrTable(detail, table);
+
+  if (options.dry_run) {
+    detail << "dry-run only — no train step. Not a quality curve. Not a tok/s result.";
+    report.ok = true;
+    report.line = "STATUS: qat-schedule dry-run ok";
+    report.detail = detail.str();
+    return report;
+  }
+
+  TinySteNet net = MakeDefaultTinySteNet();
+  TinySteTensors io;
+  if (!TinySteForwardBackward(net, false, io, err, scheme)) {
+    report.ok = false;
+    report.line = "FAILED: qat-smoke forward";
+    report.detail = err;
+    return report;
+  }
+  report.loss_before = io.loss;
+
+  AdamWConfig cfg;
+  cfg.lr = sched.base_lr;
+  cfg.beta1 = sched.beta1;
+  cfg.beta2 = sched.beta2;
+  cfg.eps = sched.eps;
+  cfg.weight_decay = sched.weight_decay;
+  AdamWState st1;
+  AdamWState st2;
+  AdamWReset(st1, net.W1.size());
+  AdamWReset(st2, net.W2.size());
+
+  float max_dw = 0.0f;
+  float max_dw_delta = 0.0f;
+  for (std::uint32_t s = 0; s < steps; ++s) {
+    if (s > 0) {
+      if (!TinySteForwardBackward(net, false, io, err, scheme)) {
+        report.ok = false;
+        report.line = "FAILED: qat-smoke forward";
+        report.detail = err;
+        return report;
+      }
+    }
+    cfg.lr = table[s].lr;
+    for (float g : io.dW1) {
+      max_dw = std::max(max_dw, std::fabs(g));
+    }
+    for (float g : io.dW2) {
+      max_dw = std::max(max_dw, std::fabs(g));
+    }
+    std::vector<float> w1_before = net.W1;
+    std::vector<float> w2_before = net.W2;
+    AdamWStep(cfg, st1, net.W1.data(), io.dW1.data(), net.W1.size());
+    AdamWStep(cfg, st2, net.W2.data(), io.dW2.data(), net.W2.size());
+    for (std::size_t i = 0; i < net.W1.size(); ++i) {
+      max_dw_delta = std::max(max_dw_delta, std::fabs(net.W1[i] - w1_before[i]));
+    }
+    for (std::size_t i = 0; i < net.W2.size(); ++i) {
+      max_dw_delta = std::max(max_dw_delta, std::fabs(net.W2[i] - w2_before[i]));
+    }
+  }
+
+  if (!TinySteForwardBackward(net, false, io, err, scheme)) {
+    report.ok = false;
+    report.line = "FAILED: qat-smoke post forward";
+    report.detail = err;
+    return report;
+  }
+  report.loss_after = io.loss;
+
+  detail << "loss_before " << report.loss_before << " loss_after " << report.loss_after << "\n";
+  detail << "max|dW| " << max_dw << " max|delta W| " << max_dw_delta << "\n";
+  detail << "DirectML is not the optimizer. Not a tok/s result. Not a quality curve. "
+            "Not a console result. No new HLSL in this phase.";
+
+  report.ok = true;
+  report.line = "STATUS: qat-smoke ok";
   report.detail = detail.str();
   return report;
 }

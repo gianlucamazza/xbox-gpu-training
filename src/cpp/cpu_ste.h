@@ -1,13 +1,15 @@
 #pragma once
 
 // Fase 3: ternary FakeQuant (absmean) + STE + host AdamW + tiny-net grad-check.
-// Semantics: ADR 0002 / docs/ste-adamw.md. No CUDA. DirectML is not the optimizer.
-// English comments only.
+// Fase 5: 2/4-bit host FakeQuant (FLP2 midrise) + QAT/WSD smoke on the same net.
+// Semantics: ADR 0002 / docs/ste-adamw.md / docs/qat-wsd.md.
+// No CUDA. DirectML is not the optimizer. English comments only.
 
 #include "cpu_matmul.h"
 
 #include <cstddef>
 #include <cstdint>
+#include <filesystem>
 #include <string>
 #include <vector>
 
@@ -43,8 +45,8 @@ void AdamWStep(const AdamWConfig& cfg, AdamWState& st, float* w, const float* g,
 
 enum class FakeQuantScheme {
   TernaryAbsmean = 0,
-  Bits2Stub = 2,
-  Bits4Stub = 4,
+  Bits2 = 2,
+  Bits4 = 4,
 };
 
 float AbsMean(const float* w, std::size_t n);
@@ -55,7 +57,13 @@ float RoundNearestEven(float x);
 bool FakeQuantTernaryAbsmean(const float* w, std::size_t n, float* wq, float* mask, float& scale,
                              std::string& err);
 
-// Fase 5 stubs — not on the Fase 3 train path.
+// Fase 5 host FakeQuant — FLP2 midrise lattices (levels=4 / 16). Not stubs.
+bool FakeQuant2BitAbsmean(const float* w, std::size_t n, float* wq, float* mask, float& scale,
+                          std::string& err);
+bool FakeQuant4BitAbsmean(const float* w, std::size_t n, float* wq, float* mask, float& scale,
+                          std::string& err);
+
+// Back-compat names: now call the real 2/4-bit kernels (mask/scale discarded).
 bool FakeQuant2BitStub(const float* w, std::size_t n, float* wq, std::string& err);
 bool FakeQuant4BitStub(const float* w, std::size_t n, float* wq, std::string& err);
 
@@ -108,9 +116,10 @@ struct TinySteTensors {
 };
 
 // identity_ste: Wq := W (the function STE claims to differentiate).
-// Otherwise: ternary FakeQuant + STE clip on the master grads.
+// Otherwise: FakeQuant + STE clip on the master grads (default ternary).
 bool TinySteForwardBackward(const TinySteNet& net, bool identity_ste, TinySteTensors& io,
-                            std::string& err);
+                            std::string& err,
+                            FakeQuantScheme scheme = FakeQuantScheme::TernaryAbsmean);
 
 float TinySteLossAt(const TinySteNet& net, bool identity_ste, const float* W1, const float* W2,
                     std::string& err);
@@ -136,3 +145,13 @@ struct SteCpuReport {
 
 SteCpuReport RunSteGradCheck();
 SteCpuReport RunSteTrainStep(std::uint32_t steps);
+
+struct QatSmokeOptions {
+  std::filesystem::path config;
+  std::uint32_t steps = 0;  // 0 → schedule smoke.steps
+  bool dry_run = false;
+  bool bit_width_set = false;
+  FakeQuantScheme bit_width = FakeQuantScheme::TernaryAbsmean;
+};
+
+SteCpuReport RunQatSmoke(const QatSmokeOptions& options);

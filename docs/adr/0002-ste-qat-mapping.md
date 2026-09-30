@@ -13,7 +13,7 @@
 
 Master weights already live in host fp32 (ADR 0001). Fase 2 reconstructed a **scalar** FLP2 decode for deploy-style codes; it did not define how those codes are produced from a trainable master, nor how gradients flow through the quantizer.
 
-This ADR freezes the Fase 3 mapping only. Full QAT schedules, WSD, and isolated cooldowns stay Fase 5.
+This ADR freezes the Fase 3 mapping only. Full QAT schedules, WSD, and isolated cooldowns are Fase 5: [docs/qat-wsd.md](../qat-wsd.md). 2-bit / 4-bit FakeQuant are host midrise kernels there; they are still **not** the Fase 3 gate.
 
 ## Decision
 
@@ -34,7 +34,7 @@ This ADR freezes the Fase 3 mapping only. Full QAT schedules, WSD, and isolated 
    | `weight_decay` | `0.01` (decoupled) |
 
    `W ← W - lr * (m̂ / (√v̂ + ε) + wd * W)` after the usual bias-corrected moments.
-5. **2-bit / 4-bit FakeQuant** exist only as **stubs** (`FakeQuant2BitStub` / `FakeQuant4BitStub`) for Fase 5. They are not on the Fase 3 train path.
+5. **2-bit / 4-bit FakeQuant** were stubs in the Fase 3 PR. Fase 5 implements them on the **host** (FLP2 midrise; `--bit-width 2|4`). They are still not on the Fase 3 `--train-step 1` / `--grad-check` STE-identity gate. No new HLSL.
 6. **Grad-check** compares analytic STE-identity gradients (unquantized forward, same clip-off path) to central finite differences. Discrete FakeQuant is piecewise constant, so finite-diff of `Q(W)` is **not** the STE claim. Documented in [docs/ste-adamw.md](../ste-adamw.md).
 
 ## Peers (not ports)
@@ -56,7 +56,7 @@ These papers / trees inform the mapping. Nothing is copied as a CUDA or PyTorch 
 
 ## Out of scope (this PR)
 
-- Full WSD + isolated cooldowns (Fase 5)
+- Full WSD + isolated cooldowns — implemented in Fase 5 ([qat-wsd.md](../qat-wsd.md)); this ADR does not change AdamW β/ε/wd
 - Binary FLP2 envelope / rANS (research issue #10)
 - Console benches, tok/s, loss curves, quality metrics
 - CUDA / cuDNN

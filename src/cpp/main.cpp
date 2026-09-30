@@ -4,12 +4,14 @@
 // --forward-fixture runs Fase 2 FLP2 decode + tiny forward vs the CPU fixture.
 // --grad-check / --train-step run Fase 3 STE + host AdamW.
 // --stream-stress runs Fase 4 chunk stream + double buffer under --budget-mb.
+// --qat-smoke runs Fase 5 QAT + WSD + isolated cooldowns (host).
 // --smoke keeps the no-GPU compile check. No CUDA. DirectML is not the trainer.
 
 #include "cpu_matmul.h"
 #include "flp2_dispatch.h"
 #include "hello_dispatch.h"
 #include "matmul_dispatch.h"
+#include "qat_schedule.h"
 #include "ste_dispatch.h"
 #include "stream_stress.h"
 
@@ -20,7 +22,7 @@
 #include <string>
 
 static void PrintBanner() {
-  std::cout << "xbox-gpu-training host (Fase 4)\n";
+  std::cout << "xbox-gpu-training host (Fase 5)\n";
   std::cout << "Target path: DirectX 12 compute shaders (HLSL). No CUDA.\n";
   std::cout << "DirectML is inference/forward-focused on console and is not the trainer.\n";
 }
@@ -42,6 +44,8 @@ static void PrintUsage() {
   std::cout << "  xbox_gpu_host --grad-check\n";
   std::cout << "  xbox_gpu_host --train-step [N]\n";
   std::cout << "  xbox_gpu_host --stream-stress [--budget-mb 1024]\n";
+  std::cout << "  xbox_gpu_host --qat-smoke [--steps N] [--config path] [--bit-width ternary|2|4]\n";
+  std::cout << "                    [--dry-run]\n";
   std::cout << "  --smoke            Print the banner and exit 0 (no device create).\n";
   std::cout << "  --hello-compute    Create a D3D12 device and dispatch hello_compute once.\n";
   std::cout << "  --cpu-ref          Run the portable CPU GEMM tests (no GPU).\n";
@@ -55,6 +59,11 @@ static void PrintUsage() {
   std::cout << "  --budget-mb N      Planning budget in MiB (default 1024). App, not Game.\n";
   std::cout << "  --chunk-mb N       Override fixture tile size (optional).\n";
   std::cout << "  --logical-mb N     Override fixture logical corpus (optional).\n";
+  std::cout << "  --qat-smoke        Fase 5 QAT + WSD + isolated cooldown host loop.\n";
+  std::cout << "  --steps N          Override schedule smoke.steps (default 16).\n";
+  std::cout << "  --config path      QAT/WSD JSON (default examples/qat-wsd-smoke.json).\n";
+  std::cout << "  --bit-width W      ternary (default) | 2 | 4. 2/4-bit are host FakeQuant.\n";
+  std::cout << "  --dry-run          Validate schedule + print LR table; no train step.\n";
   std::cout << "  default            Same as --hello-compute.\n";
 }
 
@@ -67,6 +76,11 @@ int main(int argc, char** argv) {
   bool grad_check = false;
   bool train_step = false;
   bool stream_stress = false;
+  bool qat_smoke = false;
+  bool dry_run = false;
+  bool bit_width_set = false;
+  bool steps_set = false;
+  QatBitWidth bit_width = QatBitWidth::Ternary;
   std::uint32_t train_steps = 1;
   std::uint64_t budget_mb = 0;
   std::uint64_t chunk_mb = 0;
@@ -76,6 +90,7 @@ int main(int argc, char** argv) {
   std::filesystem::path shader_hint;
   std::filesystem::path out_csv;
   std::filesystem::path fixture_path;
+  std::filesystem::path qat_config;
 
   for (int i = 1; i < argc; ++i) {
     const std::string arg = argv[i];
@@ -107,6 +122,32 @@ int main(int argc, char** argv) {
           return 1;
         }
       }
+    } else if (arg == "--qat-smoke") {
+      qat_smoke = true;
+    } else if (arg == "--dry-run") {
+      dry_run = true;
+    } else if (arg == "--steps" && i + 1 < argc) {
+      try {
+        const int n = std::stoi(argv[++i]);
+        if (n < 1) {
+          std::cerr << "--steps requires N >= 1\n";
+          return 1;
+        }
+        train_steps = static_cast<std::uint32_t>(n);
+        steps_set = true;
+      } catch (const std::exception&) {
+        std::cerr << "--steps requires an integer N\n";
+        return 1;
+      }
+    } else if (arg == "--config" && i + 1 < argc) {
+      qat_config = argv[++i];
+    } else if (arg == "--bit-width" && i + 1 < argc) {
+      std::string bw_err;
+      if (!ParseQatBitWidth(argv[++i], bit_width, bw_err)) {
+        std::cerr << bw_err << "\n";
+        return 1;
+      }
+      bit_width_set = true;
     } else if (arg == "--stream-stress") {
       stream_stress = true;
       if (i + 1 < argc && argv[i + 1][0] != '-') {
@@ -179,6 +220,11 @@ int main(int argc, char** argv) {
     std::cerr << "--chunk-mb / --logical-mb require --stream-stress\n";
     return 1;
   }
+  if ((dry_run || bit_width_set || !qat_config.empty() || (steps_set && !train_step)) &&
+      !qat_smoke) {
+    std::cerr << "--qat-smoke required for --dry-run / --config / --bit-width / --steps\n";
+    return 1;
+  }
 
   PrintBanner();
   if (smoke_only) {
@@ -210,6 +256,25 @@ int main(int argc, char** argv) {
     SteHostOptions opt;
     opt.shader_hint = shader_hint;
     const RunReport report = RunSteGradCheckHost(opt);
+    PrintReport(report);
+    return report.status == RunStatus::Failed ? 1 : 0;
+  }
+
+  if (qat_smoke) {
+    QatSmokeHostOptions opt;
+    opt.shader_hint = shader_hint;
+    opt.config = qat_config;
+    opt.steps = steps_set ? train_steps : 0;
+    opt.dry_run = dry_run;
+    opt.bit_width_set = bit_width_set;
+    if (bit_width == QatBitWidth::Bits2) {
+      opt.bit_width = FakeQuantScheme::Bits2;
+    } else if (bit_width == QatBitWidth::Bits4) {
+      opt.bit_width = FakeQuantScheme::Bits4;
+    } else {
+      opt.bit_width = FakeQuantScheme::TernaryAbsmean;
+    }
+    const RunReport report = RunQatSmokeHost(opt);
     PrintReport(report);
     return report.status == RunStatus::Failed ? 1 : 0;
   }

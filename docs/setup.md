@@ -16,6 +16,7 @@ Platform facts (Microsoft/Xbox public documentation, not our benches) live under
 | Fase 1: real matmul HLSL + CPU baseline + CSV | Treat DirectML as the matmul trainer; vendor ggml unless documented |
 | Fase 2: RMSNorm / RoPE / FLP2 decode + tiny fixture | Unpack a guessed binary FLP2 envelope; modify xllama |
 | Fase 3: STE + host AdamW + `--grad-check` / `--train-step 1` | Invent loss curves / tok/s; treat DirectML as the optimizer |
+| Fase 5: QAT/WSD schedule + `--qat-smoke --steps 16` | Invent quality curves; skip cooldown isolation; add CUDA |
 
 Fase 0–5 Windows work is **not** gated on a Dev Mode console. Console validation is Fase 6: [blockers-fase6-validation.md](platform/blockers-fase6-validation.md).
 
@@ -228,12 +229,38 @@ Linux / no D3D12:
 
 No new HLSL kernel. GPU work (when a D3D12 device exists) is a ping-pong `CopyBufferRegion` of two tiles. Debugger can mask OOM; the **non-debug** package is the gate. **Do not assume Game designation** in an App package. Desktop / CI peak working-set is **not** a Series S|X number.
 
+## QAT + WSD (Fase 5)
+
+| Piece | Path |
+| --- | --- |
+| Contract | [`docs/qat-wsd.md`](qat-wsd.md) |
+| Mapping | [`docs/adr/0002-ste-qat-mapping.md`](adr/0002-ste-qat-mapping.md) |
+| Config | [`examples/qat-wsd-smoke.json`](../examples/qat-wsd-smoke.json) |
+| Host | `xbox_gpu_host --qat-smoke --steps 16` (N=16) |
+
+```bat
+python scripts\validate_qat_schedule.py examples\qat-wsd-smoke.json --dry-run
+.\build\Release\xbox_gpu_host.exe --qat-smoke --steps 16
+.\build\Release\xbox_gpu_host.exe --qat-smoke --dry-run
+```
+
+Linux / no D3D12:
+
+```bash
+python3 scripts/validate_qat_schedule.py examples/qat-wsd-smoke.json --dry-run
+./build/xbox_gpu_host --qat-smoke --steps 16
+# Host N-step QAT/WSD loop, then BLOCKED: no D3D12 device. Dispatch log not invented.
+```
+
+Default FakeQuant is ternary absmean (ADR 0002). `--bit-width 2|4` selects host midrise FakeQuant. **No new HLSL.** Isolated cooldowns overlay WSD; they are not merged into decay. Measured loss pairs are **not** a quality curve.
+
 ## Docs lint
 
 ```bash
 python3 scripts/check_required_docs.py
 python3 scripts/check_glossary.py
 python3 scripts/check_relative_links.py
+python3 scripts/validate_qat_schedule.py examples/qat-wsd-smoke.json --dry-run
 ```
 
 ## Related platform packs (do not duplicate)
@@ -245,6 +272,7 @@ python3 scripts/check_relative_links.py
 | [dx12-hlsl-compute.md](platform/dx12-hlsl-compute.md) | FL 11.0, compute shader path, no CUDA |
 | [uwp-resources.md](platform/uwp-resources.md) | App 1 GB / Creators 5 GB; debugger masks OOM |
 | [memory-budget.md](memory-budget.md) | Fase 4 streaming vs those caps; console unvalidated |
+| [qat-wsd.md](qat-wsd.md) | Fase 5 WSD + isolated cooldowns + bit-widths |
 | [directml-scope.md](platform/directml-scope.md) | DirectML is not the trainer |
 | [series-s-vs-x.md](platform/series-s-vs-x.md) | Public SKU specs, not our benches |
 | [blockers-fase6-validation.md](platform/blockers-fase6-validation.md) | Why console tables wait |

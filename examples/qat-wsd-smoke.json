@@ -1,0 +1,38 @@
+{
+  "schema": "xbox-gpu-training.qat.wsd.v1",
+  "name": "qat_wsd_smoke",
+  "note": "Fase 5 QAT + WSD smoke. Isolated cooldowns overlay the WSD curve; they are not merged into decay. Default FakeQuant is ternary absmean (ADR 0002). 2-bit / 4-bit are host-selectable midrise lattices. Not a quality curve. Not a tok/s result. Not a console result. No CUDA. DirectML is not the trainer.",
+  "qat": {
+    "master": "fp32",
+    "bit_width": "ternary",
+    "ste_clip": "normalized_abs",
+    "scale_grad": false
+  },
+  "optimizer": {
+    "type": "adamw",
+    "base_lr": 0.001,
+    "beta1": 0.9,
+    "beta2": 0.999,
+    "eps": 1e-8,
+    "weight_decay": 0.01,
+    "device": "host"
+  },
+  "wsd": {
+    "warmup_steps": 4,
+    "stable_steps": 8,
+    "decay_steps": 4,
+    "decay": "linear",
+    "min_lr": 0.0001
+  },
+  "cooldowns": [
+    {
+      "id": "stable-mid",
+      "start_step": 8,
+      "steps": 4,
+      "end_lr": 0.00001
+    }
+  ],
+  "smoke": {
+    "steps": 16
+  }
+}
