@@ -14,7 +14,7 @@
 namespace e0 {
 std::string sha256_file(const std::filesystem::path& path) {
   std::ifstream input(path,std::ios::binary);
-  if(!input) throw std::runtime_error("cannot hash: "+path.u8string());
+  if(!input) throw std::runtime_error("cannot hash: "+path_text(path));
   std::vector<char> bytes(1<<20); unsigned char digest[32]{};
 #ifdef _WIN32
   BCRYPT_ALG_HANDLE algorithm=nullptr; BCRYPT_HASH_HANDLE hash=nullptr;
@@ -44,11 +44,11 @@ std::string sha256_file(const std::filesystem::path& path) {
   return out.str();
 }
 Json read_json(const std::filesystem::path& path) {
-  std::ifstream input(path); if(!input) throw std::runtime_error("missing JSON: "+path.u8string());
+  std::ifstream input(path); if(!input) throw std::runtime_error("missing JSON: "+path_text(path));
   return Json::parse(input);
 }
 void atomic_json(const std::filesystem::path& path,const Json& value) {
-  const auto temporary=path.u8string()+".tmp";
+  const auto temporary=path_text(path)+".tmp";
   { std::ofstream file(temporary,std::ios::binary|std::ios::trunc); if(!file) throw std::runtime_error("JSON write failed");file<<value.dump();file.flush();if(!file) throw std::runtime_error("JSON flush failed"); }
 #ifdef _WIN32
   if(!MoveFileExW(std::filesystem::path(temporary).c_str(),path.c_str(),MOVEFILE_REPLACE_EXISTING|MOVEFILE_WRITE_THROUGH)) throw std::runtime_error("JSON atomic replacement failed");
@@ -66,7 +66,7 @@ std::filesystem::path asset(const std::filesystem::path& root,const Json& descri
   auto rel=path.lexically_relative(prefix);
   for(const auto& part:rel) if(part=="..") throw std::runtime_error("asset symlink escapes job directory");
   if(!std::filesystem::exists(path)&&descriptor.contains("chunks")) {
-    const auto temporary=path.u8string()+".assembling";
+    const auto temporary=path_text(path)+".assembling";
     { std::ofstream output(temporary,std::ios::binary|std::ios::trunc);
       if(!output) throw std::runtime_error("asset assembly creation failed");
       std::vector<char> buffer(1<<20);uint64_t total=0;
@@ -83,7 +83,7 @@ std::filesystem::path asset(const std::filesystem::path& root,const Json& descri
     if(sha256_file(temporary)!=descriptor.at("sha256")) throw std::runtime_error("assembled asset hash mismatch");
     std::filesystem::rename(temporary,path);
   }
-  if(std::filesystem::file_size(path)!=descriptor.at("bytes").get<uint64_t>()||sha256_file(path)!=descriptor.at("sha256")) throw std::runtime_error("asset integrity failed: "+relative.u8string());
+  if(std::filesystem::file_size(path)!=descriptor.at("bytes").get<uint64_t>()||sha256_file(path)!=descriptor.at("sha256")) throw std::runtime_error("asset integrity failed: "+path_text(relative));
   return path;
 }
 void read_batch(std::ifstream& corpus,std::ifstream& indices,uint64_t step,uint32_t batch,uint32_t ctx,uint64_t corpus_size,Values& x,Values& y) {
@@ -154,7 +154,7 @@ Json run_job(const std::filesystem::path& job_file,Kernel& kernel,uint64_t stop_
       const uint64_t end=T*(uint64_t(1)<<branch),cd=std::max<uint64_t>(1,uint64_t(0.1*double(end))),start=end-cd;
       if(step>start) continue;
       while(step<start) {
-        if(std::filesystem::exists(root/"cancel")) { atomic_json(result/"checkpoint.json",model.checkpoint(step,job));status("interrupted");return report; }
+        if(std::filesystem::exists(root/(id+".cancel"))) { atomic_json(result/"checkpoint.json",model.checkpoint(step,job));status("interrupted");return report; }
         read_batch(corpus,indices,step,batch,model.config.ctx,job.at("data").at("bytes"),x,y);
         auto metric=model.step(kernel,x,y,batch,learning_rate(step,warmup,lr),wd,step+1);
         ++step;++executed;report["last_loss"]=metric.at("loss");
@@ -165,7 +165,7 @@ Json run_job(const std::filesystem::path& job_file,Kernel& kernel,uint64_t stop_
       const auto cooldown_begin=std::chrono::steady_clock::now();
       Model copy=model;
       for(uint64_t s=start;s<end;++s) {
-        if(std::filesystem::exists(root/"cancel")) { status("interrupted");return report; }
+        if(std::filesystem::exists(root/(id+".cancel"))) { status("interrupted");return report; }
         read_batch(corpus,indices,s,batch,model.config.ctx,job.at("data").at("bytes"),x,y);
         copy.step(kernel,x,y,batch,learning_rate(s,warmup,lr,start,cd),wd,s+1);
       }

@@ -6,6 +6,7 @@
 
 namespace e0 {
 using Json = nlohmann::json;
+inline std::string path_text(const std::filesystem::path& path) { auto text=path.u8string();return {text.begin(),text.end()}; }
 struct Config {
   uint32_t d=0, layers=0, heads=0, ff=0, vocab=256, ctx=0;
   std::string mlp, format, policy;

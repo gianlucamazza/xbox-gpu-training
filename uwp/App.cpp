@@ -19,15 +19,15 @@ void worker() {
     auto local=std::filesystem::path(winrt::Windows::Storage::ApplicationData::Current().LocalFolder().Path().c_str());
     inbox=local/L"inbox";std::filesystem::create_directories(inbox);
     auto shader=std::filesystem::path(winrt::Windows::ApplicationModel::Package::Current().InstalledLocation().Path().c_str())/L"Assets"/L"e0_tensor.cso";
-    auto kernel=e0::make_gpu(shader.u8string());
+    auto kernel=e0::make_gpu(e0::path_text(shader));
     e0::atomic_json(local/L"device.json",{{"schema","floppylm.device.v1"},{"hardware_gpu",kernel->hardware()},
       {"adapter",kernel->adapter()},{"package",winrt::to_string(winrt::Windows::ApplicationModel::Package::Current().Id().FullName())},
       {"state","ready"}});
     while(true) {
       for(const auto& entry:std::filesystem::directory_iterator(inbox)) {
         if(entry.path().extension()!=L".ready") continue;
-        auto stem=entry.path().stem().wstring(), claimed=inbox/(stem+L".claimed");
-        if(!MoveFileW(entry.path().c_str(),claimed.c_str())) continue;
+        auto stem=entry.path().stem().wstring();auto claimed=inbox/(stem+L".claimed");
+        if(!MoveFileExW(entry.path().c_str(),claimed.c_str(),MOVEFILE_REPLACE_EXISTING)) continue;
         auto job=inbox/(stem+L".job.json");
         { std::lock_guard<std::mutex> lock(active_mutex);active_job=job; }
         try {
@@ -54,7 +54,7 @@ namespace winrt::Xgpu::implementation {
 App::App() {
   Suspending([](auto const&,auto const&) {
     std::lock_guard<std::mutex> lock(active_mutex);
-    if(!active_job.empty()) { std::ofstream file(active_job.parent_path()/"cancel");file<<"suspend"; }
+    if(!active_job.empty()) { std::ofstream file(active_job.parent_path()/(active_job.stem().stem().wstring()+L".cancel"));file<<"suspend"; }
   });
 }
 void App::OnLaunched(Windows::ApplicationModel::Activation::LaunchActivatedEventArgs const&) {
