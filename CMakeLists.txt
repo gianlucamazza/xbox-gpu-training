@@ -1,9 +1,10 @@
 cmake_minimum_required(VERSION 3.20)
 project(xbox_gpu_training LANGUAGES CXX)
 
-# Fase 2 host: DirectX 12 hello compute + matmul + FLP2 forward on Windows.
+# Fase 3 host: DirectX 12 hello compute + matmul + FLP2 forward + STE/AdamW on Windows.
 # Compiles as a no-GPU smoke check on non-Windows (reports BLOCKED: no D3D12 device).
-# CPU reference tests (--cpu-ref / --bench matmul / --forward-fixture) stay green without a GPU.
+# CPU tests (--cpu-ref / --bench matmul / --forward-fixture / --grad-check / --train-step)
+# stay green without a GPU.
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -109,6 +110,43 @@ if(WIN32)
       "${CMAKE_BINARY_DIR}/rope.cso"
       "${CMAKE_BINARY_DIR}/flp2_decode.cso"
       "${CMAKE_BINARY_DIR}/flp2_forward.cso")
+    add_custom_command(
+      OUTPUT "${CMAKE_BINARY_DIR}/fakequant_ternary.cso"
+      COMMAND "${XGPU_DXC}" -T cs_6_0 -E CSMain
+              -Fo "${CMAKE_BINARY_DIR}/fakequant_ternary.cso"
+              "${CMAKE_SOURCE_DIR}/src/hlsl/fakequant_ternary.hlsl"
+      DEPENDS "${CMAKE_SOURCE_DIR}/src/hlsl/fakequant_ternary.hlsl"
+      COMMENT "dxc -T cs_6_0 -E CSMain fakequant_ternary.hlsl"
+    )
+    add_custom_command(
+      OUTPUT "${CMAKE_BINARY_DIR}/matmul_grad.cso"
+      COMMAND "${XGPU_DXC}" -T cs_6_0 -E CSMain
+              -Fo "${CMAKE_BINARY_DIR}/matmul_grad.cso"
+              "${CMAKE_SOURCE_DIR}/src/hlsl/matmul_grad.hlsl"
+      DEPENDS "${CMAKE_SOURCE_DIR}/src/hlsl/matmul_grad.hlsl"
+      COMMENT "dxc -T cs_6_0 -E CSMain matmul_grad.hlsl"
+    )
+    add_custom_command(
+      OUTPUT "${CMAKE_BINARY_DIR}/relu2_grad.cso"
+      COMMAND "${XGPU_DXC}" -T cs_6_0 -E CSMain
+              -Fo "${CMAKE_BINARY_DIR}/relu2_grad.cso"
+              "${CMAKE_SOURCE_DIR}/src/hlsl/relu2_grad.hlsl"
+      DEPENDS "${CMAKE_SOURCE_DIR}/src/hlsl/relu2_grad.hlsl"
+      COMMENT "dxc -T cs_6_0 -E CSMain relu2_grad.hlsl"
+    )
+    add_custom_command(
+      OUTPUT "${CMAKE_BINARY_DIR}/ste_backward.cso"
+      COMMAND "${XGPU_DXC}" -T cs_6_0 -E CSMain
+              -Fo "${CMAKE_BINARY_DIR}/ste_backward.cso"
+              "${CMAKE_SOURCE_DIR}/src/hlsl/ste_backward.hlsl"
+      DEPENDS "${CMAKE_SOURCE_DIR}/src/hlsl/ste_backward.hlsl"
+      COMMENT "dxc -T cs_6_0 -E CSMain ste_backward.hlsl"
+    )
+    add_custom_target(xgpu_ste_cso ALL DEPENDS
+      "${CMAKE_BINARY_DIR}/fakequant_ternary.cso"
+      "${CMAKE_BINARY_DIR}/matmul_grad.cso"
+      "${CMAKE_BINARY_DIR}/relu2_grad.cso"
+      "${CMAKE_BINARY_DIR}/ste_backward.cso")
   else()
     message(STATUS "dxc not found — HLSL compile skipped (not a GPU result)")
   endif()

@@ -105,12 +105,20 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           & $dxc -T cs_6_0 -E CSMain -Fo build/flp2_forward.cso src/hlsl/flp2_forward.hlsl
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & $dxc -T cs_6_0 -E CSMain -Fo build/fakequant_ternary.cso src/hlsl/fakequant_ternary.hlsl
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & $dxc -T cs_6_0 -E CSMain -Fo build/matmul_grad.cso src/hlsl/matmul_grad.hlsl
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & $dxc -T cs_6_0 -E CSMain -Fo build/relu2_grad.cso src/hlsl/relu2_grad.hlsl
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & $dxc -T cs_6_0 -E CSMain -Fo build/ste_backward.cso src/hlsl/ste_backward.hlsl
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           foreach ($dir in @("build\Release", "build\src\cpp\Release", "dist\bin")) {
             if (Test-Path $dir) {
               Copy-Item -Force build/hello_compute.cso (Join-Path $dir "hello_compute.cso")
             }
           }
-          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "**HLSL:** compiled ``hello_compute.hlsl`` (Fase 0), ``matmul.hlsl`` (Fase 1), and ``rmsnorm`` / ``rope`` / ``flp2_decode`` / ``flp2_forward`` (Fase 2) with dxc."
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "**HLSL:** compiled ``hello_compute.hlsl`` (Fase 0), ``matmul.hlsl`` (Fase 1), ``rmsnorm`` / ``rope`` / ``flp2_decode`` / ``flp2_forward`` (Fase 2), and ``fakequant_ternary`` / ``matmul_grad`` / ``relu2_grad`` / ``ste_backward`` (Fase 3) with dxc."
 
       - name: Run host (hello compute or BLOCKED)
         shell: pwsh
@@ -175,6 +183,34 @@ jobs:
             Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "**FLP2:** CPU fixture matched; GPU path ``BLOCKED`` or not dispatched. Dispatch log not invented."
           } else {
             Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "**FLP2:** ``--forward-fixture`` ran (see log). Not treated as a GPU success."
+          }
+          if ($code -ne 0) { exit $code }
+
+          Write-Host "Running $exe --grad-check"
+          & $exe --grad-check *>&1 | Tee-Object -FilePath host-grad.txt
+          $code = $LASTEXITCODE
+          $grad = Get-Content host-grad.txt -ErrorAction SilentlyContinue
+          $gradtext = ($grad -join "`n")
+          if ($gradtext -match 'STATUS: grad-check dispatched') {
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "**Fase 3:** GPU grad kernels dispatched vs CPU. Not a tok/s result. Not a quality curve."
+          } elseif ($gradtext -match 'STATUS: grad-check ok' -or $gradtext -match 'BLOCKED:') {
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "**Fase 3:** CPU grad-check passed; GPU path ``BLOCKED`` or not dispatched. Dispatch log not invented."
+          } else {
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "**Fase 3:** ``--grad-check`` ran (see log). Not treated as a GPU success."
+          }
+          if ($code -ne 0) { exit $code }
+
+          Write-Host "Running $exe --train-step 1"
+          & $exe --train-step 1 *>&1 | Tee-Object -FilePath host-train.txt
+          $code = $LASTEXITCODE
+          $tr = Get-Content host-train.txt -ErrorAction SilentlyContinue
+          $trtext = ($tr -join "`n")
+          if ($trtext -match 'STATUS: train-step dispatched') {
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "**Fase 3:** one AdamW/STE step with GPU kernel compare. DirectML is not the optimizer."
+          } elseif ($trtext -match 'STATUS: train-step ok' -or $trtext -match 'BLOCKED:') {
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "**Fase 3:** one CPU AdamW/STE step; GPU path ``BLOCKED`` or not dispatched. Dispatch log not invented."
+          } else {
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "**Fase 3:** ``--train-step 1`` ran (see log). Not treated as a GPU success."
           }
           if ($code -ne 0) { exit $code }
 

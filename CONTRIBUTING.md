@@ -1,6 +1,6 @@
 # Contributing
 
-Evidence-first research repository. Read [README.md](README.md), [ROADMAP.md](ROADMAP.md), [docs/execution-plan.md](docs/execution-plan.md), [docs/adr/0001-architecture.md](docs/adr/0001-architecture.md), and the public platform packs under [docs/platform/](docs/platform/dev-mode.md) before opening a pull request.
+Evidence-first research repository. Read [README.md](README.md), [ROADMAP.md](ROADMAP.md), [docs/execution-plan.md](docs/execution-plan.md), [docs/adr/0001-architecture.md](docs/adr/0001-architecture.md), [docs/adr/0002-ste-qat-mapping.md](docs/adr/0002-ste-qat-mapping.md), and the public platform packs under [docs/platform/](docs/platform/dev-mode.md) before opening a pull request.
 
 ## Companion repo
 
@@ -52,6 +52,8 @@ cmake -S . -B build && cmake --build build
 ./build/xbox_gpu_host --cpu-ref
 ./build/xbox_gpu_host --bench matmul --out benchmarks/results/matmul.csv
 ./build/xbox_gpu_host --forward-fixture benchmarks/fixtures/tiny_flp2.json
+./build/xbox_gpu_host --grad-check
+./build/xbox_gpu_host --train-step 1
 ```
 
 On Windows with the Windows SDK, compile HLSL with `dxc` and run the host (see [docs/setup.md](docs/setup.md) and `src/hlsl/README.md`). CMake must auto-detect the Visual Studio generator (`cmake -S . -B build -A x64`); do not pin `-G "Visual Studio 17 2022"`.
