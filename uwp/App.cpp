@@ -91,7 +91,8 @@ void worker() {
             .c_str());
     e0::atomic_json(local / L"device.json", {{"state", "failed"},
                                              {"error", error.what()},
-                                             {"hardware_gpu", false}});
+                                             {"hardware_gpu", false},
+                                             {"commit", XGPU_COMMIT}});
   }
 }
 } // namespace

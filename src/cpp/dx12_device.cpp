@@ -15,11 +15,12 @@ std::string HrHex(long hr) {
   return buf;
 }
 
-static std::string WideToUtf8(const wchar_t* text) {
+static std::string WideToUtf8(const wchar_t *text) {
   if (!text || !text[0]) {
     return {};
   }
-  const int n = WideCharToMultiByte(CP_UTF8, 0, text, -1, nullptr, 0, nullptr, nullptr);
+  const int n =
+      WideCharToMultiByte(CP_UTF8, 0, text, -1, nullptr, 0, nullptr, nullptr);
   if (n <= 1) {
     return {};
   }
@@ -38,7 +39,10 @@ static void TryEnableDebugLayer() {
 Dx12CreateResult CreateDx12Device() {
   Dx12CreateResult result;
 
+  // Release console probes must use the same runtime as the measured job.
+#ifndef XGPU_UWP
   TryEnableDebugLayer();
+#endif
 
   Microsoft::WRL::ComPtr<IDXGIFactory4> factory;
   HRESULT hr = CreateDXGIFactory1(IID_PPV_ARGS(&factory));
@@ -48,12 +52,14 @@ Dx12CreateResult CreateDx12Device() {
     return result;
   }
 
-  auto try_adapter = [&](IDXGIAdapter* adapter, bool warp, const std::string& name) -> bool {
+  auto try_adapter = [&](IDXGIAdapter *adapter, bool warp,
+                         const std::string &name) -> bool {
     Microsoft::WRL::ComPtr<ID3D12Device> device;
-    const HRESULT create_hr =
-        D3D12CreateDevice(adapter, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&device));
+    const HRESULT create_hr = D3D12CreateDevice(adapter, D3D_FEATURE_LEVEL_11_0,
+                                                IID_PPV_ARGS(&device));
     if (FAILED(create_hr)) {
-      result.message = "D3D12CreateDevice failed on " + name + " (" + HrHex(create_hr) + ")";
+      result.message =
+          "D3D12CreateDevice failed on " + name + " (" + HrHex(create_hr) + ")";
       return false;
     }
 
@@ -67,22 +73,25 @@ Dx12CreateResult CreateDx12Device() {
     }
 
     Microsoft::WRL::ComPtr<ID3D12CommandAllocator> allocator;
-    hr = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&allocator));
+    hr = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT,
+                                        IID_PPV_ARGS(&allocator));
     if (FAILED(hr)) {
       result.message = "CreateCommandAllocator failed (" + HrHex(hr) + ")";
       return false;
     }
 
     Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> list;
-    hr = device->CreateCommandList(
-        0, D3D12_COMMAND_LIST_TYPE_DIRECT, allocator.Get(), nullptr, IID_PPV_ARGS(&list));
+    hr = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT,
+                                   allocator.Get(), nullptr,
+                                   IID_PPV_ARGS(&list));
     if (FAILED(hr)) {
       result.message = "CreateCommandList failed (" + HrHex(hr) + ")";
       return false;
     }
     hr = list->Close();
     if (FAILED(hr)) {
-      result.message = "ID3D12GraphicsCommandList::Close failed (" + HrHex(hr) + ")";
+      result.message =
+          "ID3D12GraphicsCommandList::Close failed (" + HrHex(hr) + ")";
       return false;
     }
 
@@ -113,20 +122,44 @@ Dx12CreateResult CreateDx12Device() {
     return true;
   };
 
+  std::string attempts;
   Microsoft::WRL::ComPtr<IDXGIAdapter1> adapter;
-  for (UINT i = 0; factory->EnumAdapters1(i, &adapter) != DXGI_ERROR_NOT_FOUND; ++i) {
+  for (UINT i = 0;; ++i) {
+    const HRESULT enum_hr = factory->EnumAdapters1(i, &adapter);
+    if (enum_hr == DXGI_ERROR_NOT_FOUND)
+      break;
+    if (FAILED(enum_hr)) {
+      attempts += " EnumAdapters1=" + HrHex(enum_hr);
+      break;
+    }
     DXGI_ADAPTER_DESC1 desc{};
-    adapter->GetDesc1(&desc);
+    const HRESULT desc_hr = adapter->GetDesc1(&desc);
+    if (FAILED(desc_hr)) {
+      attempts += " GetDesc1=" + HrHex(desc_hr);
+      adapter.Reset();
+      continue;
+    }
+    attempts += " [" + WideToUtf8(desc.Description) +
+                " vendor=" + std::to_string(desc.VendorId) +
+                " device=" + std::to_string(desc.DeviceId) +
+                " flags=" + std::to_string(desc.Flags) + "]";
     if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE) {
       adapter.Reset();
       continue;
     }
     const std::string name = WideToUtf8(desc.Description);
-    if (try_adapter(adapter.Get(), false, name.empty() ? "hardware adapter" : name)) {
+    if (try_adapter(adapter.Get(), false,
+                    name.empty() ? "hardware adapter" : name)) {
       return result;
     }
+    attempts += " " + result.message;
     adapter.Reset();
   }
+#ifdef XGPU_UWP
+  result.blocked = true;
+  result.message = "no usable hardware adapter:" + attempts;
+  return result;
+#endif
 
   Microsoft::WRL::ComPtr<IDXGIAdapter> warp;
   hr = factory->EnumWarpAdapter(IID_PPV_ARGS(&warp));
@@ -158,12 +191,13 @@ Dx12CreateResult CreateDx12Device() {
   result.ok = false;
   result.blocked = true;
   if (result.message.empty()) {
-    result.message = "D3D12CreateDevice failed on every adapter, including WARP";
+    result.message =
+        "D3D12CreateDevice failed on every adapter, including WARP";
   }
   return result;
 }
 
-void DestroyDx12Device(Dx12Device& ctx) {
+void DestroyDx12Device(Dx12Device &ctx) {
   if (ctx.fence_event) {
     CloseHandle(ctx.fence_event);
     ctx.fence_event = nullptr;
@@ -175,7 +209,7 @@ void DestroyDx12Device(Dx12Device& ctx) {
   ctx.device.Reset();
 }
 
-bool WaitForGpu(Dx12Device& ctx, std::string& err) {
+bool WaitForGpu(Dx12Device &ctx, std::string &err) {
   if (!ctx.queue || !ctx.fence || !ctx.fence_event) {
     err = "WaitForGpu called without a live device";
     return false;
@@ -197,4 +231,4 @@ bool WaitForGpu(Dx12Device& ctx, std::string& err) {
   return true;
 }
 
-#endif  // _WIN32
+#endif // _WIN32
