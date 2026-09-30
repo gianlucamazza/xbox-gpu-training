@@ -72,12 +72,18 @@ No tok/s or quality numbers until Fase 6 measures them on Dev Mode hardware (or 
 ## Phase 6 — Series S|X Dev Mode validation; speed/quality vs CPU-only
 
 - [x] Deploy notes + PIX checklist scaffolding: [docs/console.md](docs/console.md) (pointer in [docs/setup.md](docs/setup.md)). Win32 host is **not** a UWP package; no AppX was deployed.
-- [x] Results table present with explicit **`BLOCKED: no console`** (empty metric cells). Reason: **no Dev Mode kit** in this lane; **GDKX / ID@Xbox not claimed**. No invented tok/s or Series benches.
-- [ ] Real Series S|X Dev Mode benches — **UNVALIDATED**. No kit; table not filled from hardware. Console validation is **not** complete.
+- [x] Results table present with explicit **`BLOCKED: no console`** (empty metric cells). Reason at merge (`66224e05`, [PR #15](https://github.com/gianlucamazza/xbox-gpu-training/pull/15)): **no Dev Mode kit** in that lane; **GDKX / ID@Xbox not claimed**. No invented tok/s or Series benches.
+- [ ] Real Series S|X Dev Mode benches — **UNVALIDATED**. Table not filled from hardware. Console validation is **not** complete. A Dev Mode kit is **now available** (re-enabled 2026-09-30) for a **follow-up measured PR** only — do not back-fill Fase 6 on `main` with invented numbers.
 - [ ] CPU-only vs console comparison — not filled (both sides not measured on the same kit).
-- Status: **`BLOCKED: no console`**. Honest checkpoint (stop for a human with a kit). Known blockers stay accurate: [docs/platform/blockers-fase6-validation.md](docs/platform/blockers-fase6-validation.md) (UWP memory + debugger mask; no DirectML-as-trainer SoT; public GDK Windows-only; Dev Mode ≠ GDKX). Public SKU specs only: [docs/platform/series-s-vs-x.md](docs/platform/series-s-vs-x.md). Execution: [docs/execution-plan.md](docs/execution-plan.md#fase-6--series-sx-dev-mode-validation). Label: `phase-6`, `benchmark`.
+- Status: **`BLOCKED: no console`** on `main`. Honest checkpoint. Known blockers stay accurate: [docs/platform/blockers-fase6-validation.md](docs/platform/blockers-fase6-validation.md) (UWP memory + debugger mask; no DirectML-as-trainer SoT; public GDK Windows-only; Dev Mode ≠ GDKX). Public SKU specs only: [docs/platform/series-s-vs-x.md](docs/platform/series-s-vs-x.md). Execution: [docs/execution-plan.md](docs/execution-plan.md#fase-6--series-sx-dev-mode-validation). Label: `phase-6`, `benchmark`.
 
 ## Phase 7 — publish results (paper/blog), public BitNet/peer comparison
 
-- `docs/results.md`, figure placeholders, honest limitations, companion link to FloppyLM CPU path.
-- No fabricated numbers.
+- [x] Honest [docs/results.md](docs/results.md): Fase 0–6 host measurements sourced; console / tok/s / quality **UNMEASURED** or **`BLOCKED: no console`**.
+- [x] Figure placeholders only ([docs/figures/README.md](docs/figures/README.md)) — **no fabricated plots**.
+- [x] Companion link to FloppyLM **CPU** path: [gianlucamazza/xllama](https://github.com/gianlucamazza/xllama). xllama / `feat/floppylm-training` **not** modified.
+- [x] Public BitNet/peer table: paper-sourced numbers (Ma et al. [arXiv:2402.17764](https://arxiv.org/abs/2402.17764)) or explicitly **UNMEASURED** on our side. **No ranking.**
+- [x] README status updated (IT + EN).
+- [ ] Human review of `docs/results.md` before calling the research **public** (Fase 7 checkpoint).
+- [ ] Series / peer charts — still placeholders until a measured follow-up.
+- Status: **Fase 7 draft for human review**. Execution: [docs/execution-plan.md](docs/execution-plan.md#fase-7--publish-results). Does **not** complete console validation. Label: `phase-7`, `research`.

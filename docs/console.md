@@ -1,8 +1,10 @@
 # Fase 6 — Series S|X Dev Mode validation
 
-**Status: `BLOCKED: no console`.**
+**Status: `BLOCKED: no console`.** (merged on `main` as `66224e05`, [PR #15](https://github.com/gianlucamazza/xbox-gpu-training/pull/15))
 
-This lane has **no Xbox Series S|X Dev Mode kit**. This page is the Fase 6 deploy / PIX / results scaffolding. It does **not** invent tok/s, quality scores, PIX captures, or Series S|X kernel benches. It does **not** claim **GDKX** or **ID@Xbox**.
+This page is the Fase 6 deploy / PIX / results scaffolding. It does **not** invent tok/s, quality scores, PIX captures, or Series S|X kernel benches. It does **not** claim **GDKX** or **ID@Xbox**.
+
+At merge, this lane had **no** Dev Mode kit. On **2026-09-30** the owner re-enabled Xbox Dev Mode, so a kit is **now available for a follow-up measured PR**. That does **not** change this page: every Series metric cell stays empty / **UNVALIDATED** until that follow-up lands real numbers. Do **not** back-fill.
 
 Stopping here for a human with a kit is a successful honest phase ([docs/execution-plan.md](execution-plan.md#fase-6--series-sx-dev-mode-validation)).
 
@@ -34,10 +36,11 @@ Windows host install/run stays in [docs/setup.md](setup.md). This file is consol
 
 ```
 BLOCKED: no console
-reason: no Dev Mode kit in this lane; GDKX / ID@Xbox not claimed
+reason (merge 66224e05): no Dev Mode kit in that lane; GDKX / ID@Xbox not claimed
+note (2026-09-30): kit re-enabled — follow-up measured PR only; cells stay empty
 ```
 
-This Cursor / cloud VM is Linux. There is no retail Xbox, no Dev Home pairing, and no Microsoft-provisioned kit. Public GDK does **not** target Series consoles ([gdk-vs-gdkx.md](platform/gdk-vs-gdkx.md)). A Windows DX12 box or GitHub `windows-latest` (including WARP / Basic Render Driver) is **not** Series S|X hardware.
+This Cursor / cloud VM is Linux. There is no retail Xbox attached here, no Dev Home pairing, and no Microsoft-provisioned GDKX kit. Public GDK does **not** target Series consoles ([gdk-vs-gdkx.md](platform/gdk-vs-gdkx.md)). A Windows DX12 box or GitHub `windows-latest` (including WARP / Basic Render Driver) is **not** Series S|X hardware. The owner's re-enabled Dev Mode console is **not** a measurement until a follow-up PR records one.
 
 ## Four known blockers (must stay accurate)
 
@@ -97,14 +100,14 @@ Schema intent: `xbox-gpu-training.benchmark.console.v1`. Empty metric cells are 
 
 | sku | workload | tok/s | quality | cpu_tok/s | pix | status | note |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Series S | hello_compute | | | | | `BLOCKED: no console` | no Dev Mode kit; no GDKX |
-| Series S | matmul FP32/FP16 | | | | | `BLOCKED: no console` | no Dev Mode kit; no GDKX |
-| Series S | FLP2 forward fixture | | | | | `BLOCKED: no console` | no Dev Mode kit; no GDKX |
+| Series S | hello_compute | | | | | `BLOCKED: no console` | UNVALIDATED at 66224e05; follow-up kit not measured |
+| Series S | matmul FP32/FP16 | | | | | `BLOCKED: no console` | UNVALIDATED at 66224e05; follow-up kit not measured |
+| Series S | FLP2 forward fixture | | | | | `BLOCKED: no console` | UNVALIDATED at 66224e05; follow-up kit not measured |
 | Series S | stream-stress App ~1 GB | | | | | `BLOCKED: no console` | AppContainer unvalidated |
 | Series S | qat-smoke N=16 | | | | | `BLOCKED: no console` | no quality curve |
-| Series X | hello_compute | | | | | `BLOCKED: no console` | no Dev Mode kit; no GDKX |
-| Series X | matmul FP32/FP16 | | | | | `BLOCKED: no console` | no Dev Mode kit; no GDKX |
-| Series X | FLP2 forward fixture | | | | | `BLOCKED: no console` | no Dev Mode kit; no GDKX |
+| Series X | hello_compute | | | | | `BLOCKED: no console` | UNVALIDATED at 66224e05; follow-up kit not measured |
+| Series X | matmul FP32/FP16 | | | | | `BLOCKED: no console` | UNVALIDATED at 66224e05; follow-up kit not measured |
+| Series X | FLP2 forward fixture | | | | | `BLOCKED: no console` | UNVALIDATED at 66224e05; follow-up kit not measured |
 | Series X | stream-stress App ~1 GB | | | | | `BLOCKED: no console` | AppContainer unvalidated |
 | Series X | qat-smoke N=16 | | | | | `BLOCKED: no console` | no quality curve |
 | CPU vs console | any of the above | | | | | not filled | both sides not measured |
@@ -124,7 +127,7 @@ Detail: [uwp-resources.md](platform/uwp-resources.md), [memory-budget.md](memory
 
 ## What a human with a kit should do next
 
-Do **not** start Fase 7 until this table is either filled from hardware or still explicitly `BLOCKED`.
+Fase 7 may publish this table as still explicitly `BLOCKED` ([docs/results.md](results.md)). Filling cells is a **follow-up measured PR**, not a rewrite of `66224e05`.
 
 1. Build a real **x64 UWP** package (does not exist in this repo today).
 2. Deploy via Dev Home / Device Portal as above.

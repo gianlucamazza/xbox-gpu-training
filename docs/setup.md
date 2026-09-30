@@ -269,7 +269,7 @@ REM Device Portal / Dev Mode deploy — exact cmd TBD in docs/console.md
 REM PIX: capture one compute shader dispatch on console if tooling allows
 ```
 
-**Not run on this host.** Verdict: `BLOCKED: no console` (no Dev Mode kit; GDKX / ID@Xbox not claimed). Empty metric cells stay empty. Do **not** assume Game designation for an App package. The **non-debug** package is the memory gate.
+**Not run on this host.** Verdict on `main`: `BLOCKED: no console` (`66224e05`; GDKX / ID@Xbox not claimed). Empty metric cells stay empty. A Dev Mode kit is now available for a **follow-up measured PR** only. Do **not** assume Game designation for an App package. The **non-debug** package is the memory gate. Honest write-up: [docs/results.md](results.md).
 
 ## Docs lint
 
