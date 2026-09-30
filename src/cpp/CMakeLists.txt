@@ -1,6 +1,8 @@
 add_library(xgpu_dx12 STATIC
   dx12_device.cpp
   hello_dispatch.cpp
+  cpu_matmul.cpp
+  matmul_dispatch.cpp
 )
 
 target_include_directories(xgpu_dx12 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
@@ -25,7 +27,10 @@ add_custom_command(TARGET xbox_gpu_host POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_if_different
     "${CMAKE_SOURCE_DIR}/src/hlsl/hello_compute.hlsl"
     "$<TARGET_FILE_DIR:xbox_gpu_host>/hello_compute.hlsl"
-  COMMENT "Copy hello_compute.hlsl next to xbox_gpu_host"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${CMAKE_SOURCE_DIR}/src/hlsl/matmul.hlsl"
+    "$<TARGET_FILE_DIR:xbox_gpu_host>/matmul.hlsl"
+  COMMENT "Copy hello_compute.hlsl and matmul.hlsl next to xbox_gpu_host"
 )
 
 install(TARGETS xbox_gpu_host RUNTIME DESTINATION bin)

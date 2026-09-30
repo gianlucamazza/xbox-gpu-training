@@ -17,6 +17,7 @@ REQUIRED = [
     "docs/adr/0001-architecture.md",
     "docs/architecture.md",
     "docs/setup.md",
+    "docs/ggml-baseline.md",
     "docs/platform/dev-mode.md",
     "docs/platform/uwp-resources.md",
     "docs/platform/dx12-hlsl-compute.md",

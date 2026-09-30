@@ -71,6 +71,7 @@ benchmarks/results/*.json
 benchmarks/results/*.csv
 benchmarks/results/*.txt
 !benchmarks/results/.gitkeep
+!benchmarks/results/matmul.csv
 *.wpix
 *.pix
 *.etl

@@ -18,7 +18,7 @@ Retail Xbox Series S|X in **Dev Mode** expose a capable RDNA 2 GPU, but:
 2. **fp32 master weights** stay in system RAM.
 3. **Chunk streaming** plus **double buffering** move working tiles to the GPU.
 4. **Quantized** forward/backward (QAT ternary / 2-bit / 4-bit) with a **straight-through estimator (STE)** and **AdamW**, later a **WSD** schedule with isolated cooldowns.
-5. **CPU ggml** remains the numerical and timing baseline until console numbers exist.
+5. **CPU ggml** remains the numerical and timing baseline until console numbers exist. Fase 1 uses a portable GEMM with the same `C = A @ B` contract; ggml is not vendored yet ([ggml-baseline.md](ggml-baseline.md)).
 
 ```
   system RAM (fp32 master weights)
