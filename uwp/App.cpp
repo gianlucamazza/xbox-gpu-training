@@ -71,10 +71,15 @@ void worker() {
         } catch (const std::exception &error) {
           auto out = inbox / L"results" / stem;
           std::filesystem::create_directories(out);
-          e0::atomic_json(out / L"status.json",
-                          {{"state", "failed"},
-                           {"error", error.what()},
-                           {"job_id", winrt::to_string(stem)}});
+          e0::Json report = e0::Json::object();
+          try {
+            report = e0::read_json(out / L"status.json");
+          } catch (...) {
+          }
+          report["state"] = "failed";
+          report["error"] = error.what();
+          report["job_id"] = winrt::to_string(stem);
+          e0::atomic_json(out / L"status.json", report);
         }
         {
           std::lock_guard<std::mutex> lock(active_mutex);
