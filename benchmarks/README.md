@@ -53,4 +53,6 @@ GitHub-hosted `windows-latest` has no Xbox Series S|X GPU. Real numbers require:
 
 WARP / Basic Render Driver is a **Windows software** D3D12 device, not Series S|X hardware.
 
+Fase 6 console table: [docs/console.md](../docs/console.md) — **`BLOCKED: no console`** (no Dev Mode kit; GDKX / ID@Xbox not claimed). Empty metric cells. Not a tok/s result.
+
 Workflow **Benchmark** job name: **`benchmark`**. Artifact: `benchmark-results` (still the smoke JSON; this workflow was not rewritten in Fase 1).

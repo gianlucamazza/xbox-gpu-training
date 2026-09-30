@@ -133,4 +133,4 @@ Measured `loss_before` / `loss_after` (if printed) are **not** a quality curve a
 - Invented loss / tok/s / Series S\|X benches
 - DirectML optimizer
 - Modifying [gianlucamazza/xllama](https://github.com/gianlucamazza/xllama)
-- Fase 6 console validation
+- Fase 6 console validation — reported `BLOCKED: no console` in [docs/console.md](console.md)
