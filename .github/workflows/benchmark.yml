@@ -1,0 +1,80 @@
+name: Benchmark
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+    paths:
+      - "benchmarks/**"
+      - "src/**"
+      - ".github/workflows/benchmark.yml"
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  benchmark:
+    name: benchmark
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      github.event.action != 'labeled' ||
+      contains(github.event.pull_request.labels.*.name, 'benchmark')
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run smoke harness (stub — no tok/s)
+        run: python benchmarks/run_smoke.py --out benchmarks/results/smoke.json
+
+      - name: Job summary
+        shell: pwsh
+        run: |
+          $json = Get-Content benchmarks/results/smoke.json -Raw
+          $obj = $json | ConvertFrom-Json
+          @"
+          ## Benchmark (stub)
+
+          | Field | Value |
+          | --- | --- |
+          | status | $($obj.status) |
+          | note | $($obj.note) |
+          | generated_at_utc | $($obj.generated_at_utc) |
+
+          Real GPU / Xbox benches need Dev Mode hardware or a self-hosted runner. This job must never invent tok/s.
+          "@ | Add-Content $env:GITHUB_STEP_SUMMARY
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: benchmarks/results/smoke.json
+          retention-days: 14
+
+  # Enable when a self-hosted Windows Dev Mode / Xbox GPU runner exists.
+  # Do not require it by default — GitHub-hosted windows-latest has no Series S|X GPU.
+  benchmark-xbox:
+    name: benchmark-xbox
+    if: false
+    runs-on: [self-hosted, windows, xbox-gpu]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Placeholder
+        run: |
+          Write-Host "Disabled. Document runner labels: self-hosted, windows, xbox-gpu."
+
+  notify-failure:
+    name: notify-failure
+    if: failure()
+    needs: [benchmark]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Job summary
+        run: echo "Benchmark failed — check job **benchmark** (stub harness). No external webhook." >> "$GITHUB_STEP_SUMMARY"

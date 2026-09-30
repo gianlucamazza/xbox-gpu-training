@@ -1,0 +1,51 @@
+name: Bug
+description: Something is broken in the GPU research track (host, HLSL, CI, docs).
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Evidence-first. Do not paste invented tok/s. Xbox has no CUDA.
+        DirectML on console is inference/forward-focused — not the trainer.
+  - type: dropdown
+    id: phase
+    attributes:
+      label: Phase label
+      options:
+        - phase-0
+        - phase-1
+        - phase-2
+        - phase-3
+        - phase-4
+        - phase-5
+        - phase-6
+        - phase-7
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      placeholder: windows-latest CI / Windows SDK version / Dev Mode Series S (if any)
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual (paste logs)
+    validations:
+      required: true
+  - type: checkboxes
+    id: honesty
+    attributes:
+      label: Honesty
+      options:
+        - label: I did not invent metrics or claim GDKX/ID@Xbox access
+          required: true

@@ -1,0 +1,77 @@
+# Contributing
+
+Evidence-first research repository. Read [README.md](README.md), [ROADMAP.md](ROADMAP.md), [docs/execution-plan.md](docs/execution-plan.md), and [docs/adr/0001-architecture.md](docs/adr/0001-architecture.md) before opening a pull request.
+
+## Companion repo
+
+The FloppyLM **CPU** path lives in [gianlucamazza/xllama](https://github.com/gianlucamazza/xllama). **Do not modify xllama from this project.** This repository is the GPU research track only. Do not claim that xllama already trains on the GPU.
+
+## Language
+
+- Code, comments, commit messages, and PR titles: **English**.
+- Conventional commits (`feat:`, `fix:`, `docs:`, `chore:`, `test:`, `refactor:`).
+- Italian is welcome in GitHub Discussions and issue conversation.
+- README keeps complete **Italiano** and **English** sections.
+
+## Evidence-first rules
+
+- Do **not** invent tok/s, latency, perplexity, or quality scores.
+- Stubs must say `not implemented` / `status: stub`.
+- CPU ggml is the numerical and timing baseline once Fase 1 exists.
+- Xbox Series S|X numbers are valid only after Fase 6 Dev Mode measurement (or an explicit `BLOCKED: no console` note).
+- Architecture changes need a new or updated file under `docs/adr/` and the `adr` label.
+
+## What this repo is not
+
+- Xbox has **no CUDA**. Do not add CUDA/cuDNN paths or assume NVIDIA tooling.
+- DirectML on console is **inference/forward-focused**. Do not describe DirectML as the trainer.
+- Public **GDK** / Windows SDK / DirectX 12 is the documented host path.
+- **GDKX** / **ID@Xbox** are NDA/partner programmes. This repo does **not** claim access to them.
+- Dev Mode purpose licence: develop and test apps, not run a GPU farm. Dev Mode is limited (≤3 consoles per account, typical public documentation).
+
+## Branch and PR protocol (Cursor and humans)
+
+Follow [docs/execution-plan.md](docs/execution-plan.md):
+
+- One phase at a time. Branch `phase-N/<short-slug>` from latest `main`.
+- One PR per phase → `main`.
+- Labels: matching `phase-0` … `phase-7` plus topic (`kernel`, `memory`, `benchmark`, `research`, `adr`).
+- Milestone: matching **Fase N** (Italian titles already on GitHub).
+- PR body: objective, commands run, acceptance results (paste), what was **not** done.
+- Do not merge if **CI** jobs `lint-docs` or `build-windows` are red.
+
+## Local checks
+
+```bash
+python3 scripts/check_required_docs.py
+python3 scripts/check_glossary.py
+python3 scripts/check_relative_links.py
+python3 benchmarks/run_smoke.py
+cmake -S . -B build && cmake --build build
+```
+
+On Windows with the Windows SDK, compile HLSL with `dxc` (see `src/hlsl/README.md`).
+
+## Canonical glossary
+
+Use these terms consistently (IT and EN prose):
+
+| Term | Rule |
+| --- | --- |
+| GPU | Uppercase in prose. Folders stay lowercase (`src/`, `src/hlsl/`). |
+| DirectX 12 | First mention; `DX12` is OK afterwards. |
+| HLSL | Uppercase. Folder: `src/hlsl/`. |
+| compute shader | Two words. |
+| DirectML | Inference/forward-focused on console. Never as the trainer. |
+| FLP2, codec, QAT, WSD | As written. |
+| RMSNorm, RoPE, AdamW | As written. |
+| straight-through estimator (STE) | Spell out once, then STE. |
+| Dev Mode, UWP, GDK | Public path. |
+| GDKX / ID@Xbox | Only when noting the NDA/partner path we do **not** claim. |
+| No CUDA on Xbox | Phrase as absence, not as a stack we use. |
+| Labels | `research`, `kernel`, `memory`, `benchmark`, `adr`, `phase-0` … `phase-7`. |
+| Milestones | **Fase 0–7** (Italian titles). |
+
+## Code owners
+
+`@gianlucamazza` owns `/*` (see `.github/CODEOWNERS`).
