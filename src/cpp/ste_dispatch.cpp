@@ -42,6 +42,35 @@ RunReport RunSteTrainStepHost(const SteHostOptions& options) {
   return report;
 }
 
+RunReport RunQatSmokeHost(const QatSmokeHostOptions& options) {
+  RunReport report;
+  QatSmokeOptions cpu_opt;
+  cpu_opt.config = options.config;
+  cpu_opt.steps = options.steps;
+  cpu_opt.dry_run = options.dry_run;
+  cpu_opt.bit_width_set = options.bit_width_set;
+  cpu_opt.bit_width = options.bit_width;
+  const SteCpuReport cpu = RunQatSmoke(cpu_opt);
+  if (!cpu.ok) {
+    report.status = RunStatus::Failed;
+    report.line = cpu.line;
+    report.detail = cpu.detail;
+    return report;
+  }
+  if (options.dry_run) {
+    report.status = RunStatus::Ok;
+    report.line = cpu.line;
+    report.detail = cpu.detail;
+    return report;
+  }
+  report.status = RunStatus::Blocked;
+  report.line = "BLOCKED: no D3D12 device";
+  report.detail = cpu.line + "\n" + cpu.detail +
+                  "\nFase 5 --qat-smoke is host schedule + FakeQuant. No new HLSL. "
+                  "Fase 3 ternary kernels were not re-dispatched. Dispatch log not invented.";
+  return report;
+}
+
 #else
 
 #include "dx12_device.h"
@@ -688,6 +717,49 @@ RunReport RunSteTrainStepHost(const SteHostOptions& options) {
   }
   return FinishGpu(cpu, created.ctx, ok, err, extra.str(), "STATUS: train-step dispatched",
                    "FAILED: ste gpu train-step");
+}
+
+RunReport RunQatSmokeHost(const QatSmokeHostOptions& options) {
+  RunReport report;
+  QatSmokeOptions cpu_opt;
+  cpu_opt.config = options.config;
+  cpu_opt.steps = options.steps;
+  cpu_opt.dry_run = options.dry_run;
+  cpu_opt.bit_width_set = options.bit_width_set;
+  cpu_opt.bit_width = options.bit_width;
+  const SteCpuReport cpu = RunQatSmoke(cpu_opt);
+  if (!cpu.ok) {
+    report.status = RunStatus::Failed;
+    report.line = cpu.line;
+    report.detail = cpu.detail;
+    return report;
+  }
+  if (options.dry_run) {
+    report.status = RunStatus::Ok;
+    report.line = cpu.line;
+    report.detail = cpu.detail;
+    return report;
+  }
+
+  // Host WSD/QAT is the Fase 5 gate. No new HLSL; do not invent a GPU dispatch log.
+  Dx12CreateResult created = CreateDx12Device();
+  if (!created.ok) {
+    report.status = RunStatus::Blocked;
+    report.line = "BLOCKED: no D3D12 device";
+    report.detail = cpu.line + "\n" + cpu.detail + "\n" + created.message +
+                    ". Fase 5 --qat-smoke is host schedule + FakeQuant. No new HLSL. "
+                    "Dispatch log not invented.";
+    return report;
+  }
+  const std::string adapter = created.ctx.adapter_name;
+  const bool warp = created.ctx.warp;
+  DestroyDx12Device(created.ctx);
+  report.status = RunStatus::Ok;
+  report.line = cpu.line;
+  report.detail = cpu.detail + "\nDevice: " + adapter + (warp ? " (WARP)" : "") +
+                  ". Fase 3 ternary HLSL not re-dispatched. No new Fase 5 shaders. "
+                  "Not a GPU FakeQuant result.";
+  return report;
 }
 
 #endif  // _WIN32

@@ -32,7 +32,7 @@ s = mean(|W|)     # 1 if s == 0
 W_q = s * clip(round(W / s), -1, +1)
 ```
 
-Codes are `{-1, 0, +1}`. `round` = nearest, ties to even. 2-bit / 4-bit FakeQuant are **stubs** for Fase 5 (`FakeQuant2BitStub` / `FakeQuant4BitStub`).
+Codes are `{-1, 0, +1}`. `round` = nearest, ties to even. 2-bit / 4-bit FakeQuant are **host** midrise kernels in Fase 5 (`FakeQuant2BitAbsmean` / `FakeQuant4BitAbsmean`; FLP2 `levels=4/16` lattice). They are not on the Fase 3 `--train-step 1` path. No new HLSL. See [qat-wsd.md](qat-wsd.md).
 
 Fase 2 scalar decode with `levels=3` is the same lattice: `W = (sym - 1) * s` for `sym ∈ {0,1,2}`.
 
@@ -101,4 +101,4 @@ Honest first lines:
 - `STATUS: train-step dispatched` — GPU kernels compared, host AdamW applied.
 - `FAILED: …` — load, grad-check, or (if a device existed) GPU parity failed.
 
-No tok/s. No console numbers. No invented loss curves. WSD / isolated cooldowns are Fase 5.
+No tok/s. No console numbers. No invented loss curves. WSD / isolated cooldowns: [qat-wsd.md](qat-wsd.md) (`--qat-smoke --steps 16`).

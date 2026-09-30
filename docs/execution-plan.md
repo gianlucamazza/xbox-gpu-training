@@ -211,13 +211,13 @@ dxc -T cs_6_0 -E CSMain -Fo build\matmul.cso src\hlsl\matmul.hlsl
 **Commands:**
 
 ```bat
-.\build\Release\xbox_gpu_host.exe --qat-smoke --steps <N>
+.\build\Release\xbox_gpu_host.exe --qat-smoke --steps 16
 ```
 
 **Acceptance criteria:**
 
 - [ ] Schedule config validated (schema / dry-run)
-- [ ] Smoke train loop completes N steps (N TBD, write it)
+- [ ] Smoke train loop completes N steps (**N = 16**, written in [docs/qat-wsd.md](qat-wsd.md))
 - [ ] Labels `phase-5`, `research`; milestone Fase 5
 
 **Do NOT:** Invent final loss/quality; skip cooldown isolation in the config.

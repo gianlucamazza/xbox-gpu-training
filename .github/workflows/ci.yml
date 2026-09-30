@@ -30,6 +30,9 @@ jobs:
       - name: Relative Markdown links
         run: python3 scripts/check_relative_links.py
 
+      - name: QAT/WSD schedule dry-run
+        run: python3 scripts/validate_qat_schedule.py examples/qat-wsd-smoke.json --dry-run
+
   build-windows:
     name: build-windows
     runs-on: windows-latest
@@ -227,6 +230,20 @@ jobs:
             Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "**Fase 4:** host double-buffer stream ran; GPU path ``BLOCKED`` or not dispatched. Console AppContainer **UNVALIDATED**. Dispatch log not invented."
           } else {
             Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "**Fase 4:** ``--stream-stress`` ran (see log). Not treated as a console success."
+          }
+          if ($code -ne 0) { exit $code }
+
+          Write-Host "Running $exe --qat-smoke --steps 16"
+          & $exe --qat-smoke --steps 16 *>&1 | Tee-Object -FilePath host-qat.txt
+          $code = $LASTEXITCODE
+          $qat = Get-Content host-qat.txt -ErrorAction SilentlyContinue
+          $qattext = ($qat -join "`n")
+          if ($qattext -match 'STATUS: qat-smoke ok') {
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "**Fase 5:** host QAT/WSD smoke completed N=16 (``examples/qat-wsd-smoke.json``). Not a quality curve. Not a tok/s result. No new HLSL."
+          } elseif ($qattext -match 'STATUS: qat-schedule dry-run ok' -or $qattext -match 'BLOCKED:') {
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "**Fase 5:** schedule validated; GPU path ``BLOCKED`` or host-only. Dispatch log not invented."
+          } else {
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "**Fase 5:** ``--qat-smoke --steps 16`` ran (see log). Not treated as a quality result."
           }
           if ($code -ne 0) { exit $code }
 

@@ -23,6 +23,8 @@ Fase 3 shaders are real correctness kernels for ternary FakeQuant, linear weight
 
 Fase 4 adds **no new HLSL**. Streaming is a host + optional `CopyBufferRegion` path: [docs/memory-budget.md](../../docs/memory-budget.md).
 
+Fase 5 adds **no new HLSL**. 2-bit / 4-bit FakeQuant is host-only. WSD + isolated cooldowns are host schedule: [docs/qat-wsd.md](../../docs/qat-wsd.md).
+
 ## Entry points (`matmul.hlsl`)
 
 | Entry | Precision | Thread group | Storage |

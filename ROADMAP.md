@@ -62,7 +62,12 @@ No tok/s or quality numbers until Fase 6 measures them on Dev Mode hardware (or 
 
 ## Phase 5 — full QAT ternary/2/4-bit on GPU with WSD + isolated cooldowns
 
-- Schedule config validated; smoke train loop completes N steps (N TBD).
+- [x] Schedule SoT: [docs/qat-wsd.md](docs/qat-wsd.md) + [examples/qat-wsd-smoke.json](examples/qat-wsd-smoke.json) (`xbox-gpu-training.qat.wsd.v1`). Schema note: [examples/qat-wsd.schema.json](examples/qat-wsd.schema.json). Dry-run: `python3 scripts/validate_qat_schedule.py examples/qat-wsd-smoke.json --dry-run`.
+- [x] WSD on host AdamW (ADR 0002 `lr=1e-3`, β/ε/wd frozen): warmup linear `0 → base_lr`, stable constant, decay **linear** `base_lr → min_lr` (`min_lr = 1e-4` = `0.1 × base`).
+- [x] Isolated cooldowns are overlay windows `[{ start_step, steps, end_lr }]` — **not** merged into WSD decay. Overlaps rejected. Example: `stable-mid` on steps `[8, 12)`.
+- [x] Chosen smoke **N = 16** (`warmup 4 + stable 8 + decay 4`). Cooldown overlays; N is not `16+4`. Host: `xbox_gpu_host --qat-smoke --steps 16`.
+- [x] Default FakeQuant **ternary absmean** + STE (ADR 0002). 2-bit / 4-bit are **host** midrise FakeQuant (`--bit-width 2|4`); Fase 3 stubs are no longer no-ops. **No new HLSL** — GPU 2/4-bit FakeQuant not dispatched.
+- Status: **Fase 5 implementation**. Execution: [docs/execution-plan.md](docs/execution-plan.md#fase-5--qat-ternary24-bit--wsd). GPU path without D3D12: `BLOCKED: no D3D12 device`. No quality / tok/s / Series numbers. Label: `research`, `phase-5`.
 
 ## Phase 6 — Series S|X Dev Mode validation; speed/quality vs CPU-only
 
