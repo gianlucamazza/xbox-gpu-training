@@ -41,14 +41,14 @@ jobs:
         uses: microsoft/setup-msbuild@v2
 
       - name: Cache NuGet packages (future C# / packages)
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.nuget/packages
           key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj', '**/packages.lock.json', '**/nuget.config') }}
           restore-keys: nuget-${{ runner.os }}-
 
       - name: Cache vcpkg binary cache (if used later)
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ${{ github.workspace }}/vcpkg_installed
           key: vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
