@@ -93,7 +93,7 @@ Dx12CreateResult CreateDx12Device() {
       return false;
     }
 
-    HANDLE event = CreateEventW(nullptr, FALSE, FALSE, nullptr);
+    HANDLE event = CreateEventExW(nullptr, nullptr, 0, EVENT_ALL_ACCESS);
     if (!event) {
       result.message = "CreateEventW failed";
       return false;
@@ -192,7 +192,7 @@ bool WaitForGpu(Dx12Device& ctx, std::string& err) {
       err = "ID3D12Fence::SetEventOnCompletion failed (" + HrHex(hr) + ")";
       return false;
     }
-    WaitForSingleObject(ctx.fence_event, INFINITE);
+    WaitForSingleObjectEx(ctx.fence_event, INFINITE, FALSE);
   }
   return true;
 }

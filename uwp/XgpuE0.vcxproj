@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations"><ProjectConfiguration Include="Release|x64"><Configuration>Release</Configuration><Platform>x64</Platform></ProjectConfiguration></ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{A9102B27-0E20-4BA0-85F1-912B386A2EA4}</ProjectGuid>
+    <RootNamespace>Xgpu</RootNamespace><DefaultLanguage>en-US</DefaultLanguage>
+    <AppContainerApplication>true</AppContainerApplication><AppxPackage>true</AppxPackage>
+    <ApplicationType>Windows Store</ApplicationType><ApplicationTypeRevision>10.0</ApplicationTypeRevision>
+    <WindowsTargetPlatformVersion>$(XgpuSdkVersion)</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformMinVersion>10.0.19041.0</WindowsTargetPlatformMinVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Label="Configuration"><ConfigurationType>Application</ConfigurationType><UseDebugLibraries>false</UseDebugLibraries><PlatformToolset>$(XgpuToolset)</PlatformToolset><CharacterSet>Unicode</CharacterSet></PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <Import Project="packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.props" />
+  <PropertyGroup>
+    <TargetName>XgpuE0</TargetName><CppWinRTOptimized>true</CppWinRTOptimized>
+    <CppWinRTRootNamespaceAutoMerge>true</CppWinRTRootNamespaceAutoMerge>
+    <AppxPackageSigningEnabled>false</AppxPackageSigningEnabled><AppxBundle>Never</AppxBundle>
+    <OutDir>$(ProjectDir)..\build\uwp\</OutDir><IntDir>$(ProjectDir)..\build\uwp-obj\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\vendor;$(GeneratedFilesDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>XGPU_UWP=1;NOMINMAX;WIN32_LEAN_AND_MEAN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <LanguageStandard>stdcpp17</LanguageStandard><CompileAsWinRT>false</CompileAsWinRT>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader><ExceptionHandling>Sync</ExceptionHandling>
+      <Optimization>MaxSpeed</Optimization><RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <Link><AdditionalDependencies>WindowsApp.lib;d3d12.lib;dxgi.lib;bcrypt.lib;%(AdditionalDependencies)</AdditionalDependencies></Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <Midl Include="app.idl" /><AppxManifest Include="AppxManifest.xml" />
+    <None Include="packages.config" />
+    <ClCompile Include="App.cpp" /><ClCompile Include="module.cpp" />
+    <ClCompile Include="..\src\cpp\e0\tensor.cpp" /><ClCompile Include="..\src\cpp\e0\model.cpp" />
+    <ClCompile Include="..\src\cpp\e0\job.cpp" /><ClCompile Include="..\src\cpp\e0\dx12_kernel.cpp" />
+    <ClCompile Include="..\src\cpp\dx12_device.cpp" />
+    <Image Include="Assets\StoreLogo.png" /><Image Include="Assets\Square150x150Logo.png" />
+    <Image Include="Assets\Square44x44Logo.png" /><Image Include="Assets\SplashScreen.png" />
+    <None Include="Assets\e0_tensor.cso"><DeploymentContent>true</DeploymentContent><TargetPath>Assets\e0_tensor.cso</TargetPath></None>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <Import Project="packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.targets" />
+</Project>

@@ -72,3 +72,17 @@ add_custom_command(TARGET xbox_gpu_host POST_BUILD
 )
 
 install(TARGETS xbox_gpu_host RUNTIME DESTINATION bin)
+
+# E0 is independent of the historical tiny-network smoke contract.
+add_library(xgpu_e0 STATIC e0/tensor.cpp e0/model.cpp e0/job.cpp e0/dx12_kernel.cpp)
+target_include_directories(xgpu_e0 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/e0
+  ${CMAKE_SOURCE_DIR}/vendor)
+if(WIN32)
+  target_link_libraries(xgpu_e0 PUBLIC xgpu_dx12 bcrypt)
+else()
+  find_package(OpenSSL REQUIRED)
+  target_link_libraries(xgpu_e0 PUBLIC OpenSSL::Crypto)
+endif()
+add_executable(xgpu_e0_train e0/main.cpp)
+target_link_libraries(xgpu_e0_train PRIVATE xgpu_e0)
+install(TARGETS xgpu_e0_train RUNTIME DESTINATION bin)

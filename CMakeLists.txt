@@ -37,6 +37,13 @@ if(WIN32)
   if(XGPU_DXC)
     message(STATUS "dxc: ${XGPU_DXC}")
     add_custom_command(
+      OUTPUT "${CMAKE_BINARY_DIR}/e0_tensor.cso"
+      COMMAND "${XGPU_DXC}" -T cs_6_0 -E CSMain -Gis
+        -Fo "${CMAKE_BINARY_DIR}/e0_tensor.cso"
+        "${CMAKE_SOURCE_DIR}/src/hlsl/e0_tensor.hlsl"
+      DEPENDS "${CMAKE_SOURCE_DIR}/src/hlsl/e0_tensor.hlsl")
+    add_custom_target(xgpu_e0_cso ALL DEPENDS "${CMAKE_BINARY_DIR}/e0_tensor.cso")
+    add_custom_command(
       OUTPUT "${CMAKE_BINARY_DIR}/hello_compute.cso"
       COMMAND "${XGPU_DXC}" -T cs_6_0 -E CSMain
               -Fo "${CMAKE_BINARY_DIR}/hello_compute.cso"
