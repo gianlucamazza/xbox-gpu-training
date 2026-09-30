@@ -5,6 +5,7 @@
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
+#include <thread>
 #ifdef _WIN32
 #include <windows.h>
 
@@ -88,9 +89,19 @@ void atomic_json(const std::filesystem::path &path, const Json &value) {
       throw std::runtime_error("JSON flush failed");
   }
 #ifdef _WIN32
-  if (!MoveFileExW(std::filesystem::path(temporary).c_str(), path.c_str(),
-                   MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH))
-    throw std::runtime_error("JSON atomic replacement failed");
+  DWORD error = ERROR_SUCCESS;
+  for (unsigned attempt = 0; attempt < 40; ++attempt) {
+    if (MoveFileExW(std::filesystem::path(temporary).c_str(), path.c_str(),
+                    MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH))
+      return;
+    error = GetLastError();
+    // Device Portal can briefly hold a reader without FILE_SHARE_DELETE.
+    if (error != ERROR_SHARING_VIOLATION && error != ERROR_LOCK_VIOLATION)
+      break;
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+  }
+  throw std::runtime_error("JSON atomic replacement failed: " +
+                           path_text(path) + " win32=" + std::to_string(error));
 #else
   std::filesystem::rename(temporary, path);
 #endif
