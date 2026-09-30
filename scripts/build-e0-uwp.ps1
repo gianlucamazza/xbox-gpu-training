@@ -20,6 +20,6 @@ $manifest = Get-Content uwp/AppxManifest.xml -Raw
 try {
   $revision = if ($env:GITHUB_RUN_NUMBER) { [int]$env:GITHUB_RUN_NUMBER } else { 0 }
   $manifest.Replace('Version="0.1.0.0"', "Version=`"0.1.0.$revision`"") | Set-Content uwp/AppxManifest.xml -Encoding utf8
-  & msbuild uwp/XgpuE0.vcxproj /m /p:Configuration=Release /p:Platform=x64 "/p:XgpuSdkVersion=$($sdk.Name)" "/p:XgpuToolset=$($toolset.Name)" /p:AppxPackageSigningEnabled=false /p:UapAppxPackageBuildMode=SideloadOnly
+  & msbuild uwp/XgpuE0.vcxproj /m /p:Configuration=Release /p:Platform=x64 "/p:XgpuSdkVersion=$($sdk.Name)" "/p:XgpuToolset=$($toolset.Name)" "/p:XgpuCommit=$env:GITHUB_SHA" /p:AppxPackageSigningEnabled=false /p:UapAppxPackageBuildMode=SideloadOnly
   if ($LASTEXITCODE -ne 0) { throw "UWP build failed" }
 } finally { [IO.File]::WriteAllText("$root\uwp\AppxManifest.xml", $manifest) }
