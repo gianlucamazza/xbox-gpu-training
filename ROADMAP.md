@@ -6,7 +6,7 @@ Milestones (Italian titles, already on GitHub): [Fase 0–7](https://github.com/
 
 Phase labels (English kebab-case): `phase-0` … `phase-7`. Topic labels: `research`, `kernel`, `memory`, `benchmark`, `adr`.
 
-No tok/s or quality numbers until Fase 6 measures them on Dev Mode hardware (or the phase reports `BLOCKED: no console`). Fase 0–5 Windows / public-GDK work is **not** gated by Fase 6. Explicit console blockers: [docs/platform/blockers-fase6-validation.md](docs/platform/blockers-fase6-validation.md).
+No tok/s or quality numbers until Dev Mode hardware measures them (or the phase reports `BLOCKED` / **UNMEASURED**). Series S E0 functional throughput is measured ([docs/console.md](docs/console.md)); scientific quality is not. Fase 0–5 Windows / public-GDK work is **not** gated by Fase 6. Explicit console blockers: [docs/platform/blockers-fase6-validation.md](docs/platform/blockers-fase6-validation.md).
 
 | Phase | Milestone | Branch pattern | Gate |
 | --- | --- | --- | --- |
@@ -67,18 +67,21 @@ No tok/s or quality numbers until Fase 6 measures them on Dev Mode hardware (or 
 - [x] Isolated cooldowns are overlay windows `[{ start_step, steps, end_lr }]` — **not** merged into WSD decay. Overlaps rejected. Example: `stable-mid` on steps `[8, 12)`.
 - [x] Chosen smoke **N = 16** (`warmup 4 + stable 8 + decay 4`). Cooldown overlays; N is not `16+4`. Host: `xbox_gpu_host --qat-smoke --steps 16`.
 - [x] Default FakeQuant **ternary absmean** + STE (ADR 0002). 2-bit / 4-bit are **host** midrise FakeQuant (`--bit-width 2|4`); Fase 3 stubs are no longer no-ops. **No new HLSL** — GPU 2/4-bit FakeQuant not dispatched.
-- Status: **Fase 5 implementation**. Execution: [docs/execution-plan.md](docs/execution-plan.md#fase-5--qat-ternary24-bit--wsd). GPU path without D3D12: `BLOCKED: no D3D12 device`. No quality / tok/s / Series numbers. Label: `research`, `phase-5`.
+- Status: **Fase 5 implementation**. **N=16 is schedule smoke only — not QAT quality.** Execution: [docs/execution-plan.md](docs/execution-plan.md#fase-5--qat-ternary24-bit--wsd). GPU path without D3D12: `BLOCKED: no D3D12 device`. No quality / tok/s / Series numbers. Label: `research`, `phase-5`.
 
 ## Phase 6 — Series S|X Dev Mode validation
 
 - [x] Separate E0 x64 UWP Release package built, signed with verified CI payloads,
-  installed and exercised on retail Series S in Dev Mode.
+  installed and exercised on retail Series S in Dev Mode ([PR #17](https://github.com/gianlucamazza/xbox-gpu-training/pull/17), `aec1a2a`).
 - [x] Independent operation/model parity, identical-input optimizer, exact resume,
   real suspension and worker reuse validated on the current package.
 - [x] Representative throughput, transfers and non-debug app memory measured.
   [Evidence](docs/evidence/e0-20261001/notes.md), [console status](docs/console.md).
-- [ ] Full scientific E0 campaign and reserved final test: companion execution pending completion.
+- [ ] Full scientific E0 campaign and reserved final test. The first campaign on `0.1.0.24`
+  was stopped cleanly at trunk step 455 (2026-10-01) for the E0.1 GPU-resident engine.
 - [ ] Series X, matched CPU comparison and PIX captures: no measurements available.
+- [ ] Historical Win32 host workloads (`hello_compute` / matmul / FLP2 / stream-stress / qat-smoke) on console: **UNMEASURED**.
+- Status: Series S E0 **measured**; remaining Series / quality / PIX cells **UNMEASURED**. Known blockers stay accurate: [docs/platform/blockers-fase6-validation.md](docs/platform/blockers-fase6-validation.md). Execution: [docs/execution-plan.md](docs/execution-plan.md#fase-6--series-sx-dev-mode-validation). Label: `phase-6`, `benchmark`.
 
 The Phase 0–5 entries above document the original desktop diagnostic lane. They
 do not establish console validation of those separate host workloads. The active
@@ -86,12 +89,17 @@ E0 UWP trainer is governed by ADR 0003/0004; its measured results are listed her
 
 ## Phase 7 — Publication
 
-- [x] Publish functional evidence, exact package lineage, baseline failures and
-  limits in [docs/results.md](docs/results.md).
-- [ ] Publish scientific E0 selection, paired statistics, exclusions and costs
-  after the companion campaign passes all gates and the single final test finishes.
-- [ ] Peer/BitNet comparison or paper: requires a preregistered matched comparison;
-  no such result is claimed by the functional acceptance.
+- [x] Honest [docs/results.md](docs/results.md): Fase 0–5 Win32 host sourced; Series S E0 **functional** evidence sourced from [`docs/evidence/e0-20261001/`](docs/evidence/e0-20261001/notes.md) (pkg `0.1.0.24` / source `6a124021`; [kernel-parity.json](docs/evidence/e0-20261001/kernel-parity.json) 52 ops / 36 fixtures, `hardware_gpu`, `purpose: functional`). Synthetic throughput cited as **functional only**, not quality / PPL.
+- [x] Figure placeholders only ([docs/figures/README.md](docs/figures/README.md)) — **no fabricated plots**.
+- [x] Companion link to FloppyLM **CPU** path: [gianlucamazza/xllama](https://github.com/gianlucamazza/xllama). xllama / `feat/floppylm-training` **not** modified.
+- [x] Public BitNet/peer table: paper-sourced numbers (Ma et al. [arXiv:2402.17764](https://arxiv.org/abs/2402.17764)) or explicitly **UNMEASURED** on our side. **No ranking.** Do **not** borrow Series S E0 numbers into peer cells.
+- [x] README status updated (IT + EN).
+- [x] Publish functional E0 evidence, exact package lineage, baseline failures and limits.
+- [x] Owner review of `docs/results.md` (2026-10-01).
+- [ ] Publish scientific E0 selection, paired statistics, exclusions and costs after the companion campaign passes all gates and the single final test finishes.
+- [ ] Peer/BitNet comparison or paper: requires a preregistered matched comparison; no such result is claimed by the functional acceptance.
+- [ ] Series / peer charts — still placeholders (E0 number is sourced in prose, not drawn).
+- Status: **Fase 7 functional publication reviewed**; scientific E0 pending. Execution: [docs/execution-plan.md](docs/execution-plan.md#fase-7--publish-results). Does **not** complete scientific E0. Label: `phase-7`, `research`.
 
 ## Completion sequence (2026-10-01)
 

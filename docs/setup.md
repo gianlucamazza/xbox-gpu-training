@@ -17,7 +17,7 @@ Platform facts (Microsoft/Xbox public documentation, not our benches) live under
 | Fase 2: RMSNorm / RoPE / FLP2 decode + tiny fixture | Unpack a guessed binary FLP2 envelope; modify xllama |
 | Fase 3: STE + host AdamW + `--grad-check` / `--train-step 1` | Invent loss curves / tok/s; treat DirectML as the optimizer |
 | Fase 5: QAT/WSD schedule + `--qat-smoke --steps 16` | Invent quality curves; skip cooldown isolation; add CUDA |
-| Fase 6: [docs/console.md](console.md) deploy / PIX / `BLOCKED` table | Invent Series S\|X tok/s; claim GDKX / ID@Xbox; treat DirectML as trainer |
+| Fase 6: [docs/console.md](console.md) deploy / PIX / measured E0 + pending | Invent Series tok/s beyond recorded E0; claim GDKX / ID@Xbox; treat DirectML as trainer |
 
 Fase 0–5 Windows work is **not** gated on a Dev Mode console. Console validation is Fase 6: [docs/console.md](console.md), [blockers-fase6-validation.md](platform/blockers-fase6-validation.md). The separate E0 UWP lane has measured Series S evidence; see console status.
 
@@ -269,7 +269,7 @@ REM Device Portal / Dev Mode deploy — exact cmd TBD in docs/console.md
 REM PIX: capture one compute shader dispatch on console if tooling allows
 ```
 
-Historical Win32 host workloads remain unmeasured on console. The separate E0 UWP lane is measured in [console.md](console.md); its results do not validate these host workloads. Do **not** assume Game designation for an App package. The **non-debug** package is the memory gate.
+Historical Win32 host workloads remain unmeasured on console (`BLOCKED` / **UNMEASURED**). The separate E0 UWP lane is measured in [console.md](console.md) ([PR #17](https://github.com/gianlucamazza/xbox-gpu-training/pull/17), `aec1a2a`); those results do not validate the host workloads. Do **not** assume Game designation for an App package. The **non-debug** package is the memory gate. Honest write-up: [docs/results.md](results.md).
 
 ## Docs lint
 
@@ -294,3 +294,4 @@ python3 scripts/validate_qat_schedule.py examples/qat-wsd-smoke.json --dry-run
 | [series-s-vs-x.md](platform/series-s-vs-x.md) | Public SKU specs, not our benches |
 | [blockers-fase6-validation.md](platform/blockers-fase6-validation.md) | Why console tables wait |
 | [console.md](console.md) | Fase 6 deployment, measured E0 and pending targets |
+| [results.md](results.md) | Fase 7 honest publication (host sourced; E0 cited; rest UNMEASURED) |

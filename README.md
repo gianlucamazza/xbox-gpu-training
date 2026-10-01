@@ -48,15 +48,13 @@ Playbook Cursor: [docs/execution-plan.md](docs/execution-plan.md). Tabella compl
 
 ### Stato attuale
 
-The separate E0 UWP backend passed 52 independent operation cases, 36 model
-fixtures, identical-input AdamW, exact recovery and real suspension on a retail
-**Series S**. The representative synthetic trial measured **964 token/s**,
-**87.2 MiB** peak app memory and
-153.0 seconds wall time. Wrong identities and oversized
-dispatches are rejected without breaking subsequent GPU work.
-[Current evidence and exact package lineage](docs/evidence/e0-20261001/notes.md).
-The companion accepted row16/row8log scientific E0; the full campaign and final
-test still need to finish. These functional results make no quality claim.
+La backend UWP E0 separata ha superato su **Series S** retail 52 casi operazione
+indipendenti, 36 fixture modello, AdamW a input identici, recovery esatto e
+sospensione reale. Il trial sintetico rappresentativo ha misurato **964 token/s** e
+**87.2 MiB** di picco ([evidenza e lineage](docs/evidence/e0-20261001/notes.md)).
+La prima campagna scientifica è stata fermata il 2026-10-01 (GPU attiva ~8.6% del
+wall time) per passare al motore GPU-resident E0.1, che richiede una nuova
+acceptance. Nessun claim di qualità. Sintesi onesta Fase 0–7: [docs/results.md](docs/results.md).
 
 ### Come contribuire
 
@@ -98,9 +96,9 @@ Cursor playbook: [docs/execution-plan.md](docs/execution-plan.md). Full table: [
 ### Current status
 
 The E0 UWP backend has measured Series S functional evidence, including exact
-runner recovery and a real suspension lifecycle. The companion protocol now
-selects row16/row8log for scientific E0. Quality results remain pending campaign
-completion. [Package, results and limits](docs/evidence/e0-20261001/notes.md).
+runner recovery and a real suspension lifecycle ([package, results and limits](docs/evidence/e0-20261001/notes.md)).
+The first scientific campaign (package `0.1.0.24`) was stopped cleanly on 2026-10-01 at trunk step 455 of its first trial: its console job measured 329 GPU seconds in 3848 wall seconds. It is superseded by the GPU-resident E0.1 execution engine, which needs a new acceptance before a new campaign.
+No quality claim. Honest Fase 0–7 write-up: [docs/results.md](docs/results.md).
 
 ### How to contribute
 
@@ -120,8 +118,12 @@ completion. [Package, results and limits](docs/evidence/e0-20261001/notes.md).
 | `docs/ste-adamw.md` | Fase 3 FakeQuant / STE / AdamW contract + grad-check tolerances |
 | `docs/memory-budget.md` | Fase 4 App ~1 GB / Game ~5 GB streaming contract |
 | `docs/qat-wsd.md` | Fase 5 QAT bit-widths + WSD + isolated cooldowns (N=16) |
-| `docs/console.md` | Fase 6 measured E0 console results and pending targets |
-| `docs/`, `docs/adr/` | Architecture + ADRs (`0001`, `0002`) |
+| `docs/console.md` | Fase 6 measured Series S E0 and remaining UNMEASURED targets |
+| `docs/results.md` | Fase 7 honest host + sourced E0 summary |
+| `docs/figures/` | Figure **placeholders** only — no fabricated plots |
+| `docs/evidence/` | Package lineage and Series S E0 acceptance (PR #17) |
+| `docs/`, `docs/adr/` | Architecture + ADRs (`0001`–`0004`) |
+| `src/cpp/e0/`, `uwp/` | Separate E0 trainer + x64 UWP package lane |
 | `docs/platform/` | Public Xbox / Dev Mode / GDK / UWP fact packs |
 | `docs/execution-plan.md` | Cursor phase playbook |
 | `benchmarks/` | Smoke stub + Fase 1 CSV + Fase 2 `fixtures/tiny_flp2.json` + Fase 4 `fixtures/stream_stress.json` |

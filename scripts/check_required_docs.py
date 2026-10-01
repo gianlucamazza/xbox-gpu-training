@@ -24,6 +24,8 @@ REQUIRED = [
     "docs/memory-budget.md",
     "docs/qat-wsd.md",
     "docs/console.md",
+    "docs/results.md",
+    "docs/figures/README.md",
     "docs/platform/dev-mode.md",
     "docs/platform/uwp-resources.md",
     "docs/platform/dx12-hlsl-compute.md",
