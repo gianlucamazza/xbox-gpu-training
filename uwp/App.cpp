@@ -199,9 +199,14 @@ struct IdleCoreView : winrt::implements<IdleCoreView, winrt::Windows::Applicatio
   void Load(winrt::hstring const &) {}
   void Run() {
     auto local = std::filesystem::path(winrt::Windows::Storage::ApplicationData::Current().LocalFolder().Path().c_str());
-    e0::atomic_json(local / L"device.json", {{"state", "diagnostic"}, {"hardware_gpu", false},
-      {"commit", XGPU_COMMIT}, {"package", winrt::to_string(winrt::Windows::ApplicationModel::Package::Current().Id().FullName())},
-      {"probe", {{"core", true}}}});
+    auto probe = e0::read_json(local / L"idle-probe.json");
+    if (probe.value("worker", false)) {
+      std::thread(worker).detach();
+    } else {
+      e0::atomic_json(local / L"device.json", {{"state", "diagnostic"}, {"hardware_gpu", false},
+        {"commit", XGPU_COMMIT}, {"package", winrt::to_string(winrt::Windows::ApplicationModel::Package::Current().Id().FullName())},
+        {"probe", probe}});
+    }
     window_.Dispatcher().ProcessEvents(winrt::Windows::UI::Core::CoreProcessEventsOption::ProcessUntilQuit);
   }
   void Uninitialize() {}
