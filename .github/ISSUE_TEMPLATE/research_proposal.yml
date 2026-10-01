@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        FloppyLM CPU path is in xllama — do not propose changes to that repo here.
+        FloppyLM semantics are owned by floppy_4mb (ADR 0012); do not propose changes to xllama here.
         No CUDA. DirectML is inference/forward-focused on console.
   - type: dropdown
     id: phase

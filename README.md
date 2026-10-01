@@ -11,7 +11,7 @@
 >
 > **IT.** Su Xbox non c’è CUDA. DirectML in console è orientato a inference/forward. Una UWP App vede in genere ~1 GB di RAM. Questo repo ricerca il training quantizzato di LLM sulla GPU Series S|X con compute shader DirectX 12, pesi master fp32 in system RAM e streaming FLP2 — solo numeri misurati, altrimenti nessun claim.
 
-Companion: FloppyLM **CPU** path lives in [gianlucamazza/xllama](https://github.com/gianlucamazza/xllama). This repository is the **GPU research track**. Do not claim that xllama trains on the GPU. Do not modify xllama from here.
+FloppyLM semantics, FLP2 and the `floppylm.*.v1` contracts are owned by the local FloppyLM repo (`Workspace/experiments/floppy_4mb`, ADR 0012); this repository is its only native training backend (E0 DX12/UWP). [xllama](https://github.com/gianlucamazza/xllama) contains no FloppyLM logic: do not modify it from here and do not claim that it trains FloppyLM.
 
 ---
 
@@ -32,6 +32,8 @@ Su Xbox Series S|X in **Dev Mode** manca CUDA; DirectML è utile per alcuni graf
 Dettaglio: [docs/architecture.md](docs/architecture.md), [docs/adr/0001-architecture.md](docs/adr/0001-architecture.md). Fatti piattaforma (Microsoft/Xbox pubblici, non banchi nostri): [Dev Mode](docs/platform/dev-mode.md), [risorse UWP](docs/platform/uwp-resources.md), [DirectX 12 / HLSL](docs/platform/dx12-hlsl-compute.md), [ambito DirectML](docs/platform/directml-scope.md), [GDK vs GDKX](docs/platform/gdk-vs-gdkx.md), [Series S vs X](docs/platform/series-s-vs-x.md), [blocchi Fase 6](docs/platform/blockers-fase6-validation.md).
 
 ### Roadmap (Fase 0–7)
+
+Le fasi 0–5 (host Win32) sono **solo diagnostiche**: STE/quantizzatore diversi da FloppyLM, non certificano nulla per E0. Il trainer attivo è la lane E0 UWP.
 
 Playbook Cursor: [docs/execution-plan.md](docs/execution-plan.md). Tabella completa: [ROADMAP.md](ROADMAP.md). Milestone GitHub: [elenco](https://github.com/gianlucamazza/xbox-gpu-training/milestones).
 
@@ -80,6 +82,8 @@ On Xbox Series S|X **Dev Mode** there is **no CUDA**; **DirectML** on console is
 See [docs/architecture.md](docs/architecture.md) and [docs/adr/0001-architecture.md](docs/adr/0001-architecture.md). Public Microsoft/Xbox fact packs (not our benches): [Dev Mode](docs/platform/dev-mode.md), [UWP resources](docs/platform/uwp-resources.md), [DirectX 12 / HLSL](docs/platform/dx12-hlsl-compute.md), [DirectML scope](docs/platform/directml-scope.md), [GDK vs GDKX](docs/platform/gdk-vs-gdkx.md), [Series S vs X](docs/platform/series-s-vs-x.md), [Fase 6 blockers](docs/platform/blockers-fase6-validation.md).
 
 ### Roadmap (phases 0–7)
+
+Phases 0–5 (Win32 host) are a **diagnostic lane only**: their STE/quantizer differ from FloppyLM and certify nothing for E0. The active trainer is the E0 UWP lane.
 
 Cursor playbook: [docs/execution-plan.md](docs/execution-plan.md). Full table: [ROADMAP.md](ROADMAP.md). GitHub milestones: [index](https://github.com/gianlucamazza/xbox-gpu-training/milestones).
 

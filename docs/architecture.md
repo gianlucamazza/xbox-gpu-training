@@ -34,7 +34,7 @@ Retail Xbox Series S|X in **Dev Mode** expose a capable RDNA 2 GPU, but:
 
 ## Companion
 
-[gianlucamazza/xllama](https://github.com/gianlucamazza/xllama) holds the FloppyLM **CPU** path and the shipped UWP chat/diffusion app. This repository does not modify xllama and does not claim GPU training inside xllama.
+FloppyLM semantics, FLP2 and the `floppylm.*.v1` contracts are owned by the local FloppyLM repo (`Workspace/experiments/floppy_4mb`, ADR 0012); this repository is its only native training backend (E0 DX12/UWP). [gianlucamazza/xllama](https://github.com/gianlucamazza/xllama) holds the shipped UWP chat/diffusion app and no FloppyLM logic. This repository does not modify xllama and does not claim GPU training inside xllama.
 
 ## Platform fact packs
 

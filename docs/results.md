@@ -8,11 +8,11 @@ Playbook: [docs/execution-plan.md](execution-plan.md#fase-7--publish-results). C
 
 ## Sintesi IT
 
-Fasi 0–5: lavoro host **Win32** (Windows DX12 quando c’è un device; Linux/CI senza D3D12 in `BLOCKED: no D3D12 device`) — **separato** dalla lane UWP E0. Fase 6: [PR #17](https://github.com/gianlucamazza/xbox-gpu-training/pull/17) E0 UWP Series S **sourced** da [`docs/evidence/e0-20261001/`](evidence/e0-20261001/notes.md) (pkg `0.1.0.24` / source `6a124021`; [kernel-parity.json](evidence/e0-20261001/kernel-parity.json) 52 ops / 36 fixture, `hardware_gpu`, `purpose: functional`). Throughput sintetico **solo funzionale**, **non** qualità / PPL. **UNMEASURED:** qualità scientifica / PPL, Series X, CPU matched, PIX. Fase 5 `N=16` = smoke di schedule, non QAT di qualità. Peer BitNet = solo cite di letteratura — **nessun ranking**, nessun numero Series S nelle celle peer. AppContainer ~1 GB / Release non-debug; Dev Mode **≠** GDKX / ID@Xbox; DirectML **≠** trainer. Companion CPU: [gianlucamazza/xllama](https://github.com/gianlucamazza/xllama). xllama **non** modificato.
+Fasi 0–5: lavoro host **Win32** (Windows DX12 quando c’è un device; Linux/CI senza D3D12 in `BLOCKED: no D3D12 device`) — **separato** dalla lane UWP E0. Fase 6: [PR #17](https://github.com/gianlucamazza/xbox-gpu-training/pull/17) E0 UWP Series S **sourced** da [`docs/evidence/e0-20261001/`](evidence/e0-20261001/notes.md) (pkg `0.1.0.24` / source `6a124021`; [kernel-parity.json](evidence/e0-20261001/kernel-parity.json) 52 ops / 36 fixture, `hardware_gpu`, `purpose: functional`). Throughput sintetico **solo funzionale**, **non** qualità / PPL. **UNMEASURED:** qualità scientifica / PPL, Series X, CPU matched, PIX. Fase 5 `N=16` = smoke di schedule, non QAT di qualità. Peer BitNet = solo cite di letteratura — **nessun ranking**, nessun numero Series S nelle celle peer. AppContainer ~1 GB / Release non-debug; Dev Mode **≠** GDKX / ID@Xbox; DirectML **≠** trainer. Owner FloppyLM: repo locale `Workspace/experiments/floppy_4mb` (ADR 0012). xllama **non** modificato.
 
 ## English abstract
 
-Fase 0–5 measured **Win32 host** contracts (CPU fixtures, chosen tolerances, one Linux working-set). That desktop lane is **not** the UWP E0 trainer. Fase 6 on `main` (`aec1a2a7`, [PR #17](https://github.com/gianlucamazza/xbox-gpu-training/pull/17)) records Series S E0 **functional** evidence sourced from [`docs/evidence/e0-20261001/`](evidence/e0-20261001/notes.md): [kernel-parity.json](evidence/e0-20261001/kernel-parity.json) 52 ops / 36 fixtures, `hardware_gpu: true`, `purpose: functional`. Synthetic throughput is **functional only**, not quality / PPL. **UNMEASURED:** scientific quality / PPL, Series X, matched CPU, PIX. Fase 5 `N=16` is schedule smoke, not QAT quality. BitNet numbers below are **paper-sourced**; our peer cells stay **UNMEASURED**. Companion CPU / FloppyLM path: [gianlucamazza/xllama](https://github.com/gianlucamazza/xllama).
+Fase 0–5 measured **Win32 host** contracts (CPU fixtures, chosen tolerances, one Linux working-set). That desktop lane is **not** the UWP E0 trainer. Fase 6 on `main` (`aec1a2a7`, [PR #17](https://github.com/gianlucamazza/xbox-gpu-training/pull/17)) records Series S E0 **functional** evidence sourced from [`docs/evidence/e0-20261001/`](evidence/e0-20261001/notes.md): [kernel-parity.json](evidence/e0-20261001/kernel-parity.json) 52 ops / 36 fixtures, `hardware_gpu: true`, `purpose: functional`. Synthetic throughput is **functional only**, not quality / PPL. **UNMEASURED:** scientific quality / PPL, Series X, matched CPU, PIX. Fase 5 `N=16` is schedule smoke, not QAT quality. BitNet numbers below are **paper-sourced**; our peer cells stay **UNMEASURED**. FloppyLM owner: local repo `Workspace/experiments/floppy_4mb` (ADR 0012).
 
 ---
 
@@ -39,12 +39,12 @@ Every metric is one of those, or it is not written.
 | **Series X Dev Mode** | **Nothing measured** | **UNMEASURED** |
 | **GDKX / ID@Xbox kit** | **Not claimed** | Partner/NDA path |
 
-## Companion — FloppyLM CPU path
+## Repository boundaries
 
-The FloppyLM **CPU** path lives in **[gianlucamazza/xllama](https://github.com/gianlucamazza/xllama)** (conceptual FLP2 notes: xllama `docs/floppylm.md` and the draft FloppyLM ADRs). This repository is the **GPU research track** only.
+FloppyLM semantics, FLP2 and the `floppylm.*.v1` contracts are owned by the local FloppyLM repo (`Workspace/experiments/floppy_4mb`, ADR 0012); this repository is its only native training backend (E0 DX12/UWP).
 
-- Do **not** claim that xllama trains on the GPU.
-- Do **not** modify xllama from here (including `feat/floppylm-training`).
+- [xllama](https://github.com/gianlucamazza/xllama) contains no FloppyLM logic; its draft `feat/floppylm-training` (PR #301) was closed without merge.
+- Do **not** modify xllama from here.
 - DirectML on console, as used in the companion app, is **inference/forward-focused** and is **not** the trainer here ([directml-scope.md](platform/directml-scope.md)).
 
 ---
@@ -96,7 +96,7 @@ Sourced: [docs/flp2-forward.md](flp2-forward.md).
 
 Implemented: scalar decode `W = (symbol - half) * scale` (ternary / 2-bit / 4-bit lattices), RMSNorm (`eps=1e-6`), RoPE (`theta=10000`), tiny 1-layer relu2 fixture `tiny_flp2`.
 
-**Not** implemented: on-disk FLP2 envelope (`"FLP2"` magic, rANS). Guessing that layout would be a false codec claim. Research issue for envelope byte-parity remains open until xllama publishes a stable on-`main` contract.
+**Not** implemented: on-disk FLP2 envelope (`"FLP2"` magic, rANS). Guessing that layout would be a false codec claim. Envelope byte-parity is tracked against FloppyLM `pack.py` / `rans.py`, the format owner.
 
 **UNMEASURED:** GPU vs CPU error on this host fixture on a Series kit; any generation tok/s; GELU/SwiGLU/QK-norm/`row8log`/`tensor16` for this smoke.
 
@@ -228,7 +228,7 @@ This is **not** a ranking of xbox-gpu-training against BitNet, bitnet.cpp, or Fl
 | Peer | What we take | What we do not claim |
 | --- | --- | --- |
 | BitNet / BitNet b1.58 (Microsoft Research) | Ternary `{-1,0,+1}` + absmean FakeQuant as a **known** recipe (ADR 0002) | Their PPL, latency, energy, or A100 tok/s as **our** result |
-| FloppyLM / xllama CPU | Scalar FLP2 lattices as conceptual decode | GPU training inside xllama; envelope byte-parity |
+| FloppyLM (`floppy_4mb`) | Model, codec and FLP2 semantics (oracle) | Its scientific results as GPU results; envelope byte-parity |
 | Soul Player / ternary15M (ADR 0002) | Train↔deploy codes; STE clip | Their quality numbers |
 
 ### BitNet b1.58 — paper numbers (their experiment)
@@ -262,7 +262,7 @@ Original 1-bit BitNet: Wang et al., [arXiv:2310.11453](https://arxiv.org/abs/231
 | xbox-gpu-training host smoke | tiny fixtures only | **UNMEASURED** as an LLM footprint | **UNMEASURED** | **UNMEASURED** | **UNMEASURED** |
 | xbox-gpu-training Series S E0 | functional trainer only | **UNMEASURED** as an LLM footprint (E0 peak bytes are **not** this cell) | **UNMEASURED** | **UNMEASURED** | **UNMEASURED** as quality / PPL (synthetic functional tok/s is **not** copied here) |
 | xbox-gpu-training Series X | — | **UNMEASURED** | **UNMEASURED** | **UNMEASURED** | **UNMEASURED** |
-| FloppyLM / xllama CPU (companion) | — | **UNMEASURED** in this repo | **UNMEASURED** in this repo | **UNMEASURED** in this repo | **UNMEASURED** in this repo |
+| FloppyLM Python oracle (`floppy_4mb`) | — | **UNMEASURED** in this repo | **UNMEASURED** in this repo | **UNMEASURED** in this repo | **UNMEASURED** in this repo |
 
 Do **not** derive a “we are X× vs BitNet” line from the paper table or from the E0 trial. That would be a fabricated ranking.
 
@@ -308,4 +308,4 @@ A human / companion campaign should:
 - [docs/console.md](console.md)
 - [docs/evidence/e0-20261001/notes.md](evidence/e0-20261001/notes.md)
 - [docs/figures/README.md](figures/README.md)
-- Companion: [gianlucamazza/xllama](https://github.com/gianlucamazza/xllama)
+- FloppyLM owner: `Workspace/experiments/floppy_4mb` (ADR 0012)
