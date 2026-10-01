@@ -1,0 +1,46 @@
+{
+ "adapter": "SraKmd_arden",
+ "branches": [
+  {
+   "artifact": {
+    "bytes": 316829,
+    "path": "results/recovery-20261001T090424Z-5c8006-full/branch-8.json",
+    "sha256": "07d23edd0236512852b787fc9d3decaeae1facbf12df81e65ab96301c41ea3eb"
+   },
+   "cooldown_seconds": 0.007141709,
+   "cooldown_start": 7,
+   "cooldown_steps": 1,
+   "end_step": 8,
+   "tokens_seen": 128
+  },
+  {
+   "artifact": {
+    "bytes": 316845,
+    "path": "results/recovery-20261001T090424Z-5c8006-full/branch-16.json",
+    "sha256": "c5b067d790827cde86e90a3406755365af7cf603b78b20ef3e7b73876298b967"
+   },
+   "cooldown_seconds": 0.007049997,
+   "cooldown_start": 15,
+   "cooldown_steps": 1,
+   "end_step": 16,
+   "tokens_seen": 256
+  }
+ ],
+ "checkpoint": {
+  "bytes": 1010571,
+  "path": "results/recovery-20261001T090424Z-5c8006-full/checkpoint.json",
+  "sha256": "8894f12a3193fa6aba17923b7bbceae72f46c266035e78823ef44a5a54dee69b"
+ },
+ "dispatches": 4148,
+ "gpu_seconds": 0.027221092731829526,
+ "hardware_gpu": true,
+ "job_id": "recovery-20261001T090424Z-5c8006-full",
+ "job_sha256": "a204c5a46b86df0321e845444cac29fdcfddc203d0877af11dedbefc1412e926",
+ "last_loss": 1.5586926266551018,
+ "peak_memory_bytes": 81625088,
+ "schema": "floppylm.e0.result.v1",
+ "state": "completed",
+ "transfer_bytes": 6314752,
+ "trunk_step": 29,
+ "wall_seconds": 0.131227275
+}

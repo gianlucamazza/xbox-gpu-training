@@ -1,0 +1,18 @@
+{
+ "config": {
+  "core_fmt": "ternary",
+  "ctx": 8,
+  "d": 8,
+  "d_ff": 8,
+  "delta": 0.5,
+  "emb_fmt": "4bit",
+  "mlp": "gelu",
+  "n_heads": 2,
+  "n_layers": 1,
+  "qk_norm": false,
+  "scale_policy": "row16",
+  "vocab": 16
+ },
+ "schema": "floppylm.e0.weights.v1",
+ "tensors": []
+}

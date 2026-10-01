@@ -1,0 +1,168 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/gianlucamazza/floppylm/schemas/floppylm.e0.common.v1.json",
+  "title": "Shared definitions for floppylm E0 contracts",
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "job_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]+$"
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "seconds": {
+      "type": "number",
+      "minimum": 0
+    },
+    "descriptor": {
+      "description": "A content-addressed file: path relative to the job root, size and SHA-256.",
+      "type": "object",
+      "required": [
+        "path",
+        "bytes",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "bytes": {
+          "$ref": "#/$defs/count"
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      },
+      "additionalProperties": false
+    },
+    "config": {
+      "description": "GPTConfig.to_dict(); the native Config reads every key.",
+      "type": "object",
+      "required": [
+        "vocab",
+        "d",
+        "n_layers",
+        "n_heads",
+        "d_ff",
+        "mlp",
+        "core_fmt",
+        "emb_fmt",
+        "scale_policy",
+        "delta",
+        "qk_norm",
+        "ctx"
+      ],
+      "properties": {
+        "vocab": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "d": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "n_layers": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "n_heads": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "d_ff": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "mlp": {
+          "enum": [
+            "gelu",
+            "relu2",
+            "swiglu"
+          ]
+        },
+        "core_fmt": {
+          "enum": [
+            "ternary",
+            "2bit",
+            "4bit"
+          ]
+        },
+        "emb_fmt": {
+          "enum": [
+            "ternary",
+            "2bit",
+            "4bit"
+          ]
+        },
+        "scale_policy": {
+          "enum": [
+            "row16",
+            "row8log",
+            "tensor16"
+          ]
+        },
+        "delta": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "qk_norm": {
+          "type": "boolean"
+        },
+        "ctx": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "tensor": {
+      "description": "One stored tensor, row-major; values has rows * cols entries.",
+      "type": "object",
+      "required": [
+        "name",
+        "rows",
+        "cols",
+        "norm",
+        "values"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "rows": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "cols": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "norm": {
+          "type": "boolean"
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "tensors": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/tensor"
+      },
+      "minItems": 1
+    }
+  }
+}

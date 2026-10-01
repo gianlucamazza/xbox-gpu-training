@@ -39,6 +39,16 @@ jobs:
       - name: QAT/WSD schedule dry-run
         run: python3 scripts/validate_qat_schedule.py examples/qat-wsd-smoke.json --dry-run
 
+      - name: Set up Python for contract checks
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: floppylm contracts (pinned schemas, fixtures, native evidence)
+        run: |
+          python -m pip install "jsonschema==4.26.0"
+          python scripts/check_floppylm_contracts.py
+
   build-windows:
     name: build-windows
     runs-on: windows-latest

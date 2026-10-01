@@ -17,6 +17,12 @@ for the area you touch ([docs/README.md](docs/README.md)).
   ([docs/e0/acceptance.md](docs/e0/acceptance.md)).
 - Do not modify [xllama](https://github.com/gianlucamazza/xllama) from this project.
 
+- floppylm's `floppylm.*.v1` schemas and golden fixtures are vendored in `contracts/floppylm/`
+  at the commit in `contracts/floppylm/PIN.json`. Never edit them here: change floppylm, then
+  `python3 scripts/sync_floppylm_contracts.py --source <floppylm checkout> --commit <sha>`.
+  CI (`scripts/check_floppylm_contracts.py`) checks the copy, the fixtures and every native
+  report in `docs/evidence/`.
+
 ## Language and style
 
 - Code, comments, docs, commit messages and PR titles: **English**.

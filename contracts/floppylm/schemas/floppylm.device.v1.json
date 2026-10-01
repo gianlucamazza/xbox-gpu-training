@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/gianlucamazza/floppylm/schemas/floppylm.device.v1.json",
+  "title": "Native backend device report",
+  "description": "LocalState/device.json written once by the app worker. On startup failure it carries only state=failed, error, hardware_gpu=false and commit.",
+  "oneOf": [
+    {
+      "type": "object",
+      "required": [
+        "schema",
+        "hardware_gpu",
+        "adapter",
+        "package",
+        "state",
+        "commit"
+      ],
+      "properties": {
+        "schema": {
+          "const": "floppylm.device.v1"
+        },
+        "hardware_gpu": {
+          "type": "boolean"
+        },
+        "adapter": {
+          "type": "string"
+        },
+        "package": {
+          "type": "string",
+          "minLength": 1
+        },
+        "state": {
+          "const": "ready"
+        },
+        "commit": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "state",
+        "error",
+        "hardware_gpu",
+        "commit"
+      ],
+      "properties": {
+        "state": {
+          "const": "failed"
+        },
+        "error": {
+          "type": "string"
+        },
+        "hardware_gpu": {
+          "const": false
+        },
+        "commit": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    }
+  ]
+}

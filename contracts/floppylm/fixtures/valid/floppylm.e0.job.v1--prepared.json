@@ -1,0 +1,43 @@
+{
+ "config": {
+  "core_fmt": "ternary",
+  "ctx": 8,
+  "d": 8,
+  "d_ff": 8,
+  "delta": 0.5,
+  "emb_fmt": "4bit",
+  "mlp": "gelu",
+  "n_heads": 2,
+  "n_layers": 1,
+  "qk_norm": false,
+  "scale_policy": "row16",
+  "vocab": 16
+ },
+ "data": {
+  "bytes": 1024,
+  "path": "train.bin",
+  "sha256": "61cce23b92db74468ff92543068c6af0d319efc6ee940b977ecfb8ce8bd2cf34"
+ },
+ "indices": {
+  "bytes": 256,
+  "path": "indices.bin",
+  "sha256": "34fc824ad99120fdec690834a99fd7e012d2d30d81823042c3b2f7cc601b87be"
+ },
+ "initialization": {
+  "bytes": 14169,
+  "path": "initial.json",
+  "sha256": "acd14708598695c9374ffc7ccad18fd8b66dbd712ee21e0eeb85a189adc74370"
+ },
+ "job_id": "tiny",
+ "schema": "floppylm.e0.job.v1",
+ "spec": {
+  "batch": 2,
+  "branches": 3,
+  "cooldown_frac": 0.1,
+  "lr": 0.003,
+  "seed": 0,
+  "tokens": 64,
+  "warmup_frac": 0.02,
+  "wd": 0.1
+ }
+}

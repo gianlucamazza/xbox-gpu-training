@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/gianlucamazza/floppylm/schemas/floppylm.e0.initialization.v1.json",
+  "title": "E0 initial weights (job initialization asset)",
+  "description": "Written by prepare_job as initial.json; the file carries no schema field. Native run_job requires config to equal the job config.",
+  "type": "object",
+  "required": [
+    "config",
+    "tensors"
+  ],
+  "properties": {
+    "config": {
+      "$ref": "floppylm.e0.common.v1.json#/$defs/config"
+    },
+    "tensors": {
+      "$ref": "floppylm.e0.common.v1.json#/$defs/tensors"
+    }
+  },
+  "additionalProperties": false
+}

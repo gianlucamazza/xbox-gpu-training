@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/gianlucamazza/floppylm/schemas/floppylm.e0.job.v1.json",
+  "title": "E0 training job (host to native backend)",
+  "description": "Written by floppylm.xbox.prepare_job; Portal.submit adds purpose and acceptance_sha256, Portal.resume adds resume. Native run_job requires the three-branch WSD protocol.",
+  "type": "object",
+  "required": [
+    "schema",
+    "job_id",
+    "config",
+    "spec",
+    "initialization",
+    "data",
+    "indices"
+  ],
+  "properties": {
+    "schema": {
+      "const": "floppylm.e0.job.v1"
+    },
+    "job_id": {
+      "$ref": "floppylm.e0.common.v1.json#/$defs/job_id"
+    },
+    "config": {
+      "$ref": "floppylm.e0.common.v1.json#/$defs/config"
+    },
+    "spec": {
+      "type": "object",
+      "required": [
+        "tokens",
+        "branches",
+        "batch",
+        "lr",
+        "wd",
+        "warmup_frac",
+        "cooldown_frac",
+        "seed"
+      ],
+      "properties": {
+        "tokens": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "branches": {
+          "const": 3
+        },
+        "batch": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "lr": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "wd": {
+          "type": "number",
+          "minimum": 0
+        },
+        "warmup_frac": {
+          "const": 0.02
+        },
+        "cooldown_frac": {
+          "const": 0.1
+        },
+        "seed": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "initialization": {
+      "$ref": "floppylm.e0.common.v1.json#/$defs/descriptor"
+    },
+    "data": {
+      "$ref": "floppylm.e0.common.v1.json#/$defs/descriptor"
+    },
+    "indices": {
+      "$ref": "floppylm.e0.common.v1.json#/$defs/descriptor"
+    },
+    "purpose": {
+      "enum": [
+        "functional",
+        "scientific"
+      ]
+    },
+    "acceptance_sha256": {
+      "$ref": "floppylm.e0.common.v1.json#/$defs/sha256"
+    },
+    "resume": {
+      "$ref": "floppylm.e0.common.v1.json#/$defs/descriptor"
+    },
+    "stop_after": {
+      "type": "integer",
+      "minimum": 1
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,35 @@
+{
+ "adapter": "SraKmd_arden",
+ "branches": [
+  {
+   "artifact": {
+    "bytes": 311964,
+    "path": "results/lifecycle-20260930T234054Z-352c6a-suspended/branch-512.json",
+    "sha256": "d7a4754f70f3e82611305ad0d4871ca05cdd3aa16370851b0ed9584814e0067e"
+   },
+   "cooldown_seconds": 7.506427549,
+   "cooldown_start": 461,
+   "cooldown_steps": 51,
+   "end_step": 512,
+   "tokens_seen": 8192
+  }
+ ],
+ "checkpoint": {
+  "bytes": 1010853,
+  "path": "results/lifecycle-20260930T234054Z-352c6a-suspended/checkpoint.json",
+  "sha256": "f79305c7a060a9d538593ec21e134c0f2e4f5b01d5535495ccab72273d7cc1e9"
+ },
+ "dispatches": 83814,
+ "error": "JSON atomic replacement failed: Q:\\Users\\UserMgr0\\AppData\\Local\\Packages\\GianlucaMazza.XgpuE0_g0p5dcfz4t9z4\\LocalState\\inbox\\results\\lifecycle-20260930T234054Z-352c6a-suspended\\status.json win32=5",
+ "gpu_seconds": 0.8625984160400405,
+ "hardware_gpu": true,
+ "job_id": "lifecycle-20260930T234054Z-352c6a-suspended",
+ "job_sha256": "ccc530802f58fcffd8553a67207a5e39e17b4ad8b077c74c97bc711eec7a2ae6",
+ "last_loss": 0.07757433231199684,
+ "peak_memory_bytes": 25300992,
+ "schema": "floppylm.e0.result.v1",
+ "state": "failed",
+ "transfer_bytes": 1012627008,
+ "trunk_step": 704,
+ "wall_seconds": 101.034676875
+}
