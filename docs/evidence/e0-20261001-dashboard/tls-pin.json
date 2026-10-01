@@ -1,0 +1,8 @@
+{
+  "scope": "live pinned-TLS Device Portal connection",
+  "matching_pin_succeeds": true,
+  "wrong_pin_refused": true,
+  "wrong_pin_error": "error: TLS verification failed: ('device certificate does not match --pin-sha256',) \u2014 devices use a self-signed certificate; pin it with --pin-sha256",
+  "openappx_version": "0.7.0",
+  "package": "GianlucaMazza.XgpuE0_0.1.0.56_x64__g0p5dcfz4t9z4"
+}

@@ -1,0 +1,44 @@
+{
+  "checkpoint_interruption": {
+    "adapter": "SraKmd_arden",
+    "branches": [],
+    "checkpoint": {
+      "bytes": 1010835,
+      "path": "results/lifecycle-20261001T154116Z-f2bbe8-suspended/checkpoint.json",
+      "sha256": "5607e7c7158c8a8dd71cad253bdc5983403d30bc67a525db318a2caca1216271"
+    },
+    "dispatches": 47458,
+    "gpu_seconds": 0.31165750375936935,
+    "hardware_gpu": true,
+    "job_id": "lifecycle-20261001T154116Z-f2bbe8-suspended",
+    "job_sha256": "6dbcd33efc5732ba59b843a5b04f652c753d76a78abe1fe016d93b1aeb3cd578",
+    "last_loss": 0.1379369628011773,
+    "peak_memory_bytes": 44253184,
+    "phase": "trunk",
+    "schedule": {
+      "T": 512,
+      "cooldown_starts": [
+        461,
+        922,
+        1844
+      ],
+      "ends": [
+        512,
+        1024,
+        2048
+      ],
+      "tokens_per_step": 16,
+      "warmup": 10
+    },
+    "schema": "floppylm.e0.result.v1",
+    "state": "interrupted",
+    "transfer_bytes": 72248192,
+    "trunk_step": 389,
+    "wall_seconds": 0.907802809
+  },
+  "commit": "53ab3c25c21dff633b8dba6913ddf3f8020b4f65",
+  "ok": true,
+  "package": "GianlucaMazza.XgpuE0_0.1.0.56_x64__g0p5dcfz4t9z4",
+  "purpose": "functional",
+  "suspend_marker": "suspend"
+}

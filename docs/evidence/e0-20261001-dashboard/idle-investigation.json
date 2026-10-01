@@ -1,0 +1,720 @@
+{
+  "schema": "xbox-gpu-training.idle-investigation.v1",
+  "initial_hypothesis": "repeated dashboard invalidation causes the idle GPU counter",
+  "initial_hypothesis_result": "falsified by controlled hardware retest",
+  "initial_package": "0.1.0.46",
+  "candidate_package": "0.1.0.50",
+  "initial_engine_5_mean": 96.82204786666667,
+  "candidate_engine_5_mean": 99.70685633333333,
+  "scope": "whole-console Device Portal counters; no per-process GPU attribution or power measurement",
+  "modes": {
+    "idle-layer-probe/blank-worker-off": {
+      "mode": {
+        "blank": true,
+        "worker": false
+      },
+      "device": {
+        "commit": "6e2326f0256db97b2e7540308153e03a871390d5",
+        "hardware_gpu": false,
+        "package": "GianlucaMazza.XgpuE0_0.1.0.51_x64__g0p5dcfz4t9z4",
+        "probe": {
+          "blank": true,
+          "worker": false
+        },
+        "state": "diagnostic"
+      },
+      "engine_summaries": {
+        "0": {
+          "mean": 0.011168733333333335,
+          "max": 0.335062
+        },
+        "1": {
+          "mean": 0.0,
+          "max": 0.0
+        },
+        "2": {
+          "mean": 0.0,
+          "max": 0.0
+        },
+        "3": {
+          "mean": 0.0037229,
+          "max": 0.111687
+        },
+        "4": {
+          "mean": 0.0,
+          "max": 0.0
+        },
+        "5": {
+          "mean": 99.32948773333334,
+          "max": 100.0
+        },
+        "6": {
+          "mean": 0.0,
+          "max": 0.0
+        }
+      }
+    },
+    "idle-layer-probe/blank-worker-on": {
+      "mode": {
+        "blank": true
+      },
+      "device": {
+        "adapter": "SraKmd_arden",
+        "capabilities": {
+          "core_fmt": [
+            "ternary",
+            "2bit"
+          ],
+          "delta": {
+            "exclusive_maximum": 4.0,
+            "minimum": 0.0
+          },
+          "emb_fmt": [
+            "4bit"
+          ],
+          "mlp": [
+            "gelu",
+            "relu2",
+            "swiglu"
+          ],
+          "scale_policy": [
+            "row16",
+            "row8log",
+            "tensor16"
+          ],
+          "vocab": [
+            256
+          ]
+        },
+        "commit": "6e2326f0256db97b2e7540308153e03a871390d5",
+        "hardware_gpu": true,
+        "package": "GianlucaMazza.XgpuE0_0.1.0.51_x64__g0p5dcfz4t9z4",
+        "schema": "floppylm.device.v1",
+        "state": "ready"
+      },
+      "engine_summaries": {
+        "0": {
+          "mean": 0.0119951,
+          "max": 0.359853
+        },
+        "1": {
+          "mean": 0.0,
+          "max": 0.0
+        },
+        "2": {
+          "mean": 0.0,
+          "max": 0.0
+        },
+        "3": {
+          "mean": 0.003129166666666667,
+          "max": 0.093875
+        },
+        "4": {
+          "mean": 0.0,
+          "max": 0.0
+        },
+        "5": {
+          "mean": 99.25922633333333,
+          "max": 100.0
+        },
+        "6": {
+          "mean": 0.0,
+          "max": 0.0
+        }
+      }
+    },
+    "idle-layer-probe/full": {
+      "mode": {},
+      "device": {
+        "adapter": "SraKmd_arden",
+        "capabilities": {
+          "core_fmt": [
+            "ternary",
+            "2bit"
+          ],
+          "delta": {
+            "exclusive_maximum": 4.0,
+            "minimum": 0.0
+          },
+          "emb_fmt": [
+            "4bit"
+          ],
+          "mlp": [
+            "gelu",
+            "relu2",
+            "swiglu"
+          ],
+          "scale_policy": [
+            "row16",
+            "row8log",
+            "tensor16"
+          ],
+          "vocab": [
+            256
+          ]
+        },
+        "commit": "6e2326f0256db97b2e7540308153e03a871390d5",
+        "hardware_gpu": true,
+        "package": "GianlucaMazza.XgpuE0_0.1.0.51_x64__g0p5dcfz4t9z4",
+        "schema": "floppylm.device.v1",
+        "state": "ready"
+      },
+      "engine_summaries": {
+        "0": {
+          "mean": 0.010437566666666667,
+          "max": 0.313127
+        },
+        "1": {
+          "mean": 0.0,
+          "max": 0.0
+        },
+        "2": {
+          "mean": 0.0,
+          "max": 0.0
+        },
+        "3": {
+          "mean": 0.0032115666666666666,
+          "max": 0.096347
+        },
+        "4": {
+          "mean": 0.0,
+          "max": 0.0
+        },
+        "5": {
+          "mean": 99.31941843333334,
+          "max": 100.0
+        },
+        "6": {
+          "mean": 0.0,
+          "max": 0.0
+        }
+      }
+    },
+    "idle-layer-probe/progress-off": {
+      "mode": {
+        "progress": false
+      },
+      "device": {
+        "adapter": "SraKmd_arden",
+        "capabilities": {
+          "core_fmt": [
+            "ternary",
+            "2bit"
+          ],
+          "delta": {
+            "exclusive_maximum": 4.0,
+            "minimum": 0.0
+          },
+          "emb_fmt": [
+            "4bit"
+          ],
+          "mlp": [
+            "gelu",
+            "relu2",
+            "swiglu"
+          ],
+          "scale_policy": [
+            "row16",
+            "row8log",
+            "tensor16"
+          ],
+          "vocab": [
+            256
+          ]
+        },
+        "commit": "6e2326f0256db97b2e7540308153e03a871390d5",
+        "hardware_gpu": true,
+        "package": "GianlucaMazza.XgpuE0_0.1.0.51_x64__g0p5dcfz4t9z4",
+        "schema": "floppylm.device.v1",
+        "state": "ready"
+      },
+      "engine_summaries": {
+        "0": {
+          "mean": 0.0111173,
+          "max": 0.333519
+        },
+        "1": {
+          "mean": 0.0,
+          "max": 0.0
+        },
+        "2": {
+          "mean": 0.0,
+          "max": 0.0
+        },
+        "3": {
+          "mean": 0.0029116666666666666,
+          "max": 0.08735
+        },
+        "4": {
+          "mean": 0.0,
+          "max": 0.0
+        },
+        "5": {
+          "mean": 99.28052036666666,
+          "max": 100.0
+        },
+        "6": {
+          "mean": 0.0,
+          "max": 0.0
+        }
+      }
+    },
+    "idle-layer-probe/timer-off": {
+      "mode": {
+        "timer": false
+      },
+      "device": {
+        "adapter": "SraKmd_arden",
+        "capabilities": {
+          "core_fmt": [
+            "ternary",
+            "2bit"
+          ],
+          "delta": {
+            "exclusive_maximum": 4.0,
+            "minimum": 0.0
+          },
+          "emb_fmt": [
+            "4bit"
+          ],
+          "mlp": [
+            "gelu",
+            "relu2",
+            "swiglu"
+          ],
+          "scale_policy": [
+            "row16",
+            "row8log",
+            "tensor16"
+          ],
+          "vocab": [
+            256
+          ]
+        },
+        "commit": "6e2326f0256db97b2e7540308153e03a871390d5",
+        "hardware_gpu": true,
+        "package": "GianlucaMazza.XgpuE0_0.1.0.51_x64__g0p5dcfz4t9z4",
+        "schema": "floppylm.device.v1",
+        "state": "ready"
+      },
+      "engine_summaries": {
+        "0": {
+          "mean": 0.0111076,
+          "max": 0.333228
+        },
+        "1": {
+          "mean": 0.0,
+          "max": 0.0
+        },
+        "2": {
+          "mean": 0.0,
+          "max": 0.0
+        },
+        "3": {
+          "mean": 0.0021157333333333334,
+          "max": 0.063472
+        },
+        "4": {
+          "mean": 0.0,
+          "max": 0.0
+        },
+        "5": {
+          "mean": 99.25820356666667,
+          "max": 100.0
+        },
+        "6": {
+          "mean": 0.0,
+          "max": 0.0
+        }
+      }
+    },
+    "idle-layer-probe/worker-off": {
+      "mode": {
+        "worker": false
+      },
+      "device": {
+        "commit": "6e2326f0256db97b2e7540308153e03a871390d5",
+        "hardware_gpu": false,
+        "package": "GianlucaMazza.XgpuE0_0.1.0.51_x64__g0p5dcfz4t9z4",
+        "probe": {
+          "worker": false
+        },
+        "state": "diagnostic"
+      },
+      "engine_summaries": {
+        "0": {
+          "mean": 0.0009645999999999999,
+          "max": 0.028938
+        },
+        "1": {
+          "mean": 0.0,
+          "max": 0.0
+        },
+        "2": {
+          "mean": 0.0,
+          "max": 0.0
+        },
+        "3": {
+          "mean": 0.000264,
+          "max": 0.00792
+        },
+        "4": {
+          "mean": 0.0,
+          "max": 0.0
+        },
+        "5": {
+          "mean": 99.70070873333333,
+          "max": 100.0
+        },
+        "6": {
+          "mean": 0.0,
+          "max": 0.0
+        }
+      }
+    },
+    "idle-surface-probe/full": {
+      "mode": {},
+      "device": {
+        "adapter": "SraKmd_arden",
+        "capabilities": {
+          "core_fmt": [
+            "ternary",
+            "2bit"
+          ],
+          "delta": {
+            "exclusive_maximum": 4.0,
+            "minimum": 0.0
+          },
+          "emb_fmt": [
+            "4bit"
+          ],
+          "mlp": [
+            "gelu",
+            "relu2",
+            "swiglu"
+          ],
+          "scale_policy": [
+            "row16",
+            "row8log",
+            "tensor16"
+          ],
+          "vocab": [
+            256
+          ]
+        },
+        "commit": "5e3625f8882f75bdf65fc665f529c6d74051fb5c",
+        "hardware_gpu": true,
+        "package": "GianlucaMazza.XgpuE0_0.1.0.52_x64__g0p5dcfz4t9z4",
+        "schema": "floppylm.device.v1",
+        "state": "ready"
+      },
+      "engine_summaries": {
+        "0": {
+          "mean": 0.009307266666666668,
+          "max": 0.279218
+        },
+        "1": {
+          "mean": 0.0,
+          "max": 0.0
+        },
+        "2": {
+          "mean": 0.0,
+          "max": 0.0
+        },
+        "3": {
+          "mean": 0.0018614666666666665,
+          "max": 0.055844
+        },
+        "4": {
+          "mean": 0.0,
+          "max": 0.0
+        },
+        "5": {
+          "mean": 99.291134,
+          "max": 100.0
+        },
+        "6": {
+          "mean": 0.0,
+          "max": 0.0
+        }
+      }
+    },
+    "idle-surface-probe/no-content-worker-off": {
+      "mode": {
+        "no_content": true,
+        "worker": false
+      },
+      "device": {
+        "commit": "5e3625f8882f75bdf65fc665f529c6d74051fb5c",
+        "hardware_gpu": false,
+        "package": "GianlucaMazza.XgpuE0_0.1.0.52_x64__g0p5dcfz4t9z4",
+        "probe": {
+          "no_content": true,
+          "worker": false
+        },
+        "state": "diagnostic"
+      },
+      "engine_summaries": {
+        "0": {
+          "mean": 0.009606133333333332,
+          "max": 0.288184
+        },
+        "1": {
+          "mean": 0.0,
+          "max": 0.0
+        },
+        "2": {
+          "mean": 0.0,
+          "max": 0.0
+        },
+        "3": {
+          "mean": 0.003202033333333333,
+          "max": 0.096061
+        },
+        "4": {
+          "mean": 0.0,
+          "max": 0.0
+        },
+        "5": {
+          "mean": 99.39526373333334,
+          "max": 100.0
+        },
+        "6": {
+          "mean": 0.0,
+          "max": 0.0
+        }
+      }
+    },
+    "idle-surface-probe/transparent-worker-off": {
+      "mode": {
+        "blank": true,
+        "transparent": true,
+        "worker": false
+      },
+      "device": {
+        "commit": "5e3625f8882f75bdf65fc665f529c6d74051fb5c",
+        "hardware_gpu": false,
+        "package": "GianlucaMazza.XgpuE0_0.1.0.52_x64__g0p5dcfz4t9z4",
+        "probe": {
+          "blank": true,
+          "transparent": true,
+          "worker": false
+        },
+        "state": "diagnostic"
+      },
+      "engine_summaries": {
+        "0": {
+          "mean": 0.0006513666666666667,
+          "max": 0.019541
+        },
+        "1": {
+          "mean": 0.0,
+          "max": 0.0
+        },
+        "2": {
+          "mean": 0.0,
+          "max": 0.0
+        },
+        "3": {
+          "mean": 0.00013293333333333333,
+          "max": 0.003988
+        },
+        "4": {
+          "mean": 0.0,
+          "max": 0.0
+        },
+        "5": {
+          "mean": 99.6720991,
+          "max": 100.0
+        },
+        "6": {
+          "mean": 0.0,
+          "max": 0.0
+        }
+      }
+    },
+    "idle-core-probe/core-window-d3d12": {
+      "mode": {
+        "core": true,
+        "worker": true
+      },
+      "device": {
+        "adapter": "SraKmd_arden",
+        "capabilities": {
+          "core_fmt": [
+            "ternary",
+            "2bit"
+          ],
+          "delta": {
+            "exclusive_maximum": 4.0,
+            "minimum": 0.0
+          },
+          "emb_fmt": [
+            "4bit"
+          ],
+          "mlp": [
+            "gelu",
+            "relu2",
+            "swiglu"
+          ],
+          "scale_policy": [
+            "row16",
+            "row8log",
+            "tensor16"
+          ],
+          "vocab": [
+            256
+          ]
+        },
+        "commit": "bfedcf833044f3acc69d76f05ae3fb07da96a9d7",
+        "hardware_gpu": true,
+        "package": "GianlucaMazza.XgpuE0_0.1.0.55_x64__g0p5dcfz4t9z4",
+        "schema": "floppylm.device.v1",
+        "state": "ready"
+      },
+      "engine_summaries": {
+        "0": {
+          "mean": 0.0110778,
+          "max": 0.332334
+        },
+        "1": {
+          "mean": 0.0,
+          "max": 0.0
+        },
+        "2": {
+          "mean": 0.0,
+          "max": 0.0
+        },
+        "3": {
+          "mean": 0.0037826666666666664,
+          "max": 0.11348
+        },
+        "4": {
+          "mean": 0.0,
+          "max": 0.0
+        },
+        "5": {
+          "mean": 99.3802014,
+          "max": 100.0
+        },
+        "6": {
+          "mean": 0.0,
+          "max": 0.0
+        }
+      }
+    },
+    "idle-core-probe/core-window": {
+      "mode": {
+        "core": true
+      },
+      "device": {
+        "commit": "bfedcf833044f3acc69d76f05ae3fb07da96a9d7",
+        "hardware_gpu": false,
+        "package": "GianlucaMazza.XgpuE0_0.1.0.55_x64__g0p5dcfz4t9z4",
+        "probe": {
+          "core": true
+        },
+        "state": "diagnostic"
+      },
+      "engine_summaries": {
+        "0": {
+          "mean": 0.0010119333333333334,
+          "max": 0.030358
+        },
+        "1": {
+          "mean": 0.0,
+          "max": 0.0
+        },
+        "2": {
+          "mean": 0.0,
+          "max": 0.0
+        },
+        "3": {
+          "mean": 0.00017419999999999998,
+          "max": 0.005226
+        },
+        "4": {
+          "mean": 0.0,
+          "max": 0.0
+        },
+        "5": {
+          "mean": 97.89851003333334,
+          "max": 100.0
+        },
+        "6": {
+          "mean": 0.0,
+          "max": 0.0
+        }
+      }
+    },
+    "idle-core-probe/full": {
+      "mode": {},
+      "device": {
+        "adapter": "SraKmd_arden",
+        "capabilities": {
+          "core_fmt": [
+            "ternary",
+            "2bit"
+          ],
+          "delta": {
+            "exclusive_maximum": 4.0,
+            "minimum": 0.0
+          },
+          "emb_fmt": [
+            "4bit"
+          ],
+          "mlp": [
+            "gelu",
+            "relu2",
+            "swiglu"
+          ],
+          "scale_policy": [
+            "row16",
+            "row8log",
+            "tensor16"
+          ],
+          "vocab": [
+            256
+          ]
+        },
+        "commit": "bfedcf833044f3acc69d76f05ae3fb07da96a9d7",
+        "hardware_gpu": true,
+        "package": "GianlucaMazza.XgpuE0_0.1.0.55_x64__g0p5dcfz4t9z4",
+        "schema": "floppylm.device.v1",
+        "state": "ready"
+      },
+      "engine_summaries": {
+        "0": {
+          "mean": 0.011463,
+          "max": 0.34389
+        },
+        "1": {
+          "mean": 0.0,
+          "max": 0.0
+        },
+        "2": {
+          "mean": 0.0,
+          "max": 0.0
+        },
+        "3": {
+          "mean": 0.0021326666666666664,
+          "max": 0.06398
+        },
+        "4": {
+          "mean": 0.0,
+          "max": 0.0
+        },
+        "5": {
+          "mean": 99.28862433333333,
+          "max": 100.0
+        },
+        "6": {
+          "mean": 0.0,
+          "max": 0.0
+        }
+      }
+    }
+  },
+  "interpretation": "The initial UI-invalidation explanation is falsified. The same high global engine-5 counter occurs with CoreWindow and no XAML or D3D12 initialization; it cannot establish per-app GPU command activity or power. Attribution remains open without an independent GPU trace.",
+  "idle_gpu_reduction_validated": false
+}

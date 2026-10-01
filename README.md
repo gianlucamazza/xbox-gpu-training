@@ -36,15 +36,16 @@ console through the job protocol described in [docs/e0/job-protocol.md](docs/e0/
 ## Status
 
 The E0 trainer passes its full hardware acceptance on Series S (52 operation cases,
-36 model fixtures, exact resume, real suspension). A scientific campaign is in progress,
-and no language-model quality result is published yet. Package, throughput and open items:
+36 model fixtures, exact resume, real suspension). Scientific state is owned by
+[FloppyLM](https://github.com/gianlucamazza/floppylm/blob/main/docs/STATUS.md);
+no language-model quality result is published yet. Package, throughput and open items:
 **[docs/status.md](docs/status.md)**.
 
 ## Two lanes
 
 | Lane                                       | Code                                                                                | State                                                      |
 | ------------------------------------------ | ----------------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| **E0 trainer** (active)                    | `src/cpp/e0/`, `src/hlsl/e0_tensor.hlsl`, `uwp/`                                    | Accepted on Series S; scientific campaign running          |
+| **E0 trainer** (active)                    | `src/cpp/e0/`, `src/hlsl/e0_tensor.hlsl`, `uwp/`                                    | Accepted on Series S; scientific state in FloppyLM          |
 | **Diagnostic host** (historical, Fase 0–5) | `src/cpp/` (`xbox_gpu_host`), other `src/hlsl/` kernels, `examples/`, `benchmarks/` | Desktop bring-up of DX12 compute; certifies nothing for E0 |
 
 ## Start here

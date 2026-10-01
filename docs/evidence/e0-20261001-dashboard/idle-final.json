@@ -1,0 +1,1277 @@
+{
+  "device": {
+    "adapter": "SraKmd_arden",
+    "capabilities": {
+      "core_fmt": [
+        "ternary",
+        "2bit"
+      ],
+      "delta": {
+        "exclusive_maximum": 4.0,
+        "minimum": 0.0
+      },
+      "emb_fmt": [
+        "4bit"
+      ],
+      "mlp": [
+        "gelu",
+        "relu2",
+        "swiglu"
+      ],
+      "scale_policy": [
+        "row16",
+        "row8log",
+        "tensor16"
+      ],
+      "vocab": [
+        256
+      ]
+    },
+    "commit": "53ab3c25c21dff633b8dba6913ddf3f8020b4f65",
+    "hardware_gpu": true,
+    "package": "GianlucaMazza.XgpuE0_0.1.0.56_x64__g0p5dcfz4t9z4",
+    "schema": "floppylm.device.v1",
+    "state": "ready"
+  },
+  "scope": "whole-console engines with foreground trainer idle",
+  "trainer": [
+    {
+      "ImageName": "XgpuE0.exe",
+      "ProcessId": 5816,
+      "CPUUsage": 0.0,
+      "WorkingSetSize": 98660352
+    }
+  ],
+  "samples": [
+    {
+      "time": 1790869395.5637338,
+      "system": {
+        "AvailablePages": 48829,
+        "CommitLimit": 2121728,
+        "CommittedPages": 1641330,
+        "CpuLoad": 1,
+        "IOOtherSpeed": 506626,
+        "IOReadSpeed": 652997,
+        "IOWriteSpeed": 401969,
+        "NonPagedPoolPages": 23342,
+        "PageSize": 4096,
+        "PagedPoolPages": 15317,
+        "TotalPages": 327680,
+        "GPUData": {
+          "AvailableAdapters": [
+            {
+              "DedicatedMemory": 134217728,
+              "DedicatedMemoryUsed": 88555520,
+              "Description": "SraKmd_arden",
+              "SystemMemory": 671088640,
+              "SystemMemoryUsed": 83603456,
+              "EnginesUtilization": [
+                2.585921,
+                0.0,
+                0.0,
+                0.011457,
+                0.0,
+                97.358341,
+                0.0
+              ]
+            }
+          ]
+        },
+        "NetworkingData": {
+          "NetworkInBytes": 31000,
+          "NetworkOutBytes": 93000
+        }
+      }
+    },
+    {
+      "time": 1790869396.5800512,
+      "system": {
+        "AvailablePages": 50179,
+        "CommitLimit": 2121728,
+        "CommittedPages": 1639419,
+        "CpuLoad": 1,
+        "IOOtherSpeed": 401898,
+        "IOReadSpeed": 0,
+        "IOWriteSpeed": 0,
+        "NonPagedPoolPages": 23220,
+        "PageSize": 4096,
+        "PagedPoolPages": 15288,
+        "TotalPages": 327680,
+        "GPUData": {
+          "AvailableAdapters": [
+            {
+              "DedicatedMemory": 134217728,
+              "DedicatedMemoryUsed": 88555520,
+              "Description": "SraKmd_arden",
+              "SystemMemory": 671088640,
+              "SystemMemoryUsed": 83603456,
+              "EnginesUtilization": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                99.219512,
+                0.0
+              ]
+            }
+          ]
+        },
+        "NetworkingData": {
+          "NetworkInBytes": 2000,
+          "NetworkOutBytes": 2000
+        }
+      }
+    },
+    {
+      "time": 1790869397.6060066,
+      "system": {
+        "AvailablePages": 48477,
+        "CommitLimit": 2121728,
+        "CommittedPages": 1639403,
+        "CpuLoad": 1,
+        "IOOtherSpeed": 407011,
+        "IOReadSpeed": 0,
+        "IOWriteSpeed": 0,
+        "NonPagedPoolPages": 23228,
+        "PageSize": 4096,
+        "PagedPoolPages": 15289,
+        "TotalPages": 327680,
+        "GPUData": {
+          "AvailableAdapters": [
+            {
+              "DedicatedMemory": 134217728,
+              "DedicatedMemoryUsed": 88555520,
+              "Description": "SraKmd_arden",
+              "SystemMemory": 671088640,
+              "SystemMemoryUsed": 83603456,
+              "EnginesUtilization": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                100.0,
+                0.0
+              ]
+            }
+          ]
+        },
+        "NetworkingData": {
+          "NetworkInBytes": 3000,
+          "NetworkOutBytes": 2000
+        }
+      }
+    },
+    {
+      "time": 1790869398.6353872,
+      "system": {
+        "AvailablePages": 48560,
+        "CommitLimit": 2121728,
+        "CommittedPages": 1639331,
+        "CpuLoad": 1,
+        "IOOtherSpeed": 404078,
+        "IOReadSpeed": 0,
+        "IOWriteSpeed": 0,
+        "NonPagedPoolPages": 23221,
+        "PageSize": 4096,
+        "PagedPoolPages": 15309,
+        "TotalPages": 327680,
+        "GPUData": {
+          "AvailableAdapters": [
+            {
+              "DedicatedMemory": 134217728,
+              "DedicatedMemoryUsed": 88555520,
+              "Description": "SraKmd_arden",
+              "SystemMemory": 671088640,
+              "SystemMemoryUsed": 83603456,
+              "EnginesUtilization": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                100.0,
+                0.0
+              ]
+            }
+          ]
+        },
+        "NetworkingData": {
+          "NetworkInBytes": 4000,
+          "NetworkOutBytes": 2000
+        }
+      }
+    },
+    {
+      "time": 1790869399.6624618,
+      "system": {
+        "AvailablePages": 48453,
+        "CommitLimit": 2121728,
+        "CommittedPages": 1639331,
+        "CpuLoad": 1,
+        "IOOtherSpeed": 408044,
+        "IOReadSpeed": 0,
+        "IOWriteSpeed": 0,
+        "NonPagedPoolPages": 23219,
+        "PageSize": 4096,
+        "PagedPoolPages": 15309,
+        "TotalPages": 327680,
+        "GPUData": {
+          "AvailableAdapters": [
+            {
+              "DedicatedMemory": 134217728,
+              "DedicatedMemoryUsed": 88555520,
+              "Description": "SraKmd_arden",
+              "SystemMemory": 671088640,
+              "SystemMemoryUsed": 83603456,
+              "EnginesUtilization": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                99.219512,
+                0.0
+              ]
+            }
+          ]
+        },
+        "NetworkingData": {
+          "NetworkInBytes": 7000,
+          "NetworkOutBytes": 2000
+        }
+      }
+    },
+    {
+      "time": 1790869400.6879215,
+      "system": {
+        "AvailablePages": 48515,
+        "CommitLimit": 2121728,
+        "CommittedPages": 1639331,
+        "CpuLoad": 1,
+        "IOOtherSpeed": 402523,
+        "IOReadSpeed": 0,
+        "IOWriteSpeed": 0,
+        "NonPagedPoolPages": 23219,
+        "PageSize": 4096,
+        "PagedPoolPages": 15309,
+        "TotalPages": 327680,
+        "GPUData": {
+          "AvailableAdapters": [
+            {
+              "DedicatedMemory": 134217728,
+              "DedicatedMemoryUsed": 88555520,
+              "Description": "SraKmd_arden",
+              "SystemMemory": 671088640,
+              "SystemMemoryUsed": 83603456,
+              "EnginesUtilization": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                99.219512,
+                0.0
+              ]
+            }
+          ]
+        },
+        "NetworkingData": {
+          "NetworkInBytes": 2000,
+          "NetworkOutBytes": 2000
+        }
+      }
+    },
+    {
+      "time": 1790869401.7141948,
+      "system": {
+        "AvailablePages": 48422,
+        "CommitLimit": 2121728,
+        "CommittedPages": 1639331,
+        "CpuLoad": 0,
+        "IOOtherSpeed": 408492,
+        "IOReadSpeed": 0,
+        "IOWriteSpeed": 0,
+        "NonPagedPoolPages": 23219,
+        "PageSize": 4096,
+        "PagedPoolPages": 15309,
+        "TotalPages": 327680,
+        "GPUData": {
+          "AvailableAdapters": [
+            {
+              "DedicatedMemory": 134217728,
+              "DedicatedMemoryUsed": 88555520,
+              "Description": "SraKmd_arden",
+              "SystemMemory": 671088640,
+              "SystemMemoryUsed": 83603456,
+              "EnginesUtilization": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                100.0,
+                0.0
+              ]
+            }
+          ]
+        },
+        "NetworkingData": {
+          "NetworkInBytes": 2000,
+          "NetworkOutBytes": 2000
+        }
+      }
+    },
+    {
+      "time": 1790869402.739747,
+      "system": {
+        "AvailablePages": 48392,
+        "CommitLimit": 2121728,
+        "CommittedPages": 1639331,
+        "CpuLoad": 1,
+        "IOOtherSpeed": 395756,
+        "IOReadSpeed": 0,
+        "IOWriteSpeed": 0,
+        "NonPagedPoolPages": 23219,
+        "PageSize": 4096,
+        "PagedPoolPages": 15289,
+        "TotalPages": 327680,
+        "GPUData": {
+          "AvailableAdapters": [
+            {
+              "DedicatedMemory": 134217728,
+              "DedicatedMemoryUsed": 88555520,
+              "Description": "SraKmd_arden",
+              "SystemMemory": 671088640,
+              "SystemMemoryUsed": 83603456,
+              "EnginesUtilization": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                98.942308,
+                0.0
+              ]
+            }
+          ]
+        },
+        "NetworkingData": {
+          "NetworkInBytes": 2000,
+          "NetworkOutBytes": 2000
+        }
+      }
+    },
+    {
+      "time": 1790869403.7797215,
+      "system": {
+        "AvailablePages": 48425,
+        "CommitLimit": 2121728,
+        "CommittedPages": 1639316,
+        "CpuLoad": 0,
+        "IOOtherSpeed": 410208,
+        "IOReadSpeed": 0,
+        "IOWriteSpeed": 0,
+        "NonPagedPoolPages": 23221,
+        "PageSize": 4096,
+        "PagedPoolPages": 15289,
+        "TotalPages": 327680,
+        "GPUData": {
+          "AvailableAdapters": [
+            {
+              "DedicatedMemory": 134217728,
+              "DedicatedMemoryUsed": 88555520,
+              "Description": "SraKmd_arden",
+              "SystemMemory": 671088640,
+              "SystemMemoryUsed": 83603456,
+              "EnginesUtilization": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                100.0,
+                0.0
+              ]
+            }
+          ]
+        },
+        "NetworkingData": {
+          "NetworkInBytes": 2000,
+          "NetworkOutBytes": 2000
+        }
+      }
+    },
+    {
+      "time": 1790869404.8022344,
+      "system": {
+        "AvailablePages": 48359,
+        "CommitLimit": 2121728,
+        "CommittedPages": 1639274,
+        "CpuLoad": 1,
+        "IOOtherSpeed": 797487,
+        "IOReadSpeed": 0,
+        "IOWriteSpeed": 0,
+        "NonPagedPoolPages": 23217,
+        "PageSize": 4096,
+        "PagedPoolPages": 15286,
+        "TotalPages": 327680,
+        "GPUData": {
+          "AvailableAdapters": [
+            {
+              "DedicatedMemory": 134217728,
+              "DedicatedMemoryUsed": 88555520,
+              "Description": "SraKmd_arden",
+              "SystemMemory": 671088640,
+              "SystemMemoryUsed": 83603456,
+              "EnginesUtilization": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                99.316406,
+                0.0
+              ]
+            }
+          ]
+        },
+        "NetworkingData": {
+          "NetworkInBytes": 2000,
+          "NetworkOutBytes": 2000
+        }
+      }
+    },
+    {
+      "time": 1790869405.8260314,
+      "system": {
+        "AvailablePages": 48403,
+        "CommitLimit": 2121728,
+        "CommittedPages": 1639257,
+        "CpuLoad": 0,
+        "IOOtherSpeed": 408090,
+        "IOReadSpeed": 0,
+        "IOWriteSpeed": 0,
+        "NonPagedPoolPages": 23219,
+        "PageSize": 4096,
+        "PagedPoolPages": 15286,
+        "TotalPages": 327680,
+        "GPUData": {
+          "AvailableAdapters": [
+            {
+              "DedicatedMemory": 134217728,
+              "DedicatedMemoryUsed": 88555520,
+              "Description": "SraKmd_arden",
+              "SystemMemory": 671088640,
+              "SystemMemoryUsed": 83603456,
+              "EnginesUtilization": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                99.803729,
+                0.0
+              ]
+            }
+          ]
+        },
+        "NetworkingData": {
+          "NetworkInBytes": 2000,
+          "NetworkOutBytes": 2000
+        }
+      }
+    },
+    {
+      "time": 1790869406.8449981,
+      "system": {
+        "AvailablePages": 48330,
+        "CommitLimit": 2121728,
+        "CommittedPages": 1639257,
+        "CpuLoad": 1,
+        "IOOtherSpeed": 402882,
+        "IOReadSpeed": 0,
+        "IOWriteSpeed": 0,
+        "NonPagedPoolPages": 23218,
+        "PageSize": 4096,
+        "PagedPoolPages": 15288,
+        "TotalPages": 327680,
+        "GPUData": {
+          "AvailableAdapters": [
+            {
+              "DedicatedMemory": 134217728,
+              "DedicatedMemoryUsed": 88555520,
+              "Description": "SraKmd_arden",
+              "SystemMemory": 671088640,
+              "SystemMemoryUsed": 83603456,
+              "EnginesUtilization": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                100.0,
+                0.0
+              ]
+            }
+          ]
+        },
+        "NetworkingData": {
+          "NetworkInBytes": 2000,
+          "NetworkOutBytes": 2000
+        }
+      }
+    },
+    {
+      "time": 1790869407.8660765,
+      "system": {
+        "AvailablePages": 48382,
+        "CommitLimit": 2121728,
+        "CommittedPages": 1639234,
+        "CpuLoad": 0,
+        "IOOtherSpeed": 407831,
+        "IOReadSpeed": 0,
+        "IOWriteSpeed": 0,
+        "NonPagedPoolPages": 23218,
+        "PageSize": 4096,
+        "PagedPoolPages": 15288,
+        "TotalPages": 327680,
+        "GPUData": {
+          "AvailableAdapters": [
+            {
+              "DedicatedMemory": 134217728,
+              "DedicatedMemoryUsed": 88555520,
+              "Description": "SraKmd_arden",
+              "SystemMemory": 671088640,
+              "SystemMemoryUsed": 83603456,
+              "EnginesUtilization": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                99.219512,
+                0.0
+              ]
+            }
+          ]
+        },
+        "NetworkingData": {
+          "NetworkInBytes": 2000,
+          "NetworkOutBytes": 2000
+        }
+      }
+    },
+    {
+      "time": 1790869408.8922071,
+      "system": {
+        "AvailablePages": 48316,
+        "CommitLimit": 2121728,
+        "CommittedPages": 1639207,
+        "CpuLoad": 0,
+        "IOOtherSpeed": 404008,
+        "IOReadSpeed": 0,
+        "IOWriteSpeed": 0,
+        "NonPagedPoolPages": 23220,
+        "PageSize": 4096,
+        "PagedPoolPages": 15288,
+        "TotalPages": 327680,
+        "GPUData": {
+          "AvailableAdapters": [
+            {
+              "DedicatedMemory": 134217728,
+              "DedicatedMemoryUsed": 88555520,
+              "Description": "SraKmd_arden",
+              "SystemMemory": 671088640,
+              "SystemMemoryUsed": 83603456,
+              "EnginesUtilization": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                99.122807,
+                0.0
+              ]
+            }
+          ]
+        },
+        "NetworkingData": {
+          "NetworkInBytes": 2000,
+          "NetworkOutBytes": 2000
+        }
+      }
+    },
+    {
+      "time": 1790869409.917771,
+      "system": {
+        "AvailablePages": 48267,
+        "CommitLimit": 2121728,
+        "CommittedPages": 1639207,
+        "CpuLoad": 0,
+        "IOOtherSpeed": 408090,
+        "IOReadSpeed": 0,
+        "IOWriteSpeed": 0,
+        "NonPagedPoolPages": 23221,
+        "PageSize": 4096,
+        "PagedPoolPages": 15288,
+        "TotalPages": 327680,
+        "GPUData": {
+          "AvailableAdapters": [
+            {
+              "DedicatedMemory": 134217728,
+              "DedicatedMemoryUsed": 88555520,
+              "Description": "SraKmd_arden",
+              "SystemMemory": 671088640,
+              "SystemMemoryUsed": 83603456,
+              "EnginesUtilization": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                99.705882,
+                0.0
+              ]
+            }
+          ]
+        },
+        "NetworkingData": {
+          "NetworkInBytes": 2000,
+          "NetworkOutBytes": 2000
+        }
+      }
+    },
+    {
+      "time": 1790869410.9389994,
+      "system": {
+        "AvailablePages": 48309,
+        "CommitLimit": 2121728,
+        "CommittedPages": 1639207,
+        "CpuLoad": 0,
+        "IOOtherSpeed": 402238,
+        "IOReadSpeed": 0,
+        "IOWriteSpeed": 0,
+        "NonPagedPoolPages": 23215,
+        "PageSize": 4096,
+        "PagedPoolPages": 15287,
+        "TotalPages": 327680,
+        "GPUData": {
+          "AvailableAdapters": [
+            {
+              "DedicatedMemory": 134217728,
+              "DedicatedMemoryUsed": 88555520,
+              "Description": "SraKmd_arden",
+              "SystemMemory": 671088640,
+              "SystemMemoryUsed": 83603456,
+              "EnginesUtilization": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                100.0,
+                0.0
+              ]
+            }
+          ]
+        },
+        "NetworkingData": {
+          "NetworkInBytes": 2000,
+          "NetworkOutBytes": 2000
+        }
+      }
+    },
+    {
+      "time": 1790869411.961997,
+      "system": {
+        "AvailablePages": 48264,
+        "CommitLimit": 2121728,
+        "CommittedPages": 1639207,
+        "CpuLoad": 0,
+        "IOOtherSpeed": 410005,
+        "IOReadSpeed": 0,
+        "IOWriteSpeed": 0,
+        "NonPagedPoolPages": 23221,
+        "PageSize": 4096,
+        "PagedPoolPages": 15288,
+        "TotalPages": 327680,
+        "GPUData": {
+          "AvailableAdapters": [
+            {
+              "DedicatedMemory": 134217728,
+              "DedicatedMemoryUsed": 88555520,
+              "Description": "SraKmd_arden",
+              "SystemMemory": 671088640,
+              "SystemMemoryUsed": 83603456,
+              "EnginesUtilization": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                99.803729,
+                0.0
+              ]
+            }
+          ]
+        },
+        "NetworkingData": {
+          "NetworkInBytes": 2000,
+          "NetworkOutBytes": 2000
+        }
+      }
+    },
+    {
+      "time": 1790869412.9813623,
+      "system": {
+        "AvailablePages": 48311,
+        "CommitLimit": 2121728,
+        "CommittedPages": 1639207,
+        "CpuLoad": 1,
+        "IOOtherSpeed": 401508,
+        "IOReadSpeed": 0,
+        "IOWriteSpeed": 0,
+        "NonPagedPoolPages": 23215,
+        "PageSize": 4096,
+        "PagedPoolPages": 15288,
+        "TotalPages": 327680,
+        "GPUData": {
+          "AvailableAdapters": [
+            {
+              "DedicatedMemory": 134217728,
+              "DedicatedMemoryUsed": 88555520,
+              "Description": "SraKmd_arden",
+              "SystemMemory": 671088640,
+              "SystemMemoryUsed": 83603456,
+              "EnginesUtilization": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                99.316406,
+                0.0
+              ]
+            }
+          ]
+        },
+        "NetworkingData": {
+          "NetworkInBytes": 2000,
+          "NetworkOutBytes": 2000
+        }
+      }
+    },
+    {
+      "time": 1790869414.0053577,
+      "system": {
+        "AvailablePages": 48257,
+        "CommitLimit": 2121728,
+        "CommittedPages": 1639207,
+        "CpuLoad": 0,
+        "IOOtherSpeed": 410612,
+        "IOReadSpeed": 0,
+        "IOWriteSpeed": 0,
+        "NonPagedPoolPages": 23214,
+        "PageSize": 4096,
+        "PagedPoolPages": 15287,
+        "TotalPages": 327680,
+        "GPUData": {
+          "AvailableAdapters": [
+            {
+              "DedicatedMemory": 134217728,
+              "DedicatedMemoryUsed": 88555520,
+              "Description": "SraKmd_arden",
+              "SystemMemory": 671088640,
+              "SystemMemoryUsed": 83603456,
+              "EnginesUtilization": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                100.0,
+                0.0
+              ]
+            }
+          ]
+        },
+        "NetworkingData": {
+          "NetworkInBytes": 2000,
+          "NetworkOutBytes": 2000
+        }
+      }
+    },
+    {
+      "time": 1790869415.0263443,
+      "system": {
+        "AvailablePages": 48225,
+        "CommitLimit": 2121728,
+        "CommittedPages": 1639193,
+        "CpuLoad": 0,
+        "IOOtherSpeed": 408279,
+        "IOReadSpeed": 0,
+        "IOWriteSpeed": 0,
+        "NonPagedPoolPages": 23213,
+        "PageSize": 4096,
+        "PagedPoolPages": 15288,
+        "TotalPages": 327680,
+        "GPUData": {
+          "AvailableAdapters": [
+            {
+              "DedicatedMemory": 134217728,
+              "DedicatedMemoryUsed": 88555520,
+              "Description": "SraKmd_arden",
+              "SystemMemory": 671088640,
+              "SystemMemoryUsed": 83603456,
+              "EnginesUtilization": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                99.803729,
+                0.0
+              ]
+            }
+          ]
+        },
+        "NetworkingData": {
+          "NetworkInBytes": 7000,
+          "NetworkOutBytes": 2000
+        }
+      }
+    },
+    {
+      "time": 1790869416.0451255,
+      "system": {
+        "AvailablePages": 48349,
+        "CommitLimit": 2121728,
+        "CommittedPages": 1639042,
+        "CpuLoad": 0,
+        "IOOtherSpeed": 408185,
+        "IOReadSpeed": 0,
+        "IOWriteSpeed": 0,
+        "NonPagedPoolPages": 23213,
+        "PageSize": 4096,
+        "PagedPoolPages": 15288,
+        "TotalPages": 327680,
+        "GPUData": {
+          "AvailableAdapters": [
+            {
+              "DedicatedMemory": 134217728,
+              "DedicatedMemoryUsed": 88555520,
+              "Description": "SraKmd_arden",
+              "SystemMemory": 671088640,
+              "SystemMemoryUsed": 83603456,
+              "EnginesUtilization": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                99.608227,
+                0.0
+              ]
+            }
+          ]
+        },
+        "NetworkingData": {
+          "NetworkInBytes": 5000,
+          "NetworkOutBytes": 2000
+        }
+      }
+    },
+    {
+      "time": 1790869417.067008,
+      "system": {
+        "AvailablePages": 48480,
+        "CommitLimit": 2121728,
+        "CommittedPages": 1638505,
+        "CpuLoad": 1,
+        "IOOtherSpeed": 402693,
+        "IOReadSpeed": 0,
+        "IOWriteSpeed": 0,
+        "NonPagedPoolPages": 23206,
+        "PageSize": 4096,
+        "PagedPoolPages": 15287,
+        "TotalPages": 327680,
+        "GPUData": {
+          "AvailableAdapters": [
+            {
+              "DedicatedMemory": 134217728,
+              "DedicatedMemoryUsed": 88555520,
+              "Description": "SraKmd_arden",
+              "SystemMemory": 671088640,
+              "SystemMemoryUsed": 83603456,
+              "EnginesUtilization": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                99.316406,
+                0.0
+              ]
+            }
+          ]
+        },
+        "NetworkingData": {
+          "NetworkInBytes": 2000,
+          "NetworkOutBytes": 2000
+        }
+      }
+    },
+    {
+      "time": 1790869418.09123,
+      "system": {
+        "AvailablePages": 48697,
+        "CommitLimit": 2121728,
+        "CommittedPages": 1638080,
+        "CpuLoad": 0,
+        "IOOtherSpeed": 408492,
+        "IOReadSpeed": 0,
+        "IOWriteSpeed": 0,
+        "NonPagedPoolPages": 23198,
+        "PageSize": 4096,
+        "PagedPoolPages": 15288,
+        "TotalPages": 327680,
+        "GPUData": {
+          "AvailableAdapters": [
+            {
+              "DedicatedMemory": 134217728,
+              "DedicatedMemoryUsed": 88555520,
+              "Description": "SraKmd_arden",
+              "SystemMemory": 671088640,
+              "SystemMemoryUsed": 83603456,
+              "EnginesUtilization": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                99.608227,
+                0.0
+              ]
+            }
+          ]
+        },
+        "NetworkingData": {
+          "NetworkInBytes": 2000,
+          "NetworkOutBytes": 2000
+        }
+      }
+    },
+    {
+      "time": 1790869419.113063,
+      "system": {
+        "AvailablePages": 48753,
+        "CommitLimit": 2121728,
+        "CommittedPages": 1637992,
+        "CpuLoad": 1,
+        "IOOtherSpeed": 404027,
+        "IOReadSpeed": 0,
+        "IOWriteSpeed": 0,
+        "NonPagedPoolPages": 23198,
+        "PageSize": 4096,
+        "PagedPoolPages": 15287,
+        "TotalPages": 327680,
+        "GPUData": {
+          "AvailableAdapters": [
+            {
+              "DedicatedMemory": 134217728,
+              "DedicatedMemoryUsed": 88555520,
+              "Description": "SraKmd_arden",
+              "SystemMemory": 671088640,
+              "SystemMemoryUsed": 83603456,
+              "EnginesUtilization": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                99.803729,
+                0.0
+              ]
+            }
+          ]
+        },
+        "NetworkingData": {
+          "NetworkInBytes": 6000,
+          "NetworkOutBytes": 2000
+        }
+      }
+    },
+    {
+      "time": 1790869420.131408,
+      "system": {
+        "AvailablePages": 48775,
+        "CommitLimit": 2121728,
+        "CommittedPages": 1637938,
+        "CpuLoad": 0,
+        "IOOtherSpeed": 408492,
+        "IOReadSpeed": 0,
+        "IOWriteSpeed": 0,
+        "NonPagedPoolPages": 23196,
+        "PageSize": 4096,
+        "PagedPoolPages": 15286,
+        "TotalPages": 327680,
+        "GPUData": {
+          "AvailableAdapters": [
+            {
+              "DedicatedMemory": 134217728,
+              "DedicatedMemoryUsed": 88555520,
+              "Description": "SraKmd_arden",
+              "SystemMemory": 671088640,
+              "SystemMemoryUsed": 83603456,
+              "EnginesUtilization": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                100.0,
+                0.0
+              ]
+            }
+          ]
+        },
+        "NetworkingData": {
+          "NetworkInBytes": 2000,
+          "NetworkOutBytes": 2000
+        }
+      }
+    },
+    {
+      "time": 1790869421.1565447,
+      "system": {
+        "AvailablePages": 48758,
+        "CommitLimit": 2121728,
+        "CommittedPages": 1637910,
+        "CpuLoad": 1,
+        "IOOtherSpeed": 401593,
+        "IOReadSpeed": 0,
+        "IOWriteSpeed": 0,
+        "NonPagedPoolPages": 23195,
+        "PageSize": 4096,
+        "PagedPoolPages": 15287,
+        "TotalPages": 327680,
+        "GPUData": {
+          "AvailableAdapters": [
+            {
+              "DedicatedMemory": 134217728,
+              "DedicatedMemoryUsed": 88555520,
+              "Description": "SraKmd_arden",
+              "SystemMemory": 671088640,
+              "SystemMemoryUsed": 83603456,
+              "EnginesUtilization": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                100.0,
+                0.0
+              ]
+            }
+          ]
+        },
+        "NetworkingData": {
+          "NetworkInBytes": 2000,
+          "NetworkOutBytes": 2000
+        }
+      }
+    },
+    {
+      "time": 1790869422.1826956,
+      "system": {
+        "AvailablePages": 48794,
+        "CommitLimit": 2121728,
+        "CommittedPages": 1637875,
+        "CpuLoad": 1,
+        "IOOtherSpeed": 408492,
+        "IOReadSpeed": 0,
+        "IOWriteSpeed": 0,
+        "NonPagedPoolPages": 23192,
+        "PageSize": 4096,
+        "PagedPoolPages": 15286,
+        "TotalPages": 327680,
+        "GPUData": {
+          "AvailableAdapters": [
+            {
+              "DedicatedMemory": 134217728,
+              "DedicatedMemoryUsed": 88555520,
+              "Description": "SraKmd_arden",
+              "SystemMemory": 671088640,
+              "SystemMemoryUsed": 83603456,
+              "EnginesUtilization": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                99.705882,
+                0.0
+              ]
+            }
+          ]
+        },
+        "NetworkingData": {
+          "NetworkInBytes": 2000,
+          "NetworkOutBytes": 2000
+        }
+      }
+    },
+    {
+      "time": 1790869423.2016935,
+      "system": {
+        "AvailablePages": 48738,
+        "CommitLimit": 2121728,
+        "CommittedPages": 1637837,
+        "CpuLoad": 0,
+        "IOOtherSpeed": 401898,
+        "IOReadSpeed": 0,
+        "IOWriteSpeed": 0,
+        "NonPagedPoolPages": 23191,
+        "PageSize": 4096,
+        "PagedPoolPages": 15286,
+        "TotalPages": 327680,
+        "GPUData": {
+          "AvailableAdapters": [
+            {
+              "DedicatedMemory": 134217728,
+              "DedicatedMemoryUsed": 88555520,
+              "Description": "SraKmd_arden",
+              "SystemMemory": 671088640,
+              "SystemMemoryUsed": 83603456,
+              "EnginesUtilization": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                99.219512,
+                0.0
+              ]
+            }
+          ]
+        },
+        "NetworkingData": {
+          "NetworkInBytes": 2000,
+          "NetworkOutBytes": 2000
+        }
+      }
+    },
+    {
+      "time": 1790869424.2282119,
+      "system": {
+        "AvailablePages": 48795,
+        "CommitLimit": 2121728,
+        "CommittedPages": 1637821,
+        "CpuLoad": 0,
+        "IOOtherSpeed": 410208,
+        "IOReadSpeed": 0,
+        "IOWriteSpeed": 0,
+        "NonPagedPoolPages": 23191,
+        "PageSize": 4096,
+        "PagedPoolPages": 15285,
+        "TotalPages": 327680,
+        "GPUData": {
+          "AvailableAdapters": [
+            {
+              "DedicatedMemory": 134217728,
+              "DedicatedMemoryUsed": 88555520,
+              "Description": "SraKmd_arden",
+              "SystemMemory": 671088640,
+              "SystemMemoryUsed": 83603456,
+              "EnginesUtilization": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                99.510763,
+                0.0
+              ]
+            }
+          ]
+        },
+        "NetworkingData": {
+          "NetworkInBytes": 2000,
+          "NetworkOutBytes": 2000
+        }
+      }
+    },
+    {
+      "time": 1790869425.2509742,
+      "system": {
+        "AvailablePages": 48719,
+        "CommitLimit": 2121728,
+        "CommittedPages": 1637817,
+        "CpuLoad": 0,
+        "IOOtherSpeed": 408090,
+        "IOReadSpeed": 0,
+        "IOWriteSpeed": 0,
+        "NonPagedPoolPages": 23192,
+        "PageSize": 4096,
+        "PagedPoolPages": 15286,
+        "TotalPages": 327680,
+        "GPUData": {
+          "AvailableAdapters": [
+            {
+              "DedicatedMemory": 134217728,
+              "DedicatedMemoryUsed": 88555520,
+              "Description": "SraKmd_arden",
+              "SystemMemory": 671088640,
+              "SystemMemoryUsed": 83603456,
+              "EnginesUtilization": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                99.803729,
+                0.0
+              ]
+            }
+          ]
+        },
+        "NetworkingData": {
+          "NetworkInBytes": 2000,
+          "NetworkOutBytes": 2000
+        }
+      }
+    }
+  ],
+  "summary": {
+    "0": {
+      "mean": 0.08619736666666666,
+      "max": 2.585921
+    },
+    "1": {
+      "mean": 0.0,
+      "max": 0.0
+    },
+    "2": {
+      "mean": 0.0,
+      "max": 0.0
+    },
+    "3": {
+      "mean": 0.0003819,
+      "max": 0.011457
+    },
+    "4": {
+      "mean": 0.0,
+      "max": 0.0
+    },
+    "5": {
+      "mean": 99.554262,
+      "max": 100.0
+    },
+    "6": {
+      "mean": 0.0,
+      "max": 0.0
+    }
+  }
+}

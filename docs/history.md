@@ -15,6 +15,10 @@ Chronology of the project. Current state lives in [status.md](status.md).
 | 2026-10-01 | First scientific campaign `e0-20261001T074326Z-503df0` stopped cleanly at trunk step 455 (GPU busy ~8.6%) | [e0-20261001-resident](evidence/e0-20261001-resident/notes.md) |
 | 2026-10-01 | E0.1 GPU-resident engine, package `0.1.0.28`, bit-identical to `0.1.0.24`; campaign `e0-20261001T090514Z-4236fd` started | #18 (`7abd040`) |
 | 2026-10-01 | Repository boundaries aligned with FloppyLM ADR 0012 | #19 (`b044192`) |
+| 2026-10-01 | Owner stopped the E0.1 scientific campaign; no new campaign started | [canonical FloppyLM status](https://github.com/gianlucamazza/floppylm/blob/main/docs/STATUS.md) |
+| 2026-10-01 | ADR 0005, canonical documentation links and dashboard update caching merged | [PR #27](https://github.com/gianlucamazza/xbox-gpu-training/pull/27) (`53ab3c2`) |
+| 2026-10-01 | Actual CodeRabbit review accepted; openappx PR #7 merged and 0.7.0 installed locally | [openappx record](evidence/e0-20261001-dashboard/openappx.json) |
+| 2026-10-01 | Package 0.1.0.56 signed/deployed with TLS pin; full hardware gates and bit identity passed; idle GPU hypothesis falsified | [release evidence](evidence/e0-20261001-dashboard/notes.md) |
 
 ## Phases (GitHub milestones)
 

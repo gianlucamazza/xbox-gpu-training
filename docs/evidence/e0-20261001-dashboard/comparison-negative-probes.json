@@ -1,0 +1,7 @@
+{
+  "negative_zero_distinguished": true,
+  "numeric_types_distinguished": true,
+  "schema_change_rejected": true,
+  "numeric_change_rejected": true,
+  "runtime_telemetry_ignored": true
+}
