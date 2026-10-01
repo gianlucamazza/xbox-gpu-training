@@ -1,0 +1,9 @@
+{
+  "scope": "native Linux reference fault injection; no GPU-hardware claim",
+  "rejection": "resumed branch differs from previous artifact",
+  "exit_code": 1,
+  "original_branch_unchanged": true,
+  "candidate_retained": true,
+  "candidate_differs": true,
+  "original_sha256": "0b64022a7faaf86dd1bfe5feaa03e72183f3bed9863f46e8b050c2d8624caa32"
+}
