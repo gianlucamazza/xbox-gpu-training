@@ -26,7 +26,7 @@ void raw(const fs::path &p, const std::string &s) {
   out << s;
 }
 Json descriptor(const fs::path &root, const fs::path &p) {
-  return {{"path", e0::path_text(p.lexically_relative(root))},
+  return {{"path", p.lexically_relative(root).generic_string()},
           {"bytes", fs::file_size(p)},
           {"sha256", e0::sha256_file(p)}};
 }
@@ -129,7 +129,10 @@ int main(int argc, char **argv) {
     raw(inbox / "trial.job.json", "pending incomplete replacement");
     e0::atomic_json(result / "status.json", status);
     raw(inbox / "trial.ready", "pending resume");
-    check(reconcile().at("state") == "interrupted",
+    const auto reconciled = reconcile();
+    if (reconciled.at("state") != "interrupted")
+      std::cerr << reconciled.dump() << '\n';
+    check(reconciled.at("state") == "interrupted",
           "orphan uses immutable payload, not replacement upload");
     check(!fs::exists(inbox / "trial.ready") &&
               fs::exists(inbox / "trial.ready.quarantined.new-worker"),
