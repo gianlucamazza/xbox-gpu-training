@@ -1,3 +1,4 @@
+#include "constants.h"
 #include "model.h"
 #include <algorithm>
 #include <cmath>
@@ -7,6 +8,20 @@
 #include <stdexcept>
 
 namespace e0 {
+Json capabilities() {
+  return {{"vocab", {256}},
+          {"emb_fmt", {"4bit"}},
+          {"core_fmt", {"ternary", "2bit"}},
+          {"mlp", {"gelu", "relu2", "swiglu"}},
+          {"scale_policy", {"row16", "row8log", "tensor16"}},
+          {"delta", {{"minimum", 0.0}, {"exclusive_maximum", 4.0}}}};
+}
+namespace {
+bool accepts(const Json &caps, const char *key, const Json &value) {
+  const auto &allowed = caps.at(key);
+  return std::find(allowed.begin(), allowed.end(), value) != allowed.end();
+}
+} // namespace
 Config::Config(const Json &c) {
   d = c.at("d");
   layers = c.at("n_layers");
@@ -19,17 +34,21 @@ Config::Config(const Json &c) {
   policy = c.at("scale_policy");
   delta = c.at("delta");
   qk_norm = c.at("qk_norm");
-  if (!d || !layers || !heads || !ff || !ctx || vocab != 256 || d % heads ||
-      (d / heads) % 2)
+  const auto caps = capabilities();
+  if (!d || !layers || !heads || !ff || !ctx ||
+      !accepts(caps, "vocab", c.at("vocab")) || d % heads || (d / heads) % 2)
     throw std::runtime_error("invalid E0 byte-model dimensions");
-  if (c.at("emb_fmt") != "4bit" || (format != "ternary" && format != "2bit") ||
-      (mlp != "gelu" && mlp != "relu2" && mlp != "swiglu") ||
-      (policy != "row16" && policy != "row8log" && policy != "tensor16") ||
-      !std::isfinite(delta) || delta < 0 || delta >= 4)
+  const auto &range = caps.at("delta");
+  if (!accepts(caps, "emb_fmt", c.at("emb_fmt")) ||
+      !accepts(caps, "core_fmt", c.at("core_fmt")) ||
+      !accepts(caps, "mlp", c.at("mlp")) ||
+      !accepts(caps, "scale_policy", c.at("scale_policy")) ||
+      !std::isfinite(delta) || delta < range.at("minimum").get<float>() ||
+      delta >= range.at("exclusive_maximum").get<float>())
     throw std::runtime_error("unsupported E0 recipe");
 }
 float stored_fp16(float v) {
-  if (!std::isfinite(v) || std::abs(v) > 65504.0f)
+  if (!std::isfinite(v) || std::abs(v) > constants::kFp16Max)
     throw std::runtime_error("fp16 overflow/nonfinite");
   uint32_t bits;
   std::memcpy(&bits, &v, 4);
@@ -51,9 +70,9 @@ float stored_fp16(float v) {
 }
 namespace {
 float positive_scale(float s) {
-  if (!std::isfinite(s) || s < 0 || s > 65504)
+  if (!std::isfinite(s) || s < 0 || s > constants::kFp16Max)
     throw std::runtime_error("invalid scale");
-  return stored_fp16(s > 0 ? std::max(s, 6.103515625e-5f) : 0);
+  return stored_fp16(s > 0 ? std::max(s, constants::kFp16Min) : 0);
 }
 } // namespace
 Quantized quantize(const Values &w, uint32_t rows, uint32_t cols,
@@ -101,7 +120,7 @@ Quantized quantize(const Values &w, uint32_t rows, uint32_t cols,
       total_kept += kept;
       total_count += cnt;
     } else
-      raw[r] = means[r] * (fmt == "4bit" ? 0.42f : 1.135f);
+      raw[r] = means[r] * (fmt == "4bit" ? constants::kMult4bit : constants::kMult2bit);
   }
   if (ternary && policy == "tensor16")
     std::fill(raw.begin(), raw.end(),
@@ -116,10 +135,10 @@ Quantized quantize(const Values &w, uint32_t rows, uint32_t cols,
         out.scales[r] = 0;
       else {
         float code =
-            std::nearbyint(std::log2(std::max(raw[r], 1e-30f) / base) * 16) +
+            std::nearbyint(std::log2(std::max(raw[r], 1e-30f) / base) * constants::kLogStepsPerOctave) +
             128;
         code = std::clamp(code, 1.0f, 255.0f);
-        out.scales[r] = base * std::exp2((code - 128) / 16);
+        out.scales[r] = base * std::exp2((code - 128) / constants::kLogStepsPerOctave);
       }
     }
   } else
@@ -139,8 +158,8 @@ Quantized quantize(const Values &w, uint32_t rows, uint32_t cols,
     }
   return out;
 }
-Model::Model(const Json &job) : config(job.at("config")) {
-  std::vector<std::tuple<std::string, uint32_t, uint32_t, bool>> expected;
+std::vector<Model::Layout> Model::layout(const Config &config) {
+  std::vector<Layout> expected;
   expected.emplace_back("emb.weight", config.vocab, config.d, false);
   for (uint32_t l = 0; l < config.layers; ++l) {
     const auto prefix = "blocks." + std::to_string(l) + ".";
@@ -154,6 +173,10 @@ Model::Model(const Json &job) : config(job.at("config")) {
     expected.emplace_back(prefix + "fc2.weight", config.d, config.ff, false);
   }
   expected.emplace_back("norm.weight", 1, config.d, true);
+  return expected;
+}
+Model::Model(const Json &job) : config(job.at("config")) {
+  const auto expected = layout(config);
   const auto &tensors = job.at("tensors");
   if (tensors.size() != expected.size())
     throw std::runtime_error("incorrect parameter count");
@@ -232,7 +255,7 @@ Json kernel_fixture_report(const Json &fixture, Kernel &kernel) {
     command.seq = spec.value("seq", 0u);
     command.heads = spec.value("heads", 0u);
     command.aux = spec.value("aux", 0u);
-    command.epsilon = spec.value("epsilon", 1.1920928955078125e-7f);
+    command.epsilon = spec.value("epsilon", constants::kRmsNormEps);
     if (!command.count || command.count > (1u << 24) || command.mode > 3)
       throw std::runtime_error("invalid kernel fixture command");
     const auto &inputs = item.at("inputs");
@@ -433,19 +456,19 @@ float Model::apply_gradients(const std::vector<Values> &gradients, float lr,
     }
   }
   const float norm = float(std::sqrt(norm_squared)),
-              clip = std::min(1.0f, 1.0f / (norm + 1e-6f));
-  const double correction1 = 1 - std::pow(0.9, double(t)),
-               correction2 = 1 - std::pow(0.95, double(t));
+              clip = std::min(constants::kGradClip, constants::kGradClip / (norm + constants::kGradClipEps));
+  const double correction1 = 1 - std::pow(constants::kAdamBeta1, double(t)),
+               correction2 = 1 - std::pow(constants::kAdamBeta2, double(t));
   for (size_t i = 0; i < parameters.size(); ++i) {
     auto &q = parameters[i];
     for (size_t j = 0; j < q.value.size(); ++j) {
       const float a = gradients[i][j] * clip;
-      q.first[j] = 0.9f * q.first[j] + 0.1f * a;
-      q.second[j] = 0.95f * q.second[j] + 0.05f * a * a;
+      q.first[j] = constants::kAdamBeta1f * q.first[j] + constants::kAdamOneMinusBeta1 * a;
+      q.second[j] = constants::kAdamBeta2f * q.second[j] + constants::kAdamOneMinusBeta2 * a * a;
       q.value[j] *= 1 - lr * (q.norm ? 0 : wd);
       q.value[j] -=
           float(double(lr) / correction1) * q.first[j] /
-          (std::sqrt(q.second[j]) / float(std::sqrt(correction2)) + 1e-8f);
+          (std::sqrt(q.second[j]) / float(std::sqrt(correction2)) + constants::kAdamEps);
       if (!std::isfinite(q.value[j]))
         throw std::runtime_error("nonfinite optimizer update");
     }
@@ -514,7 +537,7 @@ Json Model::step(Kernel &kernel, const Values &tokens, const Values &targets,
       norm_squared += double(v) * v;
     }
   float norm = float(std::sqrt(norm_squared)),
-        clip = std::min(1.0f, 1.0f / (norm + 1e-6f));
+        clip = std::min(constants::kGradClip, constants::kGradClip / (norm + constants::kGradClipEps));
   Json gradients = Json::array();
   if (details)
     for (size_t i = 0; i < parameters.size(); ++i)

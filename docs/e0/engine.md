@@ -9,14 +9,15 @@ Code-level map of the E0 trainer. Behaviour is fixed by ADR 0003/0004
 | --- | --- |
 | `src/cpp/e0/tensor.h`, `tensor.cpp` | `Op` enum (14 primitives), `Command` (44-byte constant block mirrored by the HLSL cbuffer), `Storage`/`Tensor`, abstract `Kernel`, `CpuKernel` reference, reverse-mode autograd `Graph`. |
 | `src/cpp/e0/dx12_kernel.cpp` | `GpuKernel` (`make_gpu`): DX12 device, root signature, buffer `Pool`, timestamps, `run`/`read`/`flush`. Rejects WARP. |
-| `src/cpp/e0/model.h`, `model.cpp` | `Config`, `quantize` (row16 / row8log / tensor16), `Model` forward/step/AdamW/checkpoint/restore, fixture reports. |
+| `src/cpp/e0/constants.h` | Semantic constants (codec, RoPE, RMSNorm, AdamW, clip, WSD fractions). Their values are floppylm's `floppylm.e0.constants.v1`; ctest `e0_constants` checks them, the shader RoPE literal and the tensor layout against the pinned copy in `contracts/floppylm/`. |
+| `src/cpp/e0/model.h`, `model.cpp` | `Config` and `capabilities()`, `quantize` (row16 / row8log / tensor16), `Model` layout/forward/step/AdamW/checkpoint/restore, fixture reports. |
 | `src/cpp/e0/job.cpp` | SHA-256, `atomic_json`, asset verification and chunk assembly, batch reader, WSD learning rate, `run_job`. |
 | `src/cpp/e0/main.cpp` | `xgpu_e0_train` CLI (Windows/Linux, reference or GPU). |
 | `src/hlsl/e0_tensor.hlsl` | One `CSMain` multi-op compute shader; `op`/`mode` select the primitive and its forward (0) or input-gradient (1..3) variant. Compiled with `dxc -T cs_6_0 -E CSMain -Gis`. |
 | `uwp/App.cpp` | Console worker: inbox polling, schema dispatch, suspension handling ([job-protocol.md](job-protocol.md)). |
 
 CMake targets: `xgpu_e0` (static library), `xgpu_e0_train` (CLI), `xgpu_e0_cso`
-(shader, when `dxc` is found). The UWP package is built by `uwp/XgpuE0.vcxproj`
+(shader, when `dxc` is found), `xgpu_e0_constants_test` (ctest `e0_constants`). The UWP package is built by `uwp/XgpuE0.vcxproj`
 through `scripts/build-e0-uwp.ps1`.
 
 ## Primitives

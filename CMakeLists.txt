@@ -160,6 +160,9 @@ if(WIN32)
   endif()
 endif()
 
+# Before add_subdirectory so tests declared there are registered with CTest.
+enable_testing()
+
 if(XGPU_BUILD_HOST)
   add_subdirectory(src/cpp)
   if(XGPU_BUILD_EXAMPLES)
@@ -168,7 +171,6 @@ if(XGPU_BUILD_HOST)
 endif()
 
 # Host unit tests for the on-console dashboard view model (no WinRT needed).
-enable_testing()
 add_executable(xgpu_e0_dashboard_test uwp/tests/dashboard_test.cpp uwp/dashboard.cpp)
 target_include_directories(xgpu_e0_dashboard_test PRIVATE "${CMAKE_SOURCE_DIR}/vendor")
 add_test(NAME e0_dashboard COMMAND xgpu_e0_dashboard_test)

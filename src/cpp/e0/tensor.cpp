@@ -1,3 +1,4 @@
+#include "constants.h"
 #include "tensor.h"
 #include <algorithm>
 #include <cmath>
@@ -90,7 +91,7 @@ Values compute(const Command &p, const Values &x, const Values &w,
       break;
     case Op::Rope: {
       auto c = n % K, row = n / K, pos = row % T, pair = c - c % 2;
-      float angle = float(pos) * std::pow(10000.0f, -float(pair) / K);
+      float angle = float(pos) * std::pow(constants::kRopeTheta, -float(pair) / K);
       auto other = n + (c % 2 ? -1 : 1);
       v = p.mode ? (dy[n] * std::cos(angle) +
                     (c % 2 ? -dy[other] : dy[other]) * std::sin(angle))

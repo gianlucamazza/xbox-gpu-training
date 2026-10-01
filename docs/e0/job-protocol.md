@@ -17,6 +17,7 @@ On start the worker writes `LocalState/device.json`:
 | `adapter` | DXGI adapter name (Series S: `SraKmd_arden`) |
 | `package` | installed package full name |
 | `commit` | source commit baked in at build (`XGPU_COMMIT`) |
+| `capabilities` | config values `Config` accepts (`e0::capabilities()`): vocab, embedding and core formats, MLPs, scale policies, delta range; the host refuses other configs before upload |
 
 Acceptance must match `package` and `commit` against the expected build.
 

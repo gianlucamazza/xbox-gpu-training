@@ -48,6 +48,7 @@ void worker() {
                                .Id()
                                .FullName())},
          {"state", "ready"},
+         {"capabilities", e0::capabilities()},
          {"commit", XGPU_COMMIT}});
     while (true) {
       for (const auto &entry : std::filesystem::directory_iterator(inbox)) {
