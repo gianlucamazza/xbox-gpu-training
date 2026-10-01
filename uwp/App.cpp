@@ -5,6 +5,7 @@
 #include "pch.h"
 #include <winrt/Windows.Media.Capture.h>
 #include <winrt/Windows.UI.Core.h>
+#include <roapi.h>
 #include <atomic>
 #include <chrono>
 #include <condition_variable>
@@ -212,7 +213,8 @@ struct IdleCoreSource : winrt::implements<IdleCoreSource, winrt::Windows::Applic
 }
 int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
   try {
-    winrt::init_apartment(winrt::apartment_type::single_threaded);
+    winrt::check_hresult(RoInitialize(RO_INIT_MULTITHREADED));
+    winrt::init_apartment();
     auto local = std::filesystem::path(winrt::Windows::Storage::ApplicationData::Current().LocalFolder().Path().c_str());
     auto path = local / L"idle-probe.json";
     if (std::filesystem::exists(path) && e0::read_json(path).value("core", false)) {
