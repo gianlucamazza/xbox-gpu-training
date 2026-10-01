@@ -67,7 +67,7 @@ No tok/s or quality numbers until Dev Mode hardware measures them (or the phase 
 - [x] Isolated cooldowns are overlay windows `[{ start_step, steps, end_lr }]` — **not** merged into WSD decay. Overlaps rejected. Example: `stable-mid` on steps `[8, 12)`.
 - [x] Chosen smoke **N = 16** (`warmup 4 + stable 8 + decay 4`). Cooldown overlays; N is not `16+4`. Host: `xbox_gpu_host --qat-smoke --steps 16`.
 - [x] Default FakeQuant **ternary absmean** + STE (ADR 0002). 2-bit / 4-bit are **host** midrise FakeQuant (`--bit-width 2|4`); Fase 3 stubs are no longer no-ops. **No new HLSL** — GPU 2/4-bit FakeQuant not dispatched.
-- Status: **Fase 5 implementation**. Execution: [docs/execution-plan.md](docs/execution-plan.md#fase-5--qat-ternary24-bit--wsd). GPU path without D3D12: `BLOCKED: no D3D12 device`. No quality / tok/s / Series numbers. Label: `research`, `phase-5`.
+- Status: **Fase 5 implementation**. **N=16 is schedule smoke only — not QAT quality.** Execution: [docs/execution-plan.md](docs/execution-plan.md#fase-5--qat-ternary24-bit--wsd). GPU path without D3D12: `BLOCKED: no D3D12 device`. No quality / tok/s / Series numbers. Label: `research`, `phase-5`.
 
 ## Phase 6 — Series S|X Dev Mode validation
 
@@ -88,10 +88,10 @@ E0 UWP trainer is governed by ADR 0003/0004; its measured results are listed her
 
 ## Phase 7 — Publication
 
-- [x] Honest [docs/results.md](docs/results.md): Fase 0–5 host measurements sourced; Series S E0 cited from [PR #17](https://github.com/gianlucamazza/xbox-gpu-training/pull/17); remaining console / quality cells **UNMEASURED**.
+- [x] Honest [docs/results.md](docs/results.md): Fase 0–5 Win32 host sourced; Series S E0 **functional** evidence sourced from [`docs/evidence/e0-20261001/`](docs/evidence/e0-20261001/notes.md) (pkg `0.1.0.24` / source `6a124021`; [kernel-parity.json](docs/evidence/e0-20261001/kernel-parity.json) 52 ops / 36 fixtures, `hardware_gpu`, `purpose: functional`). Synthetic throughput cited as **functional only**, not quality / PPL.
 - [x] Figure placeholders only ([docs/figures/README.md](docs/figures/README.md)) — **no fabricated plots**.
 - [x] Companion link to FloppyLM **CPU** path: [gianlucamazza/xllama](https://github.com/gianlucamazza/xllama). xllama / `feat/floppylm-training` **not** modified.
-- [x] Public BitNet/peer table: paper-sourced numbers (Ma et al. [arXiv:2402.17764](https://arxiv.org/abs/2402.17764)) or explicitly **UNMEASURED** on our side. **No ranking.**
+- [x] Public BitNet/peer table: paper-sourced numbers (Ma et al. [arXiv:2402.17764](https://arxiv.org/abs/2402.17764)) or explicitly **UNMEASURED** on our side. **No ranking.** Do **not** borrow Series S E0 numbers into peer cells.
 - [x] README status updated (IT + EN).
 - [x] Publish functional E0 evidence, exact package lineage, baseline failures and limits.
 - [ ] Human review of `docs/results.md` before calling the research **public** (Fase 7 checkpoint).

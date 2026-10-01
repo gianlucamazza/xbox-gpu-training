@@ -58,12 +58,12 @@ Results prose: [docs/results.md](../results.md).
 
 ### F6 — Series S|X benches {#f6}
 
-- **Would show:** tok/s / quality / PIX on Dev Mode hardware.
-- **Have now:** Series S representative synthetic E0 **963.571 token/s** (147456 tokens / 153.030679 s; peak app memory 91418624 bytes) in [console.md](../console.md) / [e0-20261001](../evidence/e0-20261001/notes.md) from [PR #17](https://github.com/gianlucamazza/xbox-gpu-training/pull/17). Historical Win32 host rows, Series X, quality, and PIX remain **UNMEASURED**.
-- **Status:** placeholder. The E0 number is sourced; this is **not** a plot.
+- **Would show:** scientific quality / PPL, Series X, matched CPU, PIX on Dev Mode hardware.
+- **Have now:** Series S E0 **functional** prose in [results.md](../results.md) sourced from [`docs/evidence/e0-20261001/`](../evidence/e0-20261001/notes.md) (pkg `0.1.0.24` / source `6a124021`; [kernel-parity.json](../evidence/e0-20261001/kernel-parity.json) 52 ops / 36 fixtures, `hardware_gpu`, `purpose: functional`). Synthetic throughput is **not** quality / PPL. Series X / quality / PPL / matched CPU / PIX remain **UNMEASURED**. No plot.
+- **Status:** placeholder. Functional evidence is cited in text — **not** a quality chart.
 
 ```
-[ F6 PLACEHOLDER — sourced E0 number lives in console.md — no fabricated Series chart ]
+[ F6 PLACEHOLDER — no fabricated Series quality / PIX / Series X chart ]
 ```
 
 ### F7 — BitNet / peer overlay {#f7}
@@ -79,5 +79,5 @@ Results prose: [docs/results.md](../results.md).
 ## Rules
 
 - No CUDA plots. No DirectML-as-trainer charts.
-- Do not commit a figure that implies Series S|X measurement until Fase 6 (or a follow-up) fills real cells.
+- Do not commit a figure that implies scientific quality, Series X, matched CPU, or PIX until those cells are measured. Do not draw a peer-ranking chart from E0 functional tok/s.
 - Prefer replacing a placeholder in a later PR over inventing an image in this one.

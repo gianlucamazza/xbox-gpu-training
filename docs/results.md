@@ -1,18 +1,18 @@
 # Fase 7 — Published results (honest)
 
-**Status: host work documented; Series S E0 functional execution MEASURED; remaining console metrics `UNMEASURED` / `UNVALIDATED`.** This page does **not** invent tok/s, quality curves, Series benches, or peer rankings beyond what [PR #17](https://github.com/gianlucamazza/xbox-gpu-training/pull/17) (`aec1a2a`) already recorded on `main`. It does **not** claim **GDKX**, **ID@Xbox**, CUDA, or DirectML-as-trainer. It does **not** call this research “public” until a human reviews this file.
+**Status: host work documented; Series S E0 functional execution sourced from [`docs/evidence/e0-20261001/`](evidence/e0-20261001/notes.md); scientific quality/PPL, Series X, matched CPU, and PIX remain `UNMEASURED`.** This page does **not** invent benches, quality curves, or peer rankings. It does **not** claim **GDKX**, **ID@Xbox**, CUDA, or DirectML-as-trainer. It does **not** call this research “public” until a human reviews this file.
 
-[PR #15](https://github.com/gianlucamazza/xbox-gpu-training/pull/15) (`66224e05`) left Fase 6 as **`BLOCKED: no console`**. That was honest for the Win32 host lane. #17 later landed a separate E0 UWP backend with Device Portal evidence on retail Series S. This page **cites** that measured E0 and keeps every other Series / quality / PIX / peer cell empty.
+[PR #15](https://github.com/gianlucamazza/xbox-gpu-training/pull/15) (`66224e05`) left the Win32 host lane as **`BLOCKED: no console`**. [PR #17](https://github.com/gianlucamazza/xbox-gpu-training/pull/17) (`aec1a2a7`) later landed a **separate** UWP E0 backend with Device Portal evidence on retail Series S. This page **cites** that evidence as **functional only**. Peer cells stay literature cites. Win32 Fase 0–3 desktop diagnostics are **not** the UWP E0 trainer.
 
 Playbook: [docs/execution-plan.md](execution-plan.md#fase-7--publish-results). Console table: [docs/console.md](console.md). Evidence: [docs/evidence/e0-20261001/notes.md](evidence/e0-20261001/notes.md). Figure catalog: [docs/figures/README.md](figures/README.md).
 
 ## Sintesi IT
 
-Fasi 0–5: lavoro host (Windows DX12 quando c’è un device; Linux/CI senza D3D12 in `BLOCKED: no D3D12 device`). Fase 6: [PR #17](https://github.com/gianlucamazza/xbox-gpu-training/pull/17) ha misurato l’E0 UWP su Series S (52 operation / 36 model fixtures; trial sintetico **963.571 token/s**). Qualità scientifica, Series X, PIX, confronto CPU e i workload Win32 storici restano **UNMEASURED**. Nessun tok/s inventato oltre quell’E0. Confronto BitNet solo con numeri **loro** (paper) o **UNMEASURED** da questa parte. Companion CPU: [gianlucamazza/xllama](https://github.com/gianlucamazza/xllama) (FloppyLM). xllama **non** modificato; `feat/floppylm-training` **non** toccato.
+Fasi 0–5: lavoro host **Win32** (Windows DX12 quando c’è un device; Linux/CI senza D3D12 in `BLOCKED: no D3D12 device`) — **separato** dalla lane UWP E0. Fase 6: [PR #17](https://github.com/gianlucamazza/xbox-gpu-training/pull/17) E0 UWP Series S **sourced** da [`docs/evidence/e0-20261001/`](evidence/e0-20261001/notes.md) (pkg `0.1.0.24` / source `6a124021`; [kernel-parity.json](evidence/e0-20261001/kernel-parity.json) 52 ops / 36 fixture, `hardware_gpu`, `purpose: functional`). Throughput sintetico **solo funzionale**, **non** qualità / PPL. **UNMEASURED:** qualità scientifica / PPL, Series X, CPU matched, PIX. Fase 5 `N=16` = smoke di schedule, non QAT di qualità. Peer BitNet = solo cite di letteratura — **nessun ranking**, nessun numero Series S nelle celle peer. AppContainer ~1 GB / Release non-debug; Dev Mode **≠** GDKX / ID@Xbox; DirectML **≠** trainer. Companion CPU: [gianlucamazza/xllama](https://github.com/gianlucamazza/xllama). xllama **non** modificato.
 
 ## English abstract
 
-Fase 0–5 measured **host** contracts (CPU fixtures, chosen tolerances, one Linux working-set). GPU dispatch on a Windows D3D12 device is **not** Series hardware. Fase 6 on `main` now includes measured Series S E0 functional execution from [PR #17](https://github.com/gianlucamazza/xbox-gpu-training/pull/17). This Fase 7 page publishes that state and leaves remaining Series / quality / PIX cells **UNMEASURED**. BitNet numbers below are **paper-sourced** or marked **UNMEASURED** on our side. Companion CPU / FloppyLM path: [gianlucamazza/xllama](https://github.com/gianlucamazza/xllama).
+Fase 0–5 measured **Win32 host** contracts (CPU fixtures, chosen tolerances, one Linux working-set). That desktop lane is **not** the UWP E0 trainer. Fase 6 on `main` (`aec1a2a7`, [PR #17](https://github.com/gianlucamazza/xbox-gpu-training/pull/17)) records Series S E0 **functional** evidence sourced from [`docs/evidence/e0-20261001/`](evidence/e0-20261001/notes.md): [kernel-parity.json](evidence/e0-20261001/kernel-parity.json) 52 ops / 36 fixtures, `hardware_gpu: true`, `purpose: functional`. Synthetic throughput is **functional only**, not quality / PPL. **UNMEASURED:** scientific quality / PPL, Series X, matched CPU, PIX. Fase 5 `N=16` is schedule smoke, not QAT quality. BitNet numbers below are **paper-sourced**; our peer cells stay **UNMEASURED**. Companion CPU / FloppyLM path: [gianlucamazza/xllama](https://github.com/gianlucamazza/xllama).
 
 ---
 
@@ -34,8 +34,8 @@ Every metric is one of those, or it is not written.
 | --- | --- | --- |
 | **Linux cloud / this agent** | Docs checks; portable CPU GEMM / FLP2 / STE / QAT host paths; Fase 4 `VmHWM` | Not D3D12. Not Xbox. Not `dxc`. |
 | **GitHub `windows-latest`** | CI jobs `lint-docs` + `build-windows` (ids unchanged). C++ host + `dxc` when present. Possible WARP / Basic Render Driver | **Not** Series S\|X. WARP is software. |
-| **Windows DX12 box** (when a contributor has one) | Hello / matmul / FLP2 / STE dispatch **if** a device exists | Still not console AppContainer |
-| **Series S Dev Mode** | E0 UWP package `0.1.0.24` (source `6a124021`) via Device Portal — [PR #17](https://github.com/gianlucamazza/xbox-gpu-training/pull/17) | Not Series X. Not scientific quality. Not the Win32 host smokes. |
+| **Windows DX12 box** (Win32 `xbox_gpu_host`) | Hello / matmul / FLP2 / STE dispatch **if** a device exists | Still not console AppContainer. **Separate** from UWP E0. |
+| **Series S Dev Mode (UWP E0)** | Functional E0 on package `0.1.0.24` / source `6a124021` — [e0-20261001](evidence/e0-20261001/notes.md) | **Not** scientific quality / PPL. **Not** Series X. **Not** GDKX. |
 | **Series X Dev Mode** | **Nothing measured** | **UNMEASURED** |
 | **GDKX / ID@Xbox kit** | **Not claimed** | Partner/NDA path |
 
@@ -58,8 +58,8 @@ The FloppyLM **CPU** path lives in **[gianlucamazza/xllama](https://github.com/g
 | 2 | Tiny FLP2 **scalar** decode + RMSNorm + RoPE + relu2 forward vs CPU fixture. Tolerance max-abs `1e-5` / max-rel `1e-4` | [flp2-forward.md](flp2-forward.md), [tiny_flp2.json](../benchmarks/fixtures/tiny_flp2.json) | Binary FLP2 envelope **not** reconstructed. xllama **not** modified. |
 | 3 | STE-identity grad-check tolerances; one AdamW/STE step **runs**. Loss before/after if printed is **not** a quality curve | [ste-adamw.md](ste-adamw.md), [ADR 0002](adr/0002-ste-qat-mapping.md) | GPU kernels **BLOCKED** without D3D12. DirectML is not the optimizer. |
 | 4 | Linux implementation host peak **36.08 MiB** `VmHWM` vs App plan **1024 MiB**. Logical 2 GiB never allocated as one tensor | [memory-budget.md](memory-budget.md), ROADMAP Fase 4 | **Console AppContainer UNVALIDATED** for this host smoke. Game ~5 GB documented only. |
-| 5 | Schedule dry-run + host `--qat-smoke --steps 16` (WSD + isolated cooldown overlay). Default ternary FakeQuant | [qat-wsd.md](qat-wsd.md), [qat-wsd-smoke.json](../examples/qat-wsd-smoke.json) | No quality / tok/s. No new HLSL. 2/4-bit = host FakeQuant only. |
-| 6 | Series S E0 UWP functional execution + representative synthetic throughput | [console.md](console.md), [e0-20261001](evidence/e0-20261001/notes.md), PR #17 `aec1a2a` | E0 **MEASURED**. Quality / Series X / PIX / Win32 host rows **UNMEASURED**. |
+| 5 | Schedule dry-run + host `--qat-smoke --steps 16` (WSD + isolated cooldown overlay). Default ternary FakeQuant | [qat-wsd.md](qat-wsd.md), [qat-wsd-smoke.json](../examples/qat-wsd-smoke.json) | **Schedule smoke only — not QAT quality.** No PPL. No new HLSL. 2/4-bit = host FakeQuant only. |
+| 6 | Series S UWP E0 **functional** execution. Package `0.1.0.24` / source `6a124021` | [e0-20261001](evidence/e0-20261001/notes.md), [kernel-parity.json](evidence/e0-20261001/kernel-parity.json), [console.md](console.md), `aec1a2a7` | **Sourced functional** (52 ops / 36 fixtures, `hardware_gpu`). Quality / PPL / Series X / matched CPU / PIX = **UNMEASURED**. |
 | 7 | This page: sourced host + sourced E0; figure placeholders; BitNet paper-or-UNMEASURED | this file, [figures/README.md](figures/README.md) | Draft for human review. Not “public” yet. |
 
 ---
@@ -137,9 +137,11 @@ Sourced: [docs/qat-wsd.md](qat-wsd.md).
 
 **N = 16** = warmup 4 + stable 8 + decay 4. Isolated cooldown `stable-mid` overlays `[8, 12)` and is **not** `16+4`. Dry-run: `python3 scripts/validate_qat_schedule.py examples/qat-wsd-smoke.json --dry-run`.
 
+This is a **schedule smoke only**. It is **not** QAT quality, **not** PPL, **not** a scientific E0 campaign.
+
 Default FakeQuant is **ternary absmean**. 2-bit / 4-bit are **host** midrise lattices (`--bit-width 2|4`). **No new HLSL** in Fase 4–5. `--qat-smoke` does **not** re-dispatch Fase 3 shaders.
 
-**UNMEASURED:** final loss / perplexity / tok/s of this host smoke; GPU 2/4-bit FakeQuant parity; cosine WSD (not implemented).
+**UNMEASURED:** final loss / perplexity / quality tok/s of this host smoke; GPU 2/4-bit FakeQuant parity; cosine WSD (not implemented).
 
 ## Fase 6 — Series S|X Dev Mode
 
@@ -153,16 +155,16 @@ Active package `GianlucaMazza.XgpuE0_0.1.0.24_x64__g0p5dcfz4t9z4`, source `6a124
 
 | Item | Value | Kind |
 | --- | --- | --- |
-| Independent GPU operation cases | 52 passed | Sourced acceptance |
-| Held-out model fixtures | 36 passed | Sourced acceptance |
+| Independent GPU operation cases | **52** passed, `hardware_gpu: true`, `purpose: functional` | **Sourced** [kernel-parity.json](evidence/e0-20261001/kernel-parity.json) |
+| Held-out model fixtures | **36** passed | **Sourced** [acceptance.json](evidence/e0-20261001/acceptance.json) / [notes.md](evidence/e0-20261001/notes.md) |
 | Identical-input AdamW + exact resume | passed | Sourced acceptance |
 | Real Dev Home suspension + runner recovery | passed (checkpoint at step 66; 1844-step trunk) | Sourced lifecycle |
 | Representative synthetic E0 | d=96 / layers=3 / d_ff=391 / ctx=256 / batch=32 | Config in throughput.json |
-| Tokens / wall / tok/s | 147456 / 153.030679 s / **963.571 token/s** | Sourced throughput |
-| Peak app memory | 91418624 bytes | Sourced; non-debug Release package |
+| Tokens / wall / tok/s | 147456 / 153.030679 s / **963.571 token/s** | **Sourced** [throughput.json](evidence/e0-20261001/throughput.json) — **functional only, not quality / PPL** |
+| Peak app memory | 91418624 bytes | Sourced; **non-debug Release** UWP App (AppContainer planning **~1 GB**) |
 | Estimate excludes | corpus upload and Python serialization/evaluation | Written in throughput.json |
 
-This is a short functional benchmark. It does **not** establish language-model quality. The companion accepted row16/row8log scientific E0; the full campaign and reserved final test still need to finish.
+`kernel-parity.json` records `oracle: independent PyTorch operations and autograd` and `purpose: functional`. [notes.md](evidence/e0-20261001/notes.md) states this evidence **certifies functional execution, not language-model quality**. Do **not** copy `963.571` token/s into a peer or PPL cell. The companion accepted row16/row8log scientific E0; the full campaign and reserved final test still need to finish.
 
 ### Still UNMEASURED
 
@@ -198,8 +200,8 @@ A successful small E0 run does **not** retire those constraints.
 | [F3](figures/README.md#f3) | Grad-check analytic vs finite-diff | No committed scatter table in-tree |
 | [F4](figures/README.md#f4) | Working-set vs App 1024 MiB | One Linux `VmHWM` point; not a Series trace |
 | [F5](figures/README.md#f5) | WSD + cooldown LR vs step | Schedule is specified; no plotted run artifact |
-| [F6](figures/README.md#f6) | Series S\|X tok/s / quality | E0 number is sourced in prose; **no plot**. Quality / Series X **UNMEASURED** |
-| [F7](figures/README.md#f7) | This repo vs BitNet | Our quality columns **UNMEASURED** — not a ranking chart |
+| [F6](figures/README.md#f6) | Series S\|X quality / PIX / Series X | Series S **functional** evidence is cited in prose — **no** quality/PPL/PIX/Series X plot |
+| [F7](figures/README.md#f7) | This repo vs BitNet | Peer cells **literature cites only** — not a ranking chart |
 
 ```
 +---------------------------+
@@ -212,7 +214,7 @@ A successful small E0 run does **not** retire those constraints.
 
 ## BitNet / peer comparison (sourced or UNMEASURED)
 
-This is **not** a ranking of xbox-gpu-training against BitNet, bitnet.cpp, or FloppyLM. Hardware, task, and stack differ. We quote **their** published numbers and mark **ours** unmeasured unless a cell is sourced above.
+This is **not** a ranking of xbox-gpu-training against BitNet, bitnet.cpp, or FloppyLM. Hardware, task, and stack differ. We quote **their** published numbers and mark **ours** unmeasured. **Do not** copy Series S E0 `963.571` token/s (or peak memory) into a peer cell.
 
 ### Conceptual overlap (not a port)
 
@@ -251,7 +253,7 @@ Original 1-bit BitNet: Wang et al., [arXiv:2310.11453](https://arxiv.org/abs/231
 | Models | Size | Memory | Latency | PPL | tok/s |
 | --- | --- | --- | --- | --- | --- |
 | xbox-gpu-training host smoke | tiny fixtures only | **UNMEASURED** as an LLM footprint | **UNMEASURED** | **UNMEASURED** | **UNMEASURED** |
-| xbox-gpu-training Series S E0 (synthetic functional) | d=96 / 3 layers (not an LLM size class) | 91418624 bytes peak app (sourced) | **UNMEASURED** as paper latency | **UNMEASURED** | **963.571** (sourced E0 trial only) |
+| xbox-gpu-training Series S E0 | functional trainer only | **UNMEASURED** as an LLM footprint (E0 peak bytes are **not** this cell) | **UNMEASURED** | **UNMEASURED** | **UNMEASURED** as quality / PPL (synthetic functional tok/s is **not** copied here) |
 | xbox-gpu-training Series X | — | **UNMEASURED** | **UNMEASURED** | **UNMEASURED** | **UNMEASURED** |
 | FloppyLM / xllama CPU (companion) | — | **UNMEASURED** in this repo | **UNMEASURED** in this repo | **UNMEASURED** in this repo | **UNMEASURED** in this repo |
 
@@ -280,7 +282,8 @@ Do **not** derive a “we are X× vs BitNet” line from the paper table or from
 - That xllama already does GPU training
 - That scientific E0 / Fase 6 quality is complete
 - That Fase 7 makes the work “public” without human review of this file
-- Any tok/s other than the sourced Series S E0 trial above
+- That Series S functional tok/s is a quality / PPL / peer-rank number
+- Any tok/s other than the sourced Series S E0 **functional** trial in the Fase 6 section
 
 ## Follow-up (not this page)
 

@@ -54,4 +54,4 @@ These are public SoT notes. They do **not** complete Fase 6 and do **not** inven
 
 ## Honesty bar
 
-No tok/s or quality claims until measured. Fase 6 records measured Series S E0 hardware evidence in [console.md](console.md). Fase 7 publishes that evidence in [results.md](results.md) and keeps every other Series / quality / PIX / peer cell **UNMEASURED** — an empty cell is **not** hardware. BitNet/peer numbers are paper-sourced or marked UNMEASURED. Do not invent tok/s beyond the E0 already on `main`.
+No quality / PPL claims until measured. Fase 6 records Series S E0 **functional** hardware evidence in [console.md](console.md) and [`docs/evidence/e0-20261001/`](evidence/e0-20261001/notes.md) (52 ops / 36 fixtures, `hardware_gpu`). Synthetic throughput is **functional only**. Fase 7 publishes that state in [results.md](results.md). BitNet/peer numbers are paper-sourced; our peer cells stay **UNMEASURED** — do not borrow E0 numbers into a ranking. Win32 Fase 0–3 is not UWP E0. Dev Mode ≠ GDKX / ID@Xbox. DirectML is not the trainer. AppContainer ~1 GB / non-debug Release.
