@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/gianlucamazza/floppylm/schemas/floppylm.e0.weights.v1.json",
+  "title": "E0 branch weights (native backend to host)",
+  "description": "branch-<end_step>.json written at the end of each cooldown; the host restores tensors and re-serializes canonical FLP2.",
+  "type": "object",
+  "required": [
+    "schema",
+    "config",
+    "tensors"
+  ],
+  "properties": {
+    "schema": {
+      "const": "floppylm.e0.weights.v1"
+    },
+    "config": {
+      "$ref": "floppylm.e0.common.v1.json#/$defs/config"
+    },
+    "tensors": {
+      "$ref": "floppylm.e0.common.v1.json#/$defs/tensors"
+    }
+  },
+  "additionalProperties": false
+}

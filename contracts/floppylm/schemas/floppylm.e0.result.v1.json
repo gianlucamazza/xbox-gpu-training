@@ -1,0 +1,307 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/gianlucamazza/floppylm/schemas/floppylm.e0.result.v1.json",
+  "title": "E0 job status/result (native backend to host)",
+  "description": "results/<job_id>/status.json of a training job (inbox protocol, docs/contracts/inbox-protocol.md). A job that fails before training starts carries only job_id, state=failed and error. The host's result.json may add execution_segments, one full report per resumed segment. Optional schedule and phase describe the executed WSD schedule and whether a cooldown is running.",
+  "$defs": {
+    "branch": {
+      "type": "object",
+      "required": [
+        "end_step",
+        "tokens_seen",
+        "cooldown_start",
+        "cooldown_steps",
+        "cooldown_seconds",
+        "artifact"
+      ],
+      "properties": {
+        "end_step": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "tokens_seen": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "cooldown_start": {
+          "$ref": "floppylm.e0.common.v1.json#/$defs/count"
+        },
+        "cooldown_steps": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "cooldown_seconds": {
+          "$ref": "floppylm.e0.common.v1.json#/$defs/seconds"
+        },
+        "artifact": {
+          "$ref": "floppylm.e0.common.v1.json#/$defs/descriptor"
+        }
+      },
+      "additionalProperties": false
+    },
+    "early_failure": {
+      "type": "object",
+      "required": [
+        "job_id",
+        "state",
+        "error"
+      ],
+      "properties": {
+        "job_id": {
+          "$ref": "floppylm.e0.common.v1.json#/$defs/job_id"
+        },
+        "state": {
+          "const": "failed"
+        },
+        "error": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "report_fields": {
+      "type": "object",
+      "required": [
+        "schema",
+        "job_id",
+        "job_sha256",
+        "hardware_gpu",
+        "adapter",
+        "branches",
+        "state",
+        "trunk_step",
+        "dispatches",
+        "gpu_seconds",
+        "transfer_bytes",
+        "peak_memory_bytes",
+        "wall_seconds"
+      ],
+      "properties": {
+        "schema": {
+          "const": "floppylm.e0.result.v1"
+        },
+        "job_id": {
+          "$ref": "floppylm.e0.common.v1.json#/$defs/job_id"
+        },
+        "job_sha256": {
+          "$ref": "floppylm.e0.common.v1.json#/$defs/sha256"
+        },
+        "hardware_gpu": {
+          "type": "boolean"
+        },
+        "adapter": {
+          "type": "string"
+        },
+        "branches": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/branch"
+          },
+          "maxItems": 3
+        },
+        "state": {
+          "enum": [
+            "running",
+            "interrupted",
+            "completed",
+            "failed"
+          ]
+        },
+        "trunk_step": {
+          "$ref": "floppylm.e0.common.v1.json#/$defs/count"
+        },
+        "dispatches": {
+          "$ref": "floppylm.e0.common.v1.json#/$defs/count"
+        },
+        "gpu_seconds": {
+          "$ref": "floppylm.e0.common.v1.json#/$defs/seconds"
+        },
+        "transfer_bytes": {
+          "$ref": "floppylm.e0.common.v1.json#/$defs/count"
+        },
+        "peak_memory_bytes": {
+          "$ref": "floppylm.e0.common.v1.json#/$defs/count"
+        },
+        "wall_seconds": {
+          "$ref": "floppylm.e0.common.v1.json#/$defs/seconds"
+        },
+        "checkpoint": {
+          "$ref": "floppylm.e0.common.v1.json#/$defs/descriptor"
+        },
+        "last_loss": {
+          "type": "number"
+        },
+        "error": {
+          "type": "string"
+        },
+        "schedule": {
+          "$ref": "#/$defs/schedule"
+        },
+        "phase": {
+          "enum": [
+            "trunk",
+            "cooldown"
+          ]
+        },
+        "cooldown_end": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "cooldown_step": {
+          "$ref": "floppylm.e0.common.v1.json#/$defs/count"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "completed"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "branches": {
+                "minItems": 3
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "failed"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "error"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "phase": {
+                "const": "cooldown"
+              }
+            },
+            "required": [
+              "phase"
+            ]
+          },
+          "then": {
+            "required": [
+              "cooldown_end",
+              "cooldown_step"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "phase": {
+                "const": "trunk"
+              }
+            },
+            "required": [
+              "phase"
+            ]
+          },
+          "then": {
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "cooldown_end"
+                  ]
+                },
+                {
+                  "required": [
+                    "cooldown_step"
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "report": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/report_fields"
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "schedule": {
+      "description": "WSD schedule as executed; steps are optimizer steps.",
+      "type": "object",
+      "required": [
+        "T",
+        "warmup",
+        "tokens_per_step",
+        "ends",
+        "cooldown_starts"
+      ],
+      "properties": {
+        "T": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "warmup": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "tokens_per_step": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "ends": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "cooldown_starts": {
+          "type": "array",
+          "items": {
+            "$ref": "floppylm.e0.common.v1.json#/$defs/count"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "oneOf": [
+    {
+      "allOf": [
+        {
+          "$ref": "#/$defs/report_fields"
+        }
+      ],
+      "properties": {
+        "execution_segments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/report"
+          },
+          "minItems": 1
+        }
+      },
+      "unevaluatedProperties": false
+    },
+    {
+      "$ref": "#/$defs/early_failure"
+    }
+  ]
+}

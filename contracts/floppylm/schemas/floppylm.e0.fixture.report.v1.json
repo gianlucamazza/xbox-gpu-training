@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/gianlucamazza/floppylm/schemas/floppylm.e0.fixture.report.v1.json",
+  "title": "E0 model fixture report",
+  "description": "Loss, logits, gradients and updated tensors after the fixture step, plus the quantization of the initial tensors. The file carries no schema field.",
+  "allOf": [
+    {
+      "$ref": "floppylm.e0.common.v1.json#/$defs/execution"
+    }
+  ],
+  "required": [
+    "loss",
+    "gradient_norm",
+    "clip",
+    "logits",
+    "gradients",
+    "tensors",
+    "quantization"
+  ],
+  "properties": {
+    "loss": {
+      "type": "number"
+    },
+    "gradient_norm": {
+      "type": "number",
+      "minimum": 0
+    },
+    "clip": {
+      "type": "number",
+      "minimum": 0
+    },
+    "logits": {
+      "$ref": "floppylm.e0.common.v1.json#/$defs/values"
+    },
+    "gradients": {
+      "type": "array",
+      "items": {
+        "$ref": "floppylm.e0.common.v1.json#/$defs/named_values"
+      },
+      "minItems": 1
+    },
+    "tensors": {
+      "$ref": "floppylm.e0.common.v1.json#/$defs/tensors"
+    },
+    "quantization": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "symbols",
+          "scales"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "symbols": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "scales": {
+            "type": "array",
+            "items": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "unevaluatedProperties": false
+}

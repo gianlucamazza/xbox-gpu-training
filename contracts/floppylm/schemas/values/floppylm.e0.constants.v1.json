@@ -1,0 +1,106 @@
+{
+ "schema": "floppylm.e0.constants.v1",
+ "codec": {
+  "formats": [
+   "ternary",
+   "2bit",
+   "4bit"
+  ],
+  "scale_policies": [
+   "row16",
+   "row8log",
+   "tensor16"
+  ],
+  "fp16_min": 6.103515625e-05,
+  "fp16_max": 65504.0,
+  "log_steps_per_octave": 16,
+  "mult_2bit": 1.135,
+  "mult_4bit": 0.42
+ },
+ "model": {
+  "mlps": [
+   "gelu",
+   "relu2",
+   "swiglu"
+  ],
+  "rope_theta": 10000.0,
+  "rmsnorm_eps": 1.1920928955078125e-07,
+  "gelu_approximate": "none",
+  "tensor_layout": [
+   {
+    "name": "emb.weight",
+    "rows": "vocab",
+    "cols": "d",
+    "norm": false,
+    "per_block": false
+   },
+   {
+    "name": "blocks.{i}.norm1.weight",
+    "rows": "1",
+    "cols": "d",
+    "norm": true,
+    "per_block": true
+   },
+   {
+    "name": "blocks.{i}.qkv.weight",
+    "rows": "3*d",
+    "cols": "d",
+    "norm": false,
+    "per_block": true
+   },
+   {
+    "name": "blocks.{i}.proj.weight",
+    "rows": "d",
+    "cols": "d",
+    "norm": false,
+    "per_block": true
+   },
+   {
+    "name": "blocks.{i}.norm2.weight",
+    "rows": "1",
+    "cols": "d",
+    "norm": true,
+    "per_block": true
+   },
+   {
+    "name": "blocks.{i}.fc.weight",
+    "rows": {
+     "gelu": "d_ff",
+     "relu2": "d_ff",
+     "swiglu": "2*d_ff"
+    },
+    "cols": "d",
+    "norm": false,
+    "per_block": true
+   },
+   {
+    "name": "blocks.{i}.fc2.weight",
+    "rows": "d",
+    "cols": "d_ff",
+    "norm": false,
+    "per_block": true
+   },
+   {
+    "name": "norm.weight",
+    "rows": "1",
+    "cols": "d",
+    "norm": true,
+    "per_block": false
+   }
+  ]
+ },
+ "optimizer": {
+  "adamw_betas": [
+   0.9,
+   0.95
+  ],
+  "adamw_eps": 1e-08,
+  "grad_clip": 1.0,
+  "grad_clip_eps": 1e-06
+ },
+ "schedule": {
+  "branches": 3,
+  "warmup_frac": 0.02,
+  "cooldown_frac": 0.1
+ }
+}

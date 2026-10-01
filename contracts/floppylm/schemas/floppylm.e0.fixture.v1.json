@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/gianlucamazza/floppylm/schemas/floppylm.e0.fixture.v1.json",
+  "title": "E0 model fixture (one training step)",
+  "description": "Initial tensors and one deterministic batch; the backend returns floppylm.e0.fixture.report.v1, compared with the PyTorch oracle under ADR 0010.",
+  "type": "object",
+  "required": [
+    "schema",
+    "config",
+    "tensors",
+    "tokens",
+    "targets",
+    "batch",
+    "lr",
+    "wd"
+  ],
+  "properties": {
+    "schema": {
+      "const": "floppylm.e0.fixture.v1"
+    },
+    "config": {
+      "$ref": "floppylm.e0.common.v1.json#/$defs/config"
+    },
+    "tensors": {
+      "$ref": "floppylm.e0.common.v1.json#/$defs/tensors"
+    },
+    "tokens": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "minItems": 1
+    },
+    "targets": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "minItems": 1
+    },
+    "batch": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "lr": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "wd": {
+      "type": "number",
+      "minimum": 0
+    }
+  },
+  "additionalProperties": false
+}

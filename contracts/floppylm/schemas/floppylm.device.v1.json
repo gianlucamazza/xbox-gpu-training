@@ -1,0 +1,155 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/gianlucamazza/floppylm/schemas/floppylm.device.v1.json",
+  "title": "Native backend device report",
+  "description": "LocalState/device.json: the backend's readiness, package, source commit and, when reported, the config values it accepts. On startup failure it carries only state=failed, error, hardware_gpu=false and commit.",
+  "oneOf": [
+    {
+      "type": "object",
+      "required": [
+        "schema",
+        "hardware_gpu",
+        "adapter",
+        "package",
+        "state",
+        "commit"
+      ],
+      "properties": {
+        "schema": {
+          "const": "floppylm.device.v1"
+        },
+        "hardware_gpu": {
+          "type": "boolean"
+        },
+        "adapter": {
+          "type": "string"
+        },
+        "package": {
+          "type": "string",
+          "minLength": 1
+        },
+        "state": {
+          "const": "ready"
+        },
+        "commit": {
+          "type": "string",
+          "minLength": 1
+        },
+        "capabilities": {
+          "description": "Config values this backend accepts; any other config is refused. Absent from packages built before the capability report.",
+          "type": "object",
+          "required": [
+            "vocab",
+            "emb_fmt",
+            "core_fmt",
+            "mlp",
+            "scale_policy",
+            "delta"
+          ],
+          "properties": {
+            "vocab": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            },
+            "emb_fmt": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "ternary",
+                  "2bit",
+                  "4bit"
+                ]
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            },
+            "core_fmt": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "ternary",
+                  "2bit",
+                  "4bit"
+                ]
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            },
+            "mlp": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "gelu",
+                  "relu2",
+                  "swiglu"
+                ]
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            },
+            "scale_policy": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "row16",
+                  "row8log",
+                  "tensor16"
+                ]
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            },
+            "delta": {
+              "type": "object",
+              "required": [
+                "minimum",
+                "exclusive_maximum"
+              ],
+              "properties": {
+                "minimum": {
+                  "type": "number"
+                },
+                "exclusive_maximum": {
+                  "type": "number"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "state",
+        "error",
+        "hardware_gpu",
+        "commit"
+      ],
+      "properties": {
+        "state": {
+          "const": "failed"
+        },
+        "error": {
+          "type": "string"
+        },
+        "hardware_gpu": {
+          "const": false
+        },
+        "commit": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    }
+  ]
+}
