@@ -43,7 +43,7 @@ private:
   winrt::Windows::UI::Xaml::Controls::Grid root_{nullptr};
   winrt::Windows::UI::Xaml::Controls::TextBlock job_{nullptr}, state_{nullptr},
       fresh_{nullptr}, phase_{nullptr}, progress_text_{nullptr},
-      loss_hi_{nullptr}, loss_lo_{nullptr}, device_{nullptr};
+      loss_hi_{nullptr}, loss_lo_{nullptr}, device_{nullptr}, axis_{nullptr};
   winrt::Windows::UI::Xaml::Controls::ProgressBar progress_{nullptr};
   winrt::Windows::UI::Xaml::Controls::Canvas chart_{nullptr};
   winrt::Windows::UI::Xaml::Shapes::Polyline raw_{nullptr}, smooth_{nullptr};

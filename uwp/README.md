@@ -24,7 +24,7 @@ Polls the active job's `job.json` and `results/<id>/status.json` once per second
 UI thread and derives nothing about the schedule: phase, progress and markers come from
 the `schedule` and `phase` fields that `run_job` publishes ([job protocol](../docs/e0/job-protocol.md)).
 It shows job state and the age of the last update (stale after 10 min), progress over all
-optimizer steps, a trunk-loss chart (raw and EMA) with warmup and cooldown markers, tokens/s,
+optimizer steps, a trunk-loss chart with warmup and cooldown markers (the EMA appears from 16 points on; before that the raw curve is the main line, since a short EMA lags far behind the data; marker labels stack and stay inside the chart), tokens/s,
 tokens processed, GPU/wall time, peak memory, a labelled remaining-time estimate and the
 `device.json` footer. While a job runs it holds a `DisplayRequest`.
 
