@@ -2,7 +2,7 @@ name: E0 UWP
 on:
   workflow_dispatch:
   push:
-    branches: [main, phase-6/e0-resident]
+    branches: [main]
   pull_request:
     paths: ['src/cpp/e0/**', 'src/cpp/dx12_device.cpp', 'src/hlsl/e0_tensor.hlsl', 'uwp/**', 'scripts/build-e0-uwp.ps1', '.github/workflows/e0-uwp.yml']
 permissions:
@@ -16,6 +16,11 @@ jobs:
       - uses: NuGet/setup-nuget@d105a947828025cd7a980103c35ba2bfae586d0f # v2
       - name: Build unsigned Release package
         shell: pwsh
+        # Optional repository variables override the package identity; unset keeps the defaults.
+        env:
+          XGPU_E0_IDENTITY_NAME: ${{ vars.XGPU_E0_IDENTITY_NAME }}
+          XGPU_E0_PUBLISHER: ${{ vars.XGPU_E0_PUBLISHER }}
+          XGPU_E0_PUBLISHER_DISPLAY_NAME: ${{ vars.XGPU_E0_PUBLISHER_DISPLAY_NAME }}
         run: ./scripts/build-e0-uwp.ps1
       - name: Upload package and layout
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
