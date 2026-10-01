@@ -1,26 +1,22 @@
 name: Research proposal
-description: Hypothesis or experiment for the DirectX 12 / HLSL GPU track.
+description: Hypothesis or experiment for the DirectX 12 / HLSL training backend.
 title: "[research] "
 labels: ["research"]
 body:
   - type: markdown
     attributes:
       value: |
-        FloppyLM semantics are owned by floppy_4mb (ADR 0012); do not propose changes to xllama here.
-        No CUDA. DirectML is inference/forward-focused on console.
+        Model and protocol semantics are owned by FloppyLM (floppy_4mb, ADR 0012); propose those changes there.
+        Claims and non-claims: https://github.com/gianlucamazza/xbox-gpu-training/blob/main/docs/claims-policy.md
   - type: dropdown
-    id: phase
+    id: lane
     attributes:
-      label: Target phase label
+      label: Area
       options:
-        - phase-0
-        - phase-1
-        - phase-2
-        - phase-3
-        - phase-4
-        - phase-5
-        - phase-6
-        - phase-7
+        - E0 trainer (src/cpp/e0, e0_tensor.hlsl, uwp)
+        - Diagnostic host (Fase 0–5)
+        - Docs / evidence
+        - CI / build
     validations:
       required: true
   - type: dropdown
@@ -46,7 +42,7 @@ body:
     id: method
     attributes:
       label: Method
-      placeholder: DirectX 12 compute shader / fixture / CPU ggml baseline / Dev Mode plan
+      placeholder: Kernel or engine change / fixtures and gates / evidence to commit / console time needed
     validations:
       required: true
   - type: checkboxes
@@ -54,9 +50,7 @@ body:
     attributes:
       label: Constraints
       options:
-        - label: I will not invent tok/s or quality scores
+        - label: Results will follow the claims policy (sourced or explicitly unmeasured)
           required: true
-        - label: I will not treat DirectML as the trainer
-          required: true
-        - label: I will not modify gianlucamazza/xllama in this work
+        - label: An ADR will accompany any architecture or gate change
           required: true

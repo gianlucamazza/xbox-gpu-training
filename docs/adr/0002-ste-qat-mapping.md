@@ -1,6 +1,7 @@
 # ADR 0002 — STE / FakeQuant mapping (Fase 3)
 
 - Status: Accepted (Fase 3 scope)
+- Superseded by: ADR 0003 for the E0 trainer; still governs the diagnostic lane
 - Date: 2026-09-30
 - Labels: `adr`, `research`, `kernel`, `phase-3`
 - Milestone: [Fase 3 — Backward + AdamW](https://github.com/gianlucamazza/xbox-gpu-training/milestone/4)
@@ -9,11 +10,11 @@
 
 ## Context
 
-[docs/execution-plan.md](../execution-plan.md) § Fase 3 requires a gradient check on a tiny net and one AdamW / straight-through estimator (STE) train step. The plan says to stop and write an ADR if the STE / QAT mapping is unspecified.
+[docs/archive/execution-plan.md](../archive/execution-plan.md) § Fase 3 requires a gradient check on a tiny net and one AdamW / straight-through estimator (STE) train step. The plan says to stop and write an ADR if the STE / QAT mapping is unspecified.
 
 Master weights already live in host fp32 (ADR 0001). Fase 2 reconstructed a **scalar** FLP2 decode for deploy-style codes; it did not define how those codes are produced from a trainable master, nor how gradients flow through the quantizer.
 
-This ADR freezes the Fase 3 mapping only. Full QAT schedules, WSD, and isolated cooldowns are Fase 5: [docs/qat-wsd.md](../qat-wsd.md). 2-bit / 4-bit FakeQuant are host midrise kernels there; they are still **not** the Fase 3 gate.
+This ADR freezes the Fase 3 mapping only. Full QAT schedules, WSD, and isolated cooldowns are Fase 5: [docs/diagnostic/qat-wsd.md](../diagnostic/qat-wsd.md). 2-bit / 4-bit FakeQuant are host midrise kernels there; they are still **not** the Fase 3 gate.
 
 ## Decision
 
@@ -35,7 +36,7 @@ This ADR freezes the Fase 3 mapping only. Full QAT schedules, WSD, and isolated 
 
    `W ← W - lr * (m̂ / (√v̂ + ε) + wd * W)` after the usual bias-corrected moments.
 5. **2-bit / 4-bit FakeQuant** were stubs in the Fase 3 PR. Fase 5 implements them on the **host** (FLP2 midrise; `--bit-width 2|4`). They are still not on the Fase 3 `--train-step 1` / `--grad-check` STE-identity gate. No new HLSL.
-6. **Grad-check** compares analytic STE-identity gradients (unquantized forward, same clip-off path) to central finite differences. Discrete FakeQuant is piecewise constant, so finite-diff of `Q(W)` is **not** the STE claim. Documented in [docs/ste-adamw.md](../ste-adamw.md).
+6. **Grad-check** compares analytic STE-identity gradients (unquantized forward, same clip-off path) to central finite differences. Discrete FakeQuant is piecewise constant, so finite-diff of `Q(W)` is **not** the STE claim. Documented in [docs/diagnostic/ste-adamw.md](../diagnostic/ste-adamw.md).
 
 ## Peers (not ports)
 
@@ -50,13 +51,13 @@ These papers / trees inform the mapping. Nothing is copied as a CUDA or PyTorch 
 
 ## Consequences
 
-- HLSL kernels implement FakeQuant, `dW = dy ⊤ x`-style weight grads, relu2 grad, and the STE mask. Host owns FakeQuant policy, AdamW, and step orchestration ([docs/ste-adamw.md](../ste-adamw.md)).
+- HLSL kernels implement FakeQuant, `dW = dy ⊤ x`-style weight grads, relu2 grad, and the STE mask. Host owns FakeQuant policy, AdamW, and step orchestration ([docs/diagnostic/ste-adamw.md](../diagnostic/ste-adamw.md)).
 - Linux / no D3D12: CPU grad-check and one train step stay green; GPU path prints `BLOCKED: no D3D12 device`. No invented dispatch log.
 - Changing STE clip, scale reduction, or AdamW coupling requires a new ADR (or an update to this one) and the `adr` label.
 
 ## Out of scope (this PR)
 
-- Full WSD + isolated cooldowns — implemented in Fase 5 ([qat-wsd.md](../qat-wsd.md)); this ADR does not change AdamW β/ε/wd
+- Full WSD + isolated cooldowns — implemented in Fase 5 ([qat-wsd.md](../diagnostic/qat-wsd.md)); this ADR does not change AdamW β/ε/wd
 - Binary FLP2 envelope / rANS (research issue #10)
 - Console benches, tok/s, loss curves, quality metrics
 - CUDA / cuDNN
@@ -69,7 +70,7 @@ These papers / trees inform the mapping. Nothing is copied as a CUDA or PyTorch 
 | Alternative | Why not (now) |
 | --- | --- |
 | Train quantized codes as primary state | Breaks ADR 0001 master-fp32 rule; deploy mismatch risk |
-| STE without clip | Allowed by some write-ups; we document the BitLinear-style `|W/s|≤1` bound instead of leaving it implicit |
+| STE without clip | Allowed by some write-ups; we document the BitLinear-style `\|W/s\|≤1` bound instead of leaving it implicit |
 | Novel learned quantizer / extra STE temperature | Would be a new estimator — forbidden without an ADR |
 | DirectML optimizer | DirectML is inference/forward-focused; not the trainer |
 | Finite-diff of discrete `Q(W)` as the gate | Locally zero / jumpy; would fail an honest STE check |

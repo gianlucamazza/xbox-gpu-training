@@ -1,6 +1,6 @@
 # Public GDK vs GDKX / ID@Xbox
 
-Fact pack (XGPU Dev Mode Counsel, 2026-09-30). This repository uses the **public GDK / Windows SDK / DirectX 12** path. It does **not** claim **GDKX** or **ID@Xbox** access.
+This repository uses the **public GDK / Windows SDK / DirectX 12** path. It does **not** claim **GDKX** or **ID@Xbox** access.
 
 ## Public GDK is Windows-only
 
@@ -39,5 +39,5 @@ Research-usable without GDKX:
 
 ## Related
 
-- [blockers-fase6-validation.md](blockers-fase6-validation.md)
+- [console-constraints.md](console-constraints.md)
 - [docs/adr/0001-architecture.md](../adr/0001-architecture.md)

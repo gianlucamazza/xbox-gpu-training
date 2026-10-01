@@ -1,6 +1,6 @@
 # UWP resource allocation on Xbox
 
-Fact pack (XGPU Dev Mode Counsel, 2026-09-30). Planning budgets from Microsoft Learn. These are **not** measured working-set numbers from this repo.
+Planning budgets from Microsoft Learn. These are **not** measured working-set numbers from this repo.
 
 Primary source:
 
@@ -25,7 +25,7 @@ Microsoft: *“When running your app or game from the Visual Studio debugger, th
 
 The **non-debug** package is the gate. A debug session that does not OOM is **not** evidence that the App 1 GB or Creators 5 GB cap holds.
 
-Exceeding the cap causes memory allocation failures. That is a Fase 4 / Fase 6 concern, not a green-wash from a debugger run.
+Exceeding the cap causes memory allocation failures. Only non-debug Release measurements count; E0 peak app memory is in [status.md](../status.md).
 
 ## Architecture requirement
 
@@ -33,7 +33,7 @@ All apps and games must target **x64** to be developed or submitted to the store
 
 ## CPU / GPU share (same page)
 
-Recorded here so memory docs stay consistent with [dx12-hlsl-compute.md](dx12-hlsl-compute.md):
+This is the single copy of the table in this repository:
 
 - **Apps:** share of **2–4 CPU cores** (depends on what else is running); **~45%** shared GPU.
 - **Games:** **4 exclusive + 2 shared** CPU cores; **full access to available GPU** cycles.
@@ -43,5 +43,5 @@ App Mode is **not** full title GPU. See [dx12-hlsl-compute.md](dx12-hlsl-compute
 ## Related
 
 - [dev-mode.md](dev-mode.md) — Dev Mode purpose and limits
-- [blockers-fase6-validation.md](blockers-fase6-validation.md) — Fase 6 memory blocker
-- [docs/memory-budget.md](../memory-budget.md) — Fase 4 streaming contract (App ~1 GB plan; Game ~5 GB documented only)
+- [console-constraints.md](console-constraints.md) — memory constraint in context
+- [diagnostic/memory-budget.md](../diagnostic/memory-budget.md) — diagnostic-lane streaming against the App budget

@@ -1,141 +1,70 @@
 # xbox-gpu-training
 
 [![CI](https://github.com/gianlucamazza/xbox-gpu-training/actions/workflows/ci.yml/badge.svg)](https://github.com/gianlucamazza/xbox-gpu-training/actions/workflows/ci.yml)
-[![Benchmark](https://github.com/gianlucamazza/xbox-gpu-training/actions/workflows/benchmark.yml/badge.svg)](https://github.com/gianlucamazza/xbox-gpu-training/actions/workflows/benchmark.yml)
+[![E0 UWP](https://github.com/gianlucamazza/xbox-gpu-training/actions/workflows/e0-uwp.yml/badge.svg)](https://github.com/gianlucamazza/xbox-gpu-training/actions/workflows/e0-uwp.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Milestones](https://img.shields.io/badge/milestones-Fase%200–7-blue.svg)](https://github.com/gianlucamazza/xbox-gpu-training/milestones)
 
-**Closing the Xbox GPU training gap with DirectX 12 HLSL compute shaders.**
+**Quantized transformer training on the Xbox Series S GPU with DirectX 12 compute shaders.**
 
-> **EN.** Xbox has no CUDA. DirectML on console is inference/forward-focused. A UWP App typically sees ~1 GB RAM. This repo researches quantized LLM training on Series S|X GPU via DirectX 12 compute shaders, host-resident fp32 master weights, and FLP2 streaming — measured honestly, or not claimed.
->
-> **IT.** Su Xbox non c’è CUDA. DirectML in console è orientato a inference/forward. Una UWP App vede in genere ~1 GB di RAM. Questo repo ricerca il training quantizzato di LLM sulla GPU Series S|X con compute shader DirectX 12, pesi master fp32 in system RAM e streaming FLP2 — solo numeri misurati, altrimenti nessun claim.
+Xbox has no CUDA, DirectML on console is inference-focused, and a UWP app in Dev Mode
+gets about 1 GB of RAM. This repository trains anyway: a full causal transformer
+forward/backward written as HLSL compute shaders, AdamW on fp32 master weights, and a
+UWP worker that runs jobs on a retail Series S in Dev Mode. Every number is measured
+on hardware and committed as evidence, or it is not claimed ([claims policy](docs/claims-policy.md)).
 
-FloppyLM semantics, FLP2 and the `floppylm.*.v1` contracts are owned by the local FloppyLM repo (`Workspace/experiments/floppy_4mb`, ADR 0012); this repository is its only native training backend (E0 DX12/UWP). [xllama](https://github.com/gianlucamazza/xllama) contains no FloppyLM logic: do not modify it from here and do not claim that it trains FloppyLM.
+It is the native training backend of FloppyLM (`floppy_4mb`), which owns the model
+semantics, the FLP2 format, the Python oracle and the experiment campaign.
 
----
+## Status
 
-## Italiano
+The E0 trainer passes its full hardware acceptance on Series S (52 operation cases,
+36 model fixtures, exact resume, real suspension) and runs the first scientific
+campaign on the GPU-resident E0.1 engine. No language-model quality result is
+published yet. Package, throughput and open items: **[docs/status.md](docs/status.md)**.
 
-### Perché esiste
+## Two lanes
 
-Su Xbox Series S|X in **Dev Mode** manca CUDA; DirectML è utile per alcuni grafi di inference/forward e **non** è il trainer di questo progetto; una UWP **App** ha un budget RAM tipico di **~1 GB** (designazione **Game** ~**5 GB**); il bus memoria e l’**AppContainer** vincolano i pesi; la licenza Dev Mode serve a sviluppare e testare app (in documentazione pubblica tipicamente **≤3 console**), non a gestire una GPU farm.
+| Lane                                       | Code                                                                                | State                                                      |
+| ------------------------------------------ | ----------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| **E0 trainer** (active)                    | `src/cpp/e0/`, `src/hlsl/e0_tensor.hlsl`, `uwp/`                                    | Accepted on Series S; scientific campaign running          |
+| **Diagnostic host** (historical, Fase 0–5) | `src/cpp/` (`xbox_gpu_host`), other `src/hlsl/` kernels, `examples/`, `benchmarks/` | Desktop bring-up of DX12 compute; certifies nothing for E0 |
 
-### Soluzione architetturale
+## Start here
 
-- Compute shader **HLSL** su **DirectX 12** per matmul, **RMSNorm**, **RoPE** e un forward ricostruito dal codec **FLP2**.
-- Pesi master **fp32** in system RAM; **chunk streaming** e **double buffering** verso la GPU.
-- Baseline numerica e di tempo: **CPU ggml** (Fase 1+).
-- QAT ternario/2/4-bit, **straight-through estimator (STE)**, **AdamW**, schedule **WSD** con cooldown isolati (Fasi 3–5).
-- GDK / Windows SDK pubblici. **GDKX** / **ID@Xbox** sono percorsi NDA/partner: **non** ne rivendichiamo l’accesso.
+| Goal                                             | Read                                                                                                    |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
+| Understand the design                            | [docs/architecture.md](docs/architecture.md), [ADRs](docs/adr/README.md)                                |
+| Build, install and run E0 on a console           | [docs/e0/runbook.md](docs/e0/runbook.md)                                                                |
+| Understand the E0 code                           | [docs/e0/engine.md](docs/e0/engine.md), [job protocol](docs/e0/job-protocol.md)                         |
+| Check what is measured                           | [docs/status.md](docs/status.md), [evidence index](docs/evidence/README.md), [results](docs/results.md) |
+| Platform constraints (Dev Mode, UWP memory, GDK) | [docs/platform/](docs/platform/README.md)                                                               |
+| Everything else                                  | [docs/README.md](docs/README.md)                                                                        |
 
-Dettaglio: [docs/architecture.md](docs/architecture.md), [docs/adr/0001-architecture.md](docs/adr/0001-architecture.md). Fatti piattaforma (Microsoft/Xbox pubblici, non banchi nostri): [Dev Mode](docs/platform/dev-mode.md), [risorse UWP](docs/platform/uwp-resources.md), [DirectX 12 / HLSL](docs/platform/dx12-hlsl-compute.md), [ambito DirectML](docs/platform/directml-scope.md), [GDK vs GDKX](docs/platform/gdk-vs-gdkx.md), [Series S vs X](docs/platform/series-s-vs-x.md), [blocchi Fase 6](docs/platform/blockers-fase6-validation.md).
+## Quick check
 
-### Roadmap (Fase 0–7)
+```bash
+python3 scripts/check_required_docs.py && python3 scripts/check_relative_links.py && python3 scripts/check_doc_claims.py
+cmake -S . -B build && cmake --build build
+./build/xgpu_e0_train --help
+```
 
-Le fasi 0–5 (host Win32) sono **solo diagnostiche**: STE/quantizzatore diversi da FloppyLM, non certificano nulla per E0. Il trainer attivo è la lane E0 UWP.
-
-Playbook Cursor: [docs/execution-plan.md](docs/execution-plan.md). Tabella completa: [ROADMAP.md](ROADMAP.md). Milestone GitHub: [elenco](https://github.com/gianlucamazza/xbox-gpu-training/milestones).
-
-| Fase | Milestone | Label |
-| --- | --- | --- |
-| 0 Setup ambiente | [Fase 0 — Setup ambiente](https://github.com/gianlucamazza/xbox-gpu-training/milestone/1) | `phase-0` |
-| 1 Kernel HLSL di base | [Fase 1 — Kernel HLSL di base](https://github.com/gianlucamazza/xbox-gpu-training/milestone/2) | `phase-1` |
-| 2 Forward FLP2 su GPU | [Fase 2 — Forward FLP2 su GPU](https://github.com/gianlucamazza/xbox-gpu-training/milestone/3) | `phase-2` |
-| 3 Backward + AdamW | [Fase 3 — Backward + AdamW](https://github.com/gianlucamazza/xbox-gpu-training/milestone/4) | `phase-3` |
-| 4 Streaming memoria | [Fase 4 — Streaming memoria](https://github.com/gianlucamazza/xbox-gpu-training/milestone/5) | `phase-4` |
-| 5 QAT completo WSD | [Fase 5 — QAT completo WSD](https://github.com/gianlucamazza/xbox-gpu-training/milestone/6) | `phase-5` |
-| 6 Validazione Series S\|X | [Fase 6 — Validazione Series S\|X](https://github.com/gianlucamazza/xbox-gpu-training/milestone/7) | `phase-6` |
-| 7 Pubblicazione | [Fase 7 — Pubblicazione](https://github.com/gianlucamazza/xbox-gpu-training/milestone/8) | `phase-7` |
-
-### Stato attuale
-
-La backend UWP E0 separata ha superato su **Series S** retail 52 casi operazione
-indipendenti, 36 fixture modello, AdamW a input identici, recovery esatto e
-sospensione reale. Il trial sintetico rappresentativo ha misurato **964 token/s** e
-**87.2 MiB** di picco ([evidenza e lineage](docs/evidence/e0-20261001/notes.md)).
-Il motore GPU-resident E0.1 (pacchetto `0.1.0.28`) ha superato la stessa acceptance,
-è bit-identico a `0.1.0.24` ed è **10.6× più veloce** (10224 token/s,
-[evidenza E0.1](docs/evidence/e0-20261001-resident/notes.md)); la campagna scientifica
-è ripartita su di esso. Nessun claim di qualità. Sintesi onesta Fase 0–7: [docs/results.md](docs/results.md).
-
-### Come contribuire
-
-[CONTRIBUTING.md](CONTRIBUTING.md). Evidence-first. Inglese per codice e commit; italiano ok nelle discussioni.
-
----
-
-## English
-
-### Why it exists
-
-On Xbox Series S|X **Dev Mode** there is **no CUDA**; **DirectML** on console is inference/forward-focused and is **not** the trainer here; a UWP **App** typically has **~1 GB** RAM ( **Game** designation ~**5 GB** ); the memory bus and **AppContainer** constrain weights; the Dev Mode purpose licence is to develop and test apps (public docs typically **≤3 consoles**), not to operate a GPU farm.
-
-### Architectural solution
-
-- **HLSL** compute shaders on **DirectX 12** for matmul, **RMSNorm**, **RoPE**, and a forward reconstructed from the **FLP2** codec.
-- **fp32** master weights in system RAM; **chunk streaming** and **double buffering** to the GPU.
-- Numerical and timing baseline: **CPU ggml** (Fase 1+).
-- Ternary / 2-bit / 4-bit **QAT**, **straight-through estimator (STE)**, **AdamW**, **WSD** with isolated cooldowns (Fasi 3–5).
-- Public GDK / Windows SDK. **GDKX** / **ID@Xbox** are NDA/partner paths: this repo does **not** claim access.
-
-See [docs/architecture.md](docs/architecture.md) and [docs/adr/0001-architecture.md](docs/adr/0001-architecture.md). Public Microsoft/Xbox fact packs (not our benches): [Dev Mode](docs/platform/dev-mode.md), [UWP resources](docs/platform/uwp-resources.md), [DirectX 12 / HLSL](docs/platform/dx12-hlsl-compute.md), [DirectML scope](docs/platform/directml-scope.md), [GDK vs GDKX](docs/platform/gdk-vs-gdkx.md), [Series S vs X](docs/platform/series-s-vs-x.md), [Fase 6 blockers](docs/platform/blockers-fase6-validation.md).
-
-### Roadmap (phases 0–7)
-
-Phases 0–5 (Win32 host) are a **diagnostic lane only**: their STE/quantizer differ from FloppyLM and certify nothing for E0. The active trainer is the E0 UWP lane.
-
-Cursor playbook: [docs/execution-plan.md](docs/execution-plan.md). Full table: [ROADMAP.md](ROADMAP.md). GitHub milestones: [index](https://github.com/gianlucamazza/xbox-gpu-training/milestones).
-
-| Phase | Milestone | Label |
-| --- | --- | --- |
-| 0 Environment setup | [Fase 0 — Setup ambiente](https://github.com/gianlucamazza/xbox-gpu-training/milestone/1) | `phase-0` |
-| 1 Base HLSL kernels | [Fase 1 — Kernel HLSL di base](https://github.com/gianlucamazza/xbox-gpu-training/milestone/2) | `phase-1` |
-| 2 FLP2 forward on GPU | [Fase 2 — Forward FLP2 su GPU](https://github.com/gianlucamazza/xbox-gpu-training/milestone/3) | `phase-2` |
-| 3 Backward + AdamW | [Fase 3 — Backward + AdamW](https://github.com/gianlucamazza/xbox-gpu-training/milestone/4) | `phase-3` |
-| 4 Memory streaming | [Fase 4 — Streaming memoria](https://github.com/gianlucamazza/xbox-gpu-training/milestone/5) | `phase-4` |
-| 5 Full QAT + WSD | [Fase 5 — QAT completo WSD](https://github.com/gianlucamazza/xbox-gpu-training/milestone/6) | `phase-5` |
-| 6 Series S\|X validation | [Fase 6 — Validazione Series S\|X](https://github.com/gianlucamazza/xbox-gpu-training/milestone/7) | `phase-6` |
-| 7 Publish results | [Fase 7 — Pubblicazione](https://github.com/gianlucamazza/xbox-gpu-training/milestone/8) | `phase-7` |
-
-### Current status
-
-The E0 UWP backend has measured Series S functional evidence, including exact
-runner recovery and a real suspension lifecycle ([package, results and limits](docs/evidence/e0-20261001/notes.md)).
-On 2026-10-01 the first scientific campaign (package `0.1.0.24`, GPU busy ~8.6% of wall time) was stopped cleanly for the GPU-resident E0.1 engine. Package `0.1.0.28` passed the same acceptance, is bit-identical to `0.1.0.24` on every fixture and trained weight, and measured **10224 token/s** (×10.6) on the representative benchmark ([E0.1 evidence](docs/evidence/e0-20261001-resident/notes.md)). Campaign `e0-20261001T090514Z-4236fd` runs on it.
-No quality claim. Honest Fase 0–7 write-up: [docs/results.md](docs/results.md).
-
-### How to contribute
-
-[CONTRIBUTING.md](CONTRIBUTING.md). Evidence-first. English for code and commits; Italian is fine in discussions.
-
----
+Windows toolchain and diagnostic-host commands: [docs/diagnostic/setup.md](docs/diagnostic/setup.md).
 
 ## Layout
 
-| Path | Role |
-| --- | --- |
-| `src/hlsl/` | HLSL compute shaders (`hello_compute` Fase 0; `matmul` Fase 1; RMSNorm / RoPE / FLP2 Fase 2; FakeQuant / grad / STE Fase 3). Fase 4–5 add none. |
-| `src/cpp/` | C++ host (`xbox_gpu_host`) — DX12 hello + matmul + `--forward-fixture` + `--grad-check` / `--train-step` + `--stream-stress` + `--qat-smoke` |
-| `docs/setup.md` | Toolchain + run notes |
-| `docs/ggml-baseline.md` | How the CPU GEMM compares; ggml is not vendored |
-| `docs/flp2-forward.md` | Fase 2 decode contract, tolerances, envelope non-goals |
-| `docs/ste-adamw.md` | Fase 3 FakeQuant / STE / AdamW contract + grad-check tolerances |
-| `docs/memory-budget.md` | Fase 4 App ~1 GB / Game ~5 GB streaming contract |
-| `docs/qat-wsd.md` | Fase 5 QAT bit-widths + WSD + isolated cooldowns (N=16) |
-| `docs/console.md` | Fase 6 measured Series S E0 and remaining UNMEASURED targets |
-| `docs/results.md` | Fase 7 honest host + sourced E0 summary |
-| `docs/figures/` | Figure **placeholders** only — no fabricated plots |
-| `docs/evidence/` | Package lineage and Series S E0 acceptance (PR #17) |
-| `docs/`, `docs/adr/` | Architecture + ADRs (`0001`–`0004`) |
-| `src/cpp/e0/`, `uwp/` | Separate E0 trainer + x64 UWP package lane |
-| `docs/platform/` | Public Xbox / Dev Mode / GDK / UWP fact packs |
-| `docs/execution-plan.md` | Cursor phase playbook |
-| `benchmarks/` | Smoke stub + Fase 1 CSV + Fase 2 `fixtures/tiny_flp2.json` + Fase 4 `fixtures/stream_stress.json` |
-| `examples/hello-compute/` | Hello compute host (`hello_compute`) |
-| `examples/qat-wsd-smoke.json` | Fase 5 QAT/WSD schedule (isolated cooldown overlay) |
-| `.github/workflows/ci.yml` | **CI** — jobs `lint-docs`, `build-windows`, `notify-failure` |
-| `.github/workflows/benchmark.yml` | **Benchmark** — job `benchmark` |
+| Path                                    | Content                                                                |
+| --------------------------------------- | ---------------------------------------------------------------------- |
+| `src/cpp/e0/`                           | E0 tensor runtime, model, DX12 kernel, job runner, `xgpu_e0_train` CLI |
+| `src/hlsl/e0_tensor.hlsl`               | E0 multi-op compute shader                                             |
+| `uwp/`                                  | x64 UWP worker app (`XgpuE0`)                                          |
+| `src/cpp/`, `src/hlsl/`                 | Diagnostic host and its kernels                                        |
+| `scripts/`                              | Doc checks, E0 UWP build, QAT schedule validator                       |
+| `benchmarks/`, `examples/`, `fixtures/` | Diagnostic-lane harnesses and fixtures                                 |
+| `docs/`                                 | Documentation ([map](docs/README.md))                                  |
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). Code, docs and commits are in English.
 
 ## License
 

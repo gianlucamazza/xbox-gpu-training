@@ -1,11 +1,11 @@
-# ADR 0003: Execute the FloppyLM E0 protocol on Xbox GPU
+# ADR 0003 — Execute the FloppyLM E0 protocol on Xbox GPU
 
-## Status
-
-Accepted — 2026-09-30, by the owner requesting implementation of the cross-project plan.
-Supersedes ADR 0002 only for the explicit E0 backend. Historical tiny-network smokes
-keep their original contract.
-Amended 2026-10-01: repository boundaries in `floppy_4mb` ADR 0012 (this repo is the only native FloppyLM backend).
+- Status: Accepted
+- Date: 2026-09-30 (owner request to implement the cross-project plan)
+- Amended: 2026-10-01 — repository boundaries follow `floppy_4mb` ADR 0012 (this repo is the only native FloppyLM backend)
+- Supersedes: ADR 0002 for the E0 backend only; diagnostic-lane smokes keep their contract
+- Superseded in part by: ADR 0004 (numerical thresholds)
+- Labels: `adr`, `research`, `phase-6`
 
 ## Context
 
@@ -43,7 +43,7 @@ CI/Win32/WARP passing is not console acceptance. Host smoke reports, hardware
 dispatch evidence and scientific E0 evidence are separate. Dedicated console time
 has no prefixed cap; sustained throughput is measured before the campaign.
 
-## Alternatives
+## Alternatives considered
 
 Using the smoke's clipped STE, absmean quantizer, fixed epsilon or cooldown overlays
 would change the experiment. Editing xllama or silently falling back to CPU would

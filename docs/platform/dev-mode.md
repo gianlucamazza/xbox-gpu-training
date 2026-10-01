@@ -1,6 +1,6 @@
 # Xbox Dev Mode (public UWP path)
 
-Fact pack (XGPU Dev Mode Counsel, 2026-09-30). Public Microsoft documentation only. Dev Mode is **not** a GDKX entitlement and is **not** the full console stack.
+Public Microsoft documentation only. Dev Mode is **not** a GDKX entitlement and is **not** the full console stack.
 
 ## Purpose
 
@@ -33,4 +33,4 @@ See [uwp-resources.md](uwp-resources.md) and [dx12-hlsl-compute.md](dx12-hlsl-co
 - **Not** GDKX hardware access, Microsoft-provisioned devkits, or ID@Xbox entitlements. This repo does **not** claim those.
 - **Not** a GPU farm licence. Purpose is develop/test apps (and demonstrate them), not operate training hardware at scale.
 
-Fase 0–5 work on Windows and the public GDK / DirectX 12 path is **not** gated on Dev Mode. Fase 6 console validation is. See [blockers-fase6-validation.md](blockers-fase6-validation.md) and [gdk-vs-gdkx.md](gdk-vs-gdkx.md).
+Desktop work on Windows and the public GDK / DirectX 12 path does not need Dev Mode; console results do. See [console-constraints.md](console-constraints.md) and [gdk-vs-gdkx.md](gdk-vs-gdkx.md).

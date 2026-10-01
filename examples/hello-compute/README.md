@@ -2,7 +2,7 @@
 
 Fase 0 example host. Builds `hello_compute` and dispatches [`src/hlsl/hello_compute.hlsl`](../../src/hlsl/hello_compute.hlsl) on a Windows **DirectX 12** device.
 
-The same dispatch path is shared with `xbox_gpu_host` in [`src/cpp/`](../../src/cpp/). Setup, `dxc`, and BLOCKED rules: [docs/setup.md](../../docs/setup.md). Public DX12 notes: [docs/platform/dx12-hlsl-compute.md](../../docs/platform/dx12-hlsl-compute.md).
+The same dispatch path is shared with `xbox_gpu_host` in [`src/cpp/`](../../src/cpp/). Setup, `dxc`, and BLOCKED rules: [docs/diagnostic/setup.md](../../docs/diagnostic/setup.md). Public DX12 notes: [docs/platform/dx12-hlsl-compute.md](../../docs/platform/dx12-hlsl-compute.md).
 
 ## What it does
 

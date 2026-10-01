@@ -1,33 +1,29 @@
 name: Bug
-description: Something is broken in the GPU research track (host, HLSL, CI, docs).
+description: Something is broken (E0 trainer, UWP app, diagnostic host, CI, docs).
 title: "[bug] "
 labels: ["bug"]
 body:
   - type: markdown
     attributes:
       value: |
-        Evidence-first. Do not paste invented tok/s. Xbox has no CUDA.
-        DirectML on console is inference/forward-focused — not the trainer.
+        Evidence-first: paste real logs; follow the claims policy (https://github.com/gianlucamazza/xbox-gpu-training/blob/main/docs/claims-policy.md).
+        For console issues include the package full name and source commit from device.json.
   - type: dropdown
-    id: phase
+    id: lane
     attributes:
-      label: Phase label
+      label: Area
       options:
-        - phase-0
-        - phase-1
-        - phase-2
-        - phase-3
-        - phase-4
-        - phase-5
-        - phase-6
-        - phase-7
+        - E0 trainer (src/cpp/e0, e0_tensor.hlsl, uwp)
+        - Diagnostic host (Fase 0–5)
+        - Docs / evidence
+        - CI / build
     validations:
       required: true
   - type: input
     id: env
     attributes:
       label: Environment
-      placeholder: windows-latest CI / Windows SDK version / Dev Mode Series S (if any)
+      placeholder: E0 package + commit / Series S Dev Mode / windows-latest CI / Windows SDK version
     validations:
       required: true
   - type: textarea
@@ -47,5 +43,5 @@ body:
     attributes:
       label: Honesty
       options:
-        - label: I did not invent metrics or claim GDKX/ID@Xbox access
+        - label: Every number above comes from a real run (claims policy)
           required: true
