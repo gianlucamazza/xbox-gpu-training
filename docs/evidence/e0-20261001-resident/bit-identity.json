@@ -1,0 +1,37 @@
+{
+ "schema": "xbox-gpu-training.e0.bit-identity.v1",
+ "reference_package": "GianlucaMazza.XgpuE0_0.1.0.24_x64__g0p5dcfz4t9z4",
+ "candidate_package": "GianlucaMazza.XgpuE0_0.1.0.28_x64__g0p5dcfz4t9z4",
+ "ignored_fields": [
+  "dispatches",
+  "gpu_seconds",
+  "transfer_bytes",
+  "peak_memory_bytes",
+  "adapter",
+  "wall_seconds"
+ ],
+ "shader_cso_sha256_both": "a6e6c2f641b6a1362e69c06d92f4faf2ae86b41baea9a681a86655ac994ca50f",
+ "acceptance_cases": {
+  "compared": 38,
+  "identical": 38,
+  "differences": {}
+ },
+ "acceptance_branch_weights_identical": {
+  "full/branch-8": true,
+  "full/branch-16": true,
+  "full/branch-32": true,
+  "resumed/branch-8": true,
+  "resumed/branch-16": true,
+  "resumed/branch-32": true
+ },
+ "benchmark_branch_artifact_sha256_identical": {
+  "4": true,
+  "8": true,
+  "16": true
+ },
+ "benchmark_last_loss": [
+  0.5518537215078254,
+  0.5518537215078254
+ ],
+ "cpu_reference_fixture_outputs_identical": "36/36 model fixtures and 52-case kernel fixture; only peak_memory_bytes differs"
+}

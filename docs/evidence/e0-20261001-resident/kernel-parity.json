@@ -1,0 +1,327 @@
+{
+ "case_count": 52,
+ "gates": {
+  "activation-0:0": {
+   "max_abs": 4.76837158203125e-07,
+   "max_bound_excess": 0.0,
+   "max_rel": 2.6199683507823227e-06,
+   "ok": true
+  },
+  "activation-0:1": {
+   "max_abs": 1.1920928955078125e-07,
+   "max_bound_excess": 0.0,
+   "max_rel": 2.203889129684183e-06,
+   "ok": true
+  },
+  "activation-1:0": {
+   "max_abs": 0.0,
+   "max_bound_excess": 0.0,
+   "max_rel": 0.0,
+   "ok": true
+  },
+  "activation-1:1": {
+   "max_abs": 0.0,
+   "max_bound_excess": 0.0,
+   "max_rel": 0.0,
+   "ok": true
+  },
+  "activation-2:0": {
+   "max_abs": 9.5367431640625e-07,
+   "max_bound_excess": 0.0,
+   "max_rel": 4.084093110788377e-07,
+   "ok": true
+  },
+  "activation-2:1": {
+   "max_abs": 5.960464477539062e-07,
+   "max_bound_excess": 0.0,
+   "max_rel": 4.2695259511180267e-07,
+   "ok": true
+  },
+  "add:0": {
+   "max_abs": 0.0,
+   "max_bound_excess": 0.0,
+   "max_rel": 0.0,
+   "ok": true
+  },
+  "add:1": {
+   "max_abs": 0.0,
+   "max_bound_excess": 0.0,
+   "max_rel": 0.0,
+   "ok": true
+  },
+  "add:2": {
+   "max_abs": 0.0,
+   "max_bound_excess": 0.0,
+   "max_rel": 0.0,
+   "ok": true
+  },
+  "attention-scores:0": {
+   "max_abs": 2.384185791015625e-07,
+   "max_bound_excess": 0.0,
+   "max_rel": 1.1899755507623341e-07,
+   "ok": true
+  },
+  "attention-scores:1": {
+   "max_abs": 4.76837158203125e-07,
+   "max_bound_excess": 0.0,
+   "max_rel": 3.2150037005348717e-06,
+   "ok": true
+  },
+  "attention-scores:2": {
+   "max_abs": 4.76837158203125e-07,
+   "max_bound_excess": 0.0,
+   "max_rel": 1.8923877315746406e-06,
+   "ok": true
+  },
+  "causal-softmax:0": {
+   "max_abs": 5.960464477539063e-08,
+   "max_bound_excess": 0.0,
+   "max_rel": 1.4007236418478514e-07,
+   "ok": true
+  },
+  "causal-softmax:1": {
+   "max_abs": 0.0,
+   "max_bound_excess": 0.0,
+   "max_rel": 0.0,
+   "ok": true
+  },
+  "causal-weighted:0": {
+   "max_abs": 0.0,
+   "max_bound_excess": 0.0,
+   "max_rel": 0.0,
+   "ok": true
+  },
+  "causal-weighted:1": {
+   "max_abs": 0.0,
+   "max_bound_excess": 0.0,
+   "max_rel": 0.0,
+   "ok": true
+  },
+  "causal-weighted:2": {
+   "max_abs": 0.0,
+   "max_bound_excess": 0.0,
+   "max_rel": 0.0,
+   "ok": true
+  },
+  "coverage": {
+   "ok": true
+  },
+  "cross-entropy-shift:0": {
+   "max_abs": 0.0,
+   "max_bound_excess": 0.0,
+   "max_rel": 0.0,
+   "ok": true
+  },
+  "cross-entropy-shift:1": {
+   "max_abs": 1.1641532182693481e-09,
+   "max_bound_excess": 0.0,
+   "max_rel": 0.0,
+   "ok": true
+  },
+  "cross-entropy:0": {
+   "max_abs": 2.384185791015625e-07,
+   "max_bound_excess": 0.0,
+   "max_rel": 6.57113377159291e-08,
+   "ok": true
+  },
+  "cross-entropy:1": {
+   "max_abs": 5.960464477539063e-08,
+   "max_bound_excess": 0.0,
+   "max_rel": 4.1158541604700195e-07,
+   "ok": true
+  },
+  "embedding-repeat:0": {
+   "max_abs": 0.0,
+   "max_bound_excess": 0.0,
+   "max_rel": 0.0,
+   "ok": true
+  },
+  "embedding-repeat:2": {
+   "max_abs": 0.0,
+   "max_bound_excess": 0.0,
+   "max_rel": 0.0,
+   "ok": true
+  },
+  "hardware": {
+   "ok": true
+  },
+  "heads-0:0": {
+   "max_abs": 0.0,
+   "max_bound_excess": 0.0,
+   "max_rel": 0.0,
+   "ok": true
+  },
+  "heads-0:1": {
+   "max_abs": 0.0,
+   "max_bound_excess": 0.0,
+   "max_rel": 0.0,
+   "ok": true
+  },
+  "heads-1:0": {
+   "max_abs": 0.0,
+   "max_bound_excess": 0.0,
+   "max_rel": 0.0,
+   "ok": true
+  },
+  "heads-1:1": {
+   "max_abs": 0.0,
+   "max_bound_excess": 0.0,
+   "max_rel": 0.0,
+   "ok": true
+  },
+  "heads-2:0": {
+   "max_abs": 0.0,
+   "max_bound_excess": 0.0,
+   "max_rel": 0.0,
+   "ok": true
+  },
+  "heads-2:1": {
+   "max_abs": 0.0,
+   "max_bound_excess": 0.0,
+   "max_rel": 0.0,
+   "ok": true
+  },
+  "linear-17-96-391:0": {
+   "max_abs": 5.7220458984375e-06,
+   "max_bound_excess": 0.0,
+   "max_rel": 7.911287999396637e-05,
+   "ok": true
+  },
+  "linear-17-96-391:1": {
+   "max_abs": 3.814697265625e-05,
+   "max_bound_excess": 0.0,
+   "max_rel": 0.0004499609536348616,
+   "ok": true
+  },
+  "linear-17-96-391:2": {
+   "max_abs": 2.86102294921875e-06,
+   "max_bound_excess": 0.0,
+   "max_rel": 3.450270562737922e-05,
+   "ok": true
+  },
+  "linear-7-11-13:0": {
+   "max_abs": 9.5367431640625e-07,
+   "max_bound_excess": 0.0,
+   "max_rel": 1.6278913792732963e-06,
+   "ok": true
+  },
+  "linear-7-11-13:1": {
+   "max_abs": 9.5367431640625e-07,
+   "max_bound_excess": 0.0,
+   "max_rel": 6.632355938547163e-06,
+   "ok": true
+  },
+  "linear-7-11-13:2": {
+   "max_abs": 9.5367431640625e-07,
+   "max_bound_excess": 0.0,
+   "max_rel": 2.787096486493266e-06,
+   "ok": true
+  },
+  "multiply:0": {
+   "max_abs": 0.0,
+   "max_bound_excess": 0.0,
+   "max_rel": 0.0,
+   "ok": true
+  },
+  "multiply:1": {
+   "max_abs": 0.0,
+   "max_bound_excess": 0.0,
+   "max_rel": 0.0,
+   "ok": true
+  },
+  "multiply:2": {
+   "max_abs": 0.0,
+   "max_bound_excess": 0.0,
+   "max_rel": 0.0,
+   "ok": true
+  },
+  "rmsnorm-1.0:0": {
+   "max_abs": 2.384185791015625e-07,
+   "max_bound_excess": 0.0,
+   "max_rel": 2.1061668143089603e-07,
+   "ok": true
+  },
+  "rmsnorm-1.0:1": {
+   "max_abs": 2.384185791015625e-07,
+   "max_bound_excess": 0.0,
+   "max_rel": 1.8021217232684645e-06,
+   "ok": true
+  },
+  "rmsnorm-1.0:2": {
+   "max_abs": 5.960464477539062e-07,
+   "max_bound_excess": 0.0,
+   "max_rel": 1.2613113349424863e-06,
+   "ok": true
+  },
+  "rmsnorm-1e-05:0": {
+   "max_abs": 0.0,
+   "max_bound_excess": 0.0,
+   "max_rel": 0.0,
+   "ok": true
+  },
+  "rmsnorm-1e-05:1": {
+   "max_abs": 0.00048828125,
+   "max_bound_excess": 0.0,
+   "max_rel": 1.1691683752113856e-07,
+   "ok": true
+  },
+  "rmsnorm-1e-05:2": {
+   "max_abs": 7.450580596923828e-09,
+   "max_bound_excess": 0.0,
+   "max_rel": 2.802753424964685e-07,
+   "ok": true
+  },
+  "rope:0": {
+   "max_abs": 5.960464477539062e-07,
+   "max_bound_excess": 0.0,
+   "max_rel": 2.351239590306578e-06,
+   "ok": true
+  },
+  "rope:1": {
+   "max_abs": 5.364418029785156e-07,
+   "max_bound_excess": 0.0,
+   "max_rel": 3.162176752128258e-05,
+   "ok": true
+  },
+  "slice-0:0": {
+   "max_abs": 0.0,
+   "max_bound_excess": 0.0,
+   "max_rel": 0.0,
+   "ok": true
+  },
+  "slice-0:1": {
+   "max_abs": 0.0,
+   "max_bound_excess": 0.0,
+   "max_rel": 0.0,
+   "ok": true
+  },
+  "slice-1:0": {
+   "max_abs": 0.0,
+   "max_bound_excess": 0.0,
+   "max_rel": 0.0,
+   "ok": true
+  },
+  "slice-1:1": {
+   "max_abs": 0.0,
+   "max_bound_excess": 0.0,
+   "max_rel": 0.0,
+   "ok": true
+  },
+  "unheads:0": {
+   "max_abs": 0.0,
+   "max_bound_excess": 0.0,
+   "max_rel": 0.0,
+   "ok": true
+  },
+  "unheads:1": {
+   "max_abs": 0.0,
+   "max_bound_excess": 0.0,
+   "max_rel": 0.0,
+   "ok": true
+  }
+ },
+ "hardware_gpu": true,
+ "ok": true,
+ "oracle": "independent PyTorch operations and autograd",
+ "purpose": "functional"
+}

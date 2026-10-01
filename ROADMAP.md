@@ -77,8 +77,10 @@ No tok/s or quality numbers until Dev Mode hardware measures them (or the phase 
   real suspension and worker reuse validated on the current package.
 - [x] Representative throughput, transfers and non-debug app memory measured.
   [Evidence](docs/evidence/e0-20261001/notes.md), [console status](docs/console.md).
+- [x] E0.1 GPU-resident engine (`0.1.0.28`): same acceptance, bit-identical to `0.1.0.24`,
+  10224 token/s vs 963.6 on the representative benchmark ([evidence](docs/evidence/e0-20261001-resident/notes.md)).
 - [ ] Full scientific E0 campaign and reserved final test. The first campaign on `0.1.0.24`
-  was stopped cleanly at trunk step 455 (2026-10-01) for the E0.1 GPU-resident engine.
+  was stopped cleanly at trunk step 455; campaign `e0-20261001T090514Z-4236fd` runs on E0.1.
 - [ ] Series X, matched CPU comparison and PIX captures: no measurements available.
 - [ ] Historical Win32 host workloads (`hello_compute` / matmul / FLP2 / stream-stress / qat-smoke) on console: **UNMEASURED**.
 - Status: Series S E0 **measured**; remaining Series / quality / PIX cells **UNMEASURED**. Known blockers stay accurate: [docs/platform/blockers-fase6-validation.md](docs/platform/blockers-fase6-validation.md). Execution: [docs/execution-plan.md](docs/execution-plan.md#fase-6--series-sx-dev-mode-validation). Label: `phase-6`, `benchmark`.

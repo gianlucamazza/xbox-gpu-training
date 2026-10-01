@@ -328,14 +328,9 @@ void Model::restore(const Json &ckpt, const Json &job, uint64_t &step) {
     throw std::runtime_error("checkpoint stream mismatch");
   parameters = std::move(restored.parameters);
 }
-int Model::forward(Graph &g, const Values &tokens, uint32_t batch,
-                   std::vector<int> &masters) {
-  const auto &c = config;
-  uint32_t R = batch * c.ctx;
-  std::vector<int> weights;
+std::vector<Tensor> Model::effective_weights(Kernel &kernel) const {
+  std::vector<Tensor> weights;
   for (const auto &p : parameters) {
-    int master = g.leaf(p.value, true);
-    masters.push_back(master);
     Values value;
     if (p.norm) {
       value = p.value;
@@ -343,10 +338,23 @@ int Model::forward(Graph &g, const Values &tokens, uint32_t batch,
         v = stored_fp16(v);
     } else
       value = quantize(p.value, p.rows, p.cols,
-                       p.name == "emb.weight" ? "4bit" : c.format, c.policy,
-                       c.delta)
+                       p.name == "emb.weight" ? "4bit" : config.format,
+                       config.policy, config.delta)
                   .value;
-    weights.push_back(g.identity(master, std::move(value)));
+    weights.push_back(kernel.leaf(std::move(value)));
+  }
+  return weights;
+}
+int Model::forward(Graph &g, const std::vector<Tensor> &effective,
+                   const Values &tokens, uint32_t batch,
+                   std::vector<int> &masters) {
+  const auto &c = config;
+  uint32_t R = batch * c.ctx;
+  std::vector<int> weights;
+  for (size_t i = 0; i < parameters.size(); ++i) {
+    int master = g.leaf(parameters[i].value, true);
+    masters.push_back(master);
+    weights.push_back(g.identity(master, effective[i]));
   }
   auto cmd = [&](Op op, uint32_t count, uint32_t rows, uint32_t cols,
                  uint32_t out = 0, uint32_t aux = 0) {
@@ -459,6 +467,9 @@ Json Model::step(Kernel &kernel, const Values &tokens, const Values &targets,
   std::vector<Values> collected(parameters.size());
   Values all_logits;
   double sum = 0;
+  // Quantized/fp16 weights are identical for every sample of the step: build
+  // and upload them once.
+  const auto effective = effective_weights(kernel);
   for (uint32_t sample = 0; sample < batch; ++sample) {
     Values sample_tokens(tokens.begin() + sample * config.ctx,
                          tokens.begin() + (sample + 1) * config.ctx);
@@ -466,25 +477,33 @@ Json Model::step(Kernel &kernel, const Values &tokens, const Values &targets,
                           targets.begin() + (sample + 1) * config.ctx);
     Graph g(kernel);
     std::vector<int> ids;
-    int logits = forward(g, sample_tokens, 1, ids);
+    int logits = forward(g, effective, sample_tokens, 1, ids);
     Command p{Op::CrossEntropy};
     p.count = config.ctx;
     p.rows = p.count;
     p.cols = config.vocab;
     int loss = g.apply(p, {logits, g.leaf(sample_targets)});
-    sum += std::accumulate(g[loss].value.begin(), g[loss].value.end(), 0.0);
+    g.backward(loss, 1.0f / float(tokens.size()));
+    // One synchronisation per sample: loss, master gradients, optional logits.
+    std::vector<Tensor> wanted{g[loss].value};
+    for (int id : ids)
+      wanted.push_back(g[id].grad);
+    if (details)
+      wanted.push_back(g[logits].value);
+    auto values = kernel.read(wanted);
+    sum += std::accumulate(values[0].begin(), values[0].end(), 0.0);
     if (!std::isfinite(sum))
       throw std::runtime_error("nonfinite loss");
-    g.backward(loss, 1.0f / float(tokens.size()));
     if (details)
-      all_logits.insert(all_logits.end(), g[logits].value.begin(),
-                        g[logits].value.end());
+      all_logits.insert(all_logits.end(), values.back().begin(),
+                        values.back().end());
     for (size_t i = 0; i < ids.size(); ++i) {
+      auto &grad = values[i + 1];
       if (collected[i].empty())
-        collected[i] = std::move(g[ids[i]].grad);
+        collected[i] = std::move(grad);
       else
         for (size_t j = 0; j < collected[i].size(); ++j)
-          collected[i][j] += g[ids[i]].grad[j];
+          collected[i][j] += grad[j];
     }
   }
   double norm_squared = 0;

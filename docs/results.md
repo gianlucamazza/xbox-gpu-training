@@ -164,7 +164,14 @@ Active package `GianlucaMazza.XgpuE0_0.1.0.24_x64__g0p5dcfz4t9z4`, source `6a124
 | Peak app memory | 91418624 bytes | Sourced; **non-debug Release** UWP App (AppContainer planning **~1 GB**) |
 | Estimate excludes | corpus upload and Python serialization/evaluation | Written in throughput.json |
 
-`kernel-parity.json` records `oracle: independent PyTorch operations and autograd` and `purpose: functional`. [notes.md](evidence/e0-20261001/notes.md) states this evidence **certifies functional execution, not language-model quality**. Do **not** copy `963.571` token/s into a peer or PPL cell. The companion accepted row16/row8log scientific E0. The first scientific campaign (package `0.1.0.24`) was stopped cleanly on 2026-10-01 at trunk step 455 of its first trial: its console job measured 329 GPU seconds in 3848 wall seconds. It is superseded by the GPU-resident E0.1 execution engine, which needs a new acceptance before a new campaign.
+`kernel-parity.json` records `oracle: independent PyTorch operations and autograd` and `purpose: functional`. [notes.md](evidence/e0-20261001/notes.md) states this evidence **certifies functional execution, not language-model quality**. Do **not** copy `963.571` token/s into a peer or PPL cell. The companion accepted row16/row8log scientific E0. See E0.1 below for the active engine.
+
+### E0.1 GPU-resident engine (PR #18)
+
+Package `0.1.0.28`, source `25f8bc39`, CI run 36839565773 — [notes](evidence/e0-20261001-resident/notes.md).
+On 2026-10-01 the first scientific campaign (package `0.1.0.24`, GPU busy ~8.6% of wall time) was stopped cleanly for the GPU-resident E0.1 engine. Package `0.1.0.28` passed the same acceptance, is bit-identical to `0.1.0.24` on every fixture and trained weight, and measured **10224 token/s** (×10.6) on the representative benchmark ([E0.1 evidence](evidence/e0-20261001-resident/throughput.json)). Campaign `e0-20261001T090514Z-4236fd` runs on it.
+Identity proof: [bit-identity.json](evidence/e0-20261001-resident/bit-identity.json). The speed-up is
+**functional only**, not quality / PPL, and is not a peer-comparison number.
 
 ### Still UNMEASURED
 
