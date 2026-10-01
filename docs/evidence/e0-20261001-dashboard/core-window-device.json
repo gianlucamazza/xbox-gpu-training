@@ -1,0 +1,9 @@
+{
+  "commit": "bfedcf833044f3acc69d76f05ae3fb07da96a9d7",
+  "hardware_gpu": false,
+  "package": "GianlucaMazza.XgpuE0_0.1.0.55_x64__g0p5dcfz4t9z4",
+  "probe": {
+    "core": true
+  },
+  "state": "diagnostic"
+}

@@ -31,9 +31,9 @@ class Claim:
     unique: bool = True  # forbid copies outside STATUS / ALLOWED
 
 
-ACTIVE = "e0-20261001-resident"
-PREVIOUS = "e0-20261001"
-PREVIOUS_ROW = "Previous engine, same benchmark (`0.1.0.24`)"
+ACTIVE = "e0-20261001-dashboard"
+PREVIOUS = "e0-20261001-resident"
+PREVIOUS_ROW = "Previous package, same benchmark (`0.1.0.28`)"
 CLAIMS = [
     Claim(f"{ACTIVE}/package-lineage.json", "package", "Package"),
     Claim(f"{ACTIVE}/package-lineage.json", "source_commit", "Installed source"),
@@ -43,7 +43,7 @@ CLAIMS = [
     Claim(f"{ACTIVE}/throughput.json", "peak_memory_bytes", "Peak app memory (same run)"),
     Claim(f"{ACTIVE}/kernel-parity.json", "case_count", "Independent GPU operation cases", unique=False),
     Claim(f"{ACTIVE}/acceptance.json", "len:fixtures", "Held-out model fixtures", unique=False),
-    Claim(f"{ACTIVE}/bit-identity.json", "acceptance_cases.compared", "Bit identity with `0.1.0.24`", unique=False),
+    Claim(f"{ACTIVE}/bit-identity.json", "acceptance_cases.compared", "Bit identity with `0.1.0.28`", unique=False),
     Claim(
         f"{ACTIVE}/lifecycle.json",
         "checkpoint_interruption.trunk_step",

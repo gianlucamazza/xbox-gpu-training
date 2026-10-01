@@ -1,0 +1,20 @@
+{
+  "version": "0.7.0",
+  "source_commit": "da05f7f",
+  "files": {
+    "__main__.py": "f996a438c6b2871ca9a8e1128f7feeab73cded8c4430ba51bef997cca2c97d3c",
+    "pack.py": "d9eacdacc87c088cbb38d468b886b00c82acb11e0cc22dc91c7119bb7fc1631a",
+    "blockmap.py": "abcc4d4827a82fae16b530a46b7590c715679ba88eec8310c48357091578f144",
+    "unpack.py": "15f58525fc0de743f27cd67b30de2d0fb4b7ab4e1306bdf2f76491794601c524",
+    "validate.py": "bf6846b660cf7921571d949c77a51f50d99ec0195980c576e2c5d29d89a878b5",
+    "bundle.py": "d4b0639ba0854d17b9fc6e790c59790aba92dfd31293798239401cbd0c604433",
+    "inspect.py": "4831937db4a043a42962b0134764054da8b8d26add1c38d2320d6d7646708b86",
+    "cli.py": "eabb7e7cde256284d4c1ead1dfe4eb2ec7727007916b94801dd5b3342b926e32",
+    "pack_core.py": "df35f9f2b8ca86929abe59194bd6fa9c64dbd8dc62e78a96d713ebb32c059661",
+    "__init__.py": "cb45f55e34d55f9ac2dc8617d716437ed00fd34e5c0b04310920418c7934d673",
+    "deploy.py": "b6a93d5dc766453925eeaad06e30d70701f775cd8e991ffea6169205bf4850ee"
+  },
+  "installed_sources_identical": true,
+  "coderabbit_covered_commit": "5058b5666fe7dc929ac8d18d06cbf660268b4b3d",
+  "review_result": "No actionable comments; actual incremental review completed 2026-10-01T14:51:09Z"
+}
