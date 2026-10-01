@@ -27,30 +27,36 @@ def git(source: Path, *args: str) -> bytes:
     return subprocess.run(["git", "-C", str(source), *args], check=True, capture_output=True).stdout
 
 
+def sync(source: Path, commit: str, dest: Path = DEST) -> dict:
+    """Copy the contract files of floppylm at commit into dest and return the pin."""
+    commit = git(source, "rev-parse", "--verify", commit + "^{commit}").decode().strip()
+    names = [
+        n
+        for n in git(source, "ls-tree", "-r", "--name-only", commit).decode().splitlines()
+        if n.startswith(PREFIXES) and n.endswith(".json")
+    ]
+    if not any(n.startswith("schemas/") for n in names):
+        raise SystemExit(f"{commit} has no schemas/")
+    shutil.rmtree(dest, ignore_errors=True)
+    files = {}
+    for name in names:
+        data = git(source, "show", f"{commit}:{name}")
+        target = dest / name.replace("tests/fixtures/contracts/", "fixtures/")
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(data)
+        files[str(target.relative_to(dest))] = hashlib.sha256(data).hexdigest()
+    pin = {"repository": "gianlucamazza/floppylm", "commit": commit, "files": files}
+    (dest / "PIN.json").write_text(json.dumps(pin, indent=1, sort_keys=True) + "\n")
+    return pin
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--source", type=Path, required=True, help="floppylm checkout")
     parser.add_argument("--commit", required=True, help="floppylm commit to pin")
     args = parser.parse_args()
-    commit = git(args.source, "rev-parse", "--verify", args.commit + "^{commit}").decode().strip()
-    names = [
-        n
-        for n in git(args.source, "ls-tree", "-r", "--name-only", commit).decode().splitlines()
-        if n.startswith(PREFIXES) and n.endswith(".json")
-    ]
-    if not any(n.startswith("schemas/") for n in names):
-        raise SystemExit(f"{commit} has no schemas/")
-    shutil.rmtree(DEST, ignore_errors=True)
-    files = {}
-    for name in names:
-        data = git(args.source, "show", f"{commit}:{name}")
-        target = DEST / name.replace("tests/fixtures/contracts/", "fixtures/")
-        target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_bytes(data)
-        files[str(target.relative_to(DEST))] = hashlib.sha256(data).hexdigest()
-    pin = {"repository": "gianlucamazza/floppylm", "commit": commit, "files": files}
-    (DEST / "PIN.json").write_text(json.dumps(pin, indent=1, sort_keys=True) + "\n")
-    print(f"pinned floppylm {commit[:12]}: {len(files)} files")
+    pin = sync(args.source, args.commit)
+    print(f"pinned floppylm {pin['commit'][:12]}: {len(pin['files'])} files")
     return 0
 
 

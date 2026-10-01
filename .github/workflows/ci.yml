@@ -21,6 +21,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install check dependencies
+        run: python -m pip install "jsonschema==4.26.0"
+
       - name: Verify required docs
         run: python3 scripts/check_required_docs.py
 
@@ -33,21 +41,15 @@ jobs:
       - name: Doc claims match evidence
         run: python3 scripts/check_doc_claims.py
 
-      - name: Doc check unit tests
+      - name: floppylm contracts (pinned schemas, fixtures, native evidence)
+        run: python3 scripts/check_floppylm_contracts.py
+
+      - name: Script unit tests
         run: python3 -m unittest discover -s scripts/tests
 
       - name: QAT/WSD schedule dry-run
         run: python3 scripts/validate_qat_schedule.py examples/qat-wsd-smoke.json --dry-run
 
-      - name: Set up Python for contract checks
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-
-      - name: floppylm contracts (pinned schemas, fixtures, native evidence)
-        run: |
-          python -m pip install "jsonschema==4.26.0"
-          python scripts/check_floppylm_contracts.py
 
   build-windows:
     name: build-windows
