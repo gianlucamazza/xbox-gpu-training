@@ -27,8 +27,14 @@ jobs:
       - name: Glossary claim check
         run: python3 scripts/check_glossary.py
 
-      - name: Relative Markdown links
+      - name: Relative Markdown links and anchors
         run: python3 scripts/check_relative_links.py
+
+      - name: Doc claims match evidence
+        run: python3 scripts/check_doc_claims.py
+
+      - name: Doc check unit tests
+        run: python3 -m unittest discover -s scripts/tests
 
       - name: QAT/WSD schedule dry-run
         run: python3 scripts/validate_qat_schedule.py examples/qat-wsd-smoke.json --dry-run

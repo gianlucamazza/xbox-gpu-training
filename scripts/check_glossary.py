@@ -24,7 +24,7 @@ SKIP_DIRS = {
     "vcpkg_installed",
 }
 
-TEXT_SUFFIXES = {".md", ".yml", ".yaml", ".hlsl", ".cpp", ".h", ".hpp", ".txt", ".py"}
+TEXT_SUFFIXES = {".md", ".yml", ".yaml", ".hlsl", ".cpp", ".h", ".hpp", ".txt", ".py", ".ps1", ".xml", ".idl"}
 
 # Exact claim-shaped phrases. Do not write these strings in the repo.
 FORBIDDEN = [
