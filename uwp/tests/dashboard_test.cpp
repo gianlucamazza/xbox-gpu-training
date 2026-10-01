@@ -101,6 +101,18 @@ int main() {
   for (auto [x, y] : xy)
     check(x >= 0 && x <= 600 && y >= 0 && y <= 200, "plot stays in the box");
 
+  check(!e0ui::smoothed(15) && e0ui::smoothed(16), "smoothing needs 16 points");
+  // warmup at 7, cooldown T at 70 (labels 60 wide) collide; cooldown 4T at 545
+  // would overflow a 560-wide chart.
+  const auto slots =
+      e0ui::place_labels({7, 70, 300, 545}, {60, 80, 90, 90}, 560);
+  check(slots[0].row == 0 && slots[1].row == 1, "colliding labels change row");
+  check(slots[2].row == 0, "a free row is reused");
+  check(slots[3].left + 90 <= 560 && slots[3].left < 545,
+        "an overflowing label moves left of its line");
+  for (const auto &s : slots)
+    check(s.left >= 0, "labels stay inside the chart");
+
   check(e0ui::format_count(10224282) == "10 224 282", "thousands separator");
   check(e0ui::format_duration(45) == "45 s", "seconds");
   check(e0ui::format_duration(2460) == "41 min", "minutes");

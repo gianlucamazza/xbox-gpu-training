@@ -94,6 +94,33 @@ std::vector<double> ema(const std::vector<Sample> &points, double alpha) {
   return out;
 }
 
+std::vector<LabelSlot> place_labels(const std::vector<float> &xs,
+                                    const std::vector<float> &widths,
+                                    float chart_w, float gap) {
+  std::vector<LabelSlot> slots;
+  std::vector<std::vector<std::pair<float, float>>> rows; // occupied spans
+  for (size_t i = 0; i < xs.size() && i < widths.size(); ++i) {
+    float left = xs[i] + gap;
+    if (left + widths[i] > chart_w)
+      left = std::max(0.0f, xs[i] - gap - widths[i]);
+    const float right = left + widths[i];
+    unsigned row = 0;
+    for (;; ++row) {
+      if (row == rows.size())
+        rows.emplace_back();
+      bool free = true;
+      for (auto [a, b] : rows[row])
+        if (left < b + gap && a < right + gap)
+          free = false;
+      if (free)
+        break;
+    }
+    rows[row].emplace_back(left, right);
+    slots.push_back({left, row});
+  }
+  return slots;
+}
+
 std::vector<std::pair<float, float>> plot(const std::vector<Sample> &points,
                                           const std::vector<double> &values,
                                           const Schedule &schedule, float w,

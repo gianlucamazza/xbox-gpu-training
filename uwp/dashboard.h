@@ -47,6 +47,22 @@ private:
 // Exponential moving average over the stored points (display smoothing only).
 std::vector<double> ema(const std::vector<Sample> &points, double alpha = 0.2);
 
+// An EMA over few points lags far behind the data, so the chart shows the
+// smoothed line only once there are enough points to smooth.
+inline constexpr size_t kMinSmoothedPoints = 16;
+inline bool smoothed(size_t points) { return points >= kMinSmoothedPoints; }
+
+// Marker label placement inside a chart of width `chart_w`: each label sits
+// right of its line, or left of it when it would overflow, on the first row
+// where it overlaps no earlier label.
+struct LabelSlot {
+  float left = 0;
+  unsigned row = 0;
+};
+std::vector<LabelSlot> place_labels(const std::vector<float> &xs,
+                                    const std::vector<float> &widths,
+                                    float chart_w, float gap = 4);
+
 // Map samples to a w x h box: x = trunk step over the last branch end, y =
 // loss over [min, max] of the history with 5% padding; top is high loss.
 std::vector<std::pair<float, float>> plot(const std::vector<Sample> &points,

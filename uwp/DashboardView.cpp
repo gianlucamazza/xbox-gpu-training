@@ -4,6 +4,7 @@
 #include <cctype>
 #include <chrono>
 #include <cstdio>
+#include <limits>
 
 namespace xgpu {
 namespace {
@@ -133,13 +134,13 @@ DashboardView::DashboardView(std::filesystem::path local,
   smooth_.Stroke(brush(kAccent));
   smooth_.StrokeThickness(3);
   loss_lo_ = text(12, kMuted);
-  auto axis = text(12, kMuted);
-  axis.Text(L"trunk training loss (EMA bold, raw faint) · x = step over the "
-            L"full schedule");
+  axis_ = text(12, kMuted);
+  axis_.Text(L"trunk training loss · x = step over the "
+             L"full schedule");
   chart_area.Children().Append(loss_hi_);
   chart_area.Children().Append(chart_);
   chart_area.Children().Append(loss_lo_);
-  chart_area.Children().Append(axis);
+  chart_area.Children().Append(axis_);
   body.Children().Append(chart_area);
   C::StackPanel metrics;
   metrics.Margin({32, 0, 0, 0});
@@ -228,7 +229,14 @@ void DashboardView::show_job(const std::filesystem::path &job) {
 
 void DashboardView::draw_markers() {
   chart_.Children().Clear();
-  auto marker = [&](uint64_t step, wchar_t const *label) {
+  const std::pair<uint64_t, wchar_t const *> markers[] = {
+      {schedule_->warmup, L"warmup"},
+      {schedule_->cooldown_starts[0], L"cooldown T"},
+      {schedule_->cooldown_starts[1], L"cooldown 2T"},
+      {schedule_->cooldown_starts[2], L"cooldown 4T"}};
+  std::vector<float> xs, widths;
+  std::vector<C::TextBlock> tags;
+  for (const auto &[step, label] : markers) {
     const float x = float(double(step) / double(schedule_->ends[2]) * kChartW);
     S::Line line;
     line.X1(x);
@@ -244,14 +252,19 @@ void DashboardView::draw_markers() {
     chart_.Children().Append(line);
     auto tag = text(12, kMuted);
     tag.Text(label);
-    C::Canvas::SetLeft(tag, x + 4);
-    C::Canvas::SetTop(tag, 2);
-    chart_.Children().Append(tag);
-  };
-  marker(schedule_->warmup, L"warmup");
-  marker(schedule_->cooldown_starts[0], L"cooldown T");
-  marker(schedule_->cooldown_starts[1], L"cooldown 2T");
-  marker(schedule_->cooldown_starts[2], L"cooldown 4T");
+    tag.Measure({std::numeric_limits<float>::infinity(),
+                 std::numeric_limits<float>::infinity()});
+    xs.push_back(x);
+    widths.push_back(tag.DesiredSize().Width);
+    tags.push_back(tag);
+  }
+  // Labels of nearby markers stack in rows and stay inside the chart.
+  const auto slots = e0ui::place_labels(xs, widths, kChartW);
+  for (size_t i = 0; i < tags.size(); ++i) {
+    C::Canvas::SetLeft(tags[i], slots[i].left);
+    C::Canvas::SetTop(tags[i], 2 + 16.0 * slots[i].row);
+    chart_.Children().Append(tags[i]);
+  }
   chart_.Children().Append(raw_);
   chart_.Children().Append(smooth_);
 }
@@ -378,15 +391,24 @@ void DashboardView::draw_chart() {
   raw_values.reserve(points.size());
   for (const auto &p : points)
     raw_values.push_back(p.loss);
-  M::PointCollection raw, smooth;
+  // With few points the EMA lags far behind the data: draw the raw curve as the
+  // main line until there is enough to smooth.
+  const bool smoothing = e0ui::smoothed(points.size());
+  const auto main_values = smoothing ? e0ui::ema(points) : raw_values;
+  M::PointCollection raw, main;
+  if (smoothing)
+    for (auto [x, y] :
+         e0ui::plot(points, raw_values, *schedule_, kChartW, kChartH))
+      raw.Append({x, y});
   for (auto [x, y] :
-       e0ui::plot(points, raw_values, *schedule_, kChartW, kChartH))
-    raw.Append({x, y});
-  for (auto [x, y] :
-       e0ui::plot(points, e0ui::ema(points), *schedule_, kChartW, kChartH))
-    smooth.Append({x, y});
+       e0ui::plot(points, main_values, *schedule_, kChartW, kChartH))
+    main.Append({x, y});
   raw_.Points(raw);
-  smooth_.Points(smooth);
+  smooth_.Points(main);
+  axis_.Text(smoothing
+                 ? L"trunk training loss (EMA bold, raw faint) · x = step "
+                   L"over the full schedule"
+                 : L"trunk training loss · x = step over the full schedule");
   if (points.empty()) {
     loss_hi_.Text(L"");
     loss_lo_.Text(L"");
