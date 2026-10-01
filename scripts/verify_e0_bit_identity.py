@@ -118,7 +118,7 @@ def main():
         and all(checkpoints.values())
         and all(benchmark.values())
         and shader
-        and old["last_loss"] == new["last_loss"]
+        and canonical(old["last_loss"]) == canonical(new["last_loss"])
     )
     report = {
         "schema": "xbox-gpu-training.e0.bit-identity.v1",
