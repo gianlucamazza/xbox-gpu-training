@@ -189,7 +189,7 @@ void verify_orphan(const std::filesystem::path &inbox, const Json &owner,
       owner.at("package") != worker.at("package") ||
       owner.at("commit") != worker.at("commit") ||
       owner.at("worker_id").get<std::string>().empty() ||
-      sha256_bytes(payload) != owner.at("job_sha256"))
+      sha256_bytes(payload) != owner.at("job_sha256").get<std::string>())
     throw std::runtime_error("orphan_owner_binding_mismatch");
   Json job = Json::parse(payload);
   if (job.at("job_id") != id || job.at("schema") != "floppylm.e0.job.v1" ||
@@ -313,7 +313,7 @@ std::filesystem::path persist_claim(const std::filesystem::path &inbox,
     if (!stream)
       throw std::runtime_error("claim_snapshot_write_failed");
   }
-  if (sha256_file(path) != owner.at("job_sha256"))
+  if (sha256_file(path) != owner.at("job_sha256").get<std::string>())
     throw std::runtime_error("claim_snapshot_hash_mismatch");
   return path;
 }
