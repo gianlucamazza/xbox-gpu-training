@@ -104,8 +104,12 @@ that old binding. On startup, reconciliation checks ownership, package/commit,
 submission hash, checkpoint descriptor and model/stream identity, plus all
 published branch hashes. Verified abandoned work becomes `interrupted`; failed
 verification is recorded as an integrity failure. Completed results are untouched.
-A leftover `.ready` beside a reconciled claim is quarantined; startup never
-executes a pending replacement automatically. Pre-admission rejection preserves
+Leftover fixture, kernel and optimizer claims that already published
+`<id>.actual.json` are skipped; they never receive a fabricated
+`results/<id>/status.json`. One malformed `.claimed` stem is skipped and does
+not abort the rest of the pass. A leftover `.ready` beside a reconciled claim
+is quarantined; startup never executes a pending replacement automatically.
+Pre-admission rejection preserves
 existing status bytes and writes `<id>.rejected.json` with the submitted hash.
 Nothing is automatically enqueued. An explicit resume requires verified interrupted
 state and an unchanged scientific recipe; published branches are not recomputed.

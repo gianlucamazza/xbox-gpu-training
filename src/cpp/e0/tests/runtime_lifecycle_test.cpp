@@ -223,8 +223,28 @@ int main(int argc, char **argv) {
     fs::remove(inbox / "trial.owner.json");
     e0::atomic_json(result / "status.json", status);
     check(reconcile().at("state") == "failed", "missing claim fails closed");
+    // A leftover successful fixture publishes .actual.json and never writes
+    // results/<id>/status.json. Reconcile must not fabricate a failed orphan
+    // or abort the rest of the pass when mixed with a bad stem and a crash.
+    raw(inbox / "fixture-ok.claimed", "");
+    e0::atomic_json(inbox / "fixture-ok.actual.json",
+                    Json{{"schema", "floppylm.e0.fixture.report.v1"},
+                         {"ok", true}});
+    e0::atomic_json(inbox / "fixture-ok.owner.json",
+                    Json{{"schema", "floppylm.claim.v1"},
+                         {"worker_id", "old-worker"},
+                         {"package", "package"},
+                         {"commit", "commit"},
+                         {"job_id", "fixture-ok"},
+                         {"job_sha256", std::string(64, 'a')},
+                         {"job_payload", "{}"}});
+    raw(inbox / "bad.id.claimed", "");
     raw(inbox / "unstarted.claimed", "");
     e0::reconcile_claims(inbox, live.snapshot());
+    check(!fs::exists(inbox / "results" / "fixture-ok" / "status.json"),
+          "successful fixture leftover is not a failed orphan");
+    check(!fs::exists(inbox / "results" / "bad.id"),
+          "invalid claim id is skipped");
     check(e0::read_json(inbox / "results" / "unstarted" / "status.json")
                   .at("state") == "failed",
           "claim-before-owner crash fails with durable diagnostic");

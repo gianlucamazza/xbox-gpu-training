@@ -319,31 +319,37 @@ std::filesystem::path persist_claim(const std::filesystem::path &inbox,
 }
 void reconcile_claims(const std::filesystem::path &inbox, const Json &worker) {
   for (const auto &entry : std::filesystem::directory_iterator(inbox)) {
-    if (entry.path().extension() != ".claimed")
-      continue;
-    const auto id = entry.path().stem().string();
-    valid_id(id);
-    const auto pending_ready = inbox / (id + ".ready");
-    if (std::filesystem::exists(pending_ready)) {
-      const auto quarantine =
-          inbox / (id + ".ready.quarantined." +
-                   worker.at("worker_id").get<std::string>());
-      std::filesystem::rename(pending_ready, quarantine);
-    }
-    const auto result = inbox / "results" / id;
-    Json status;
+    std::string id;
     try {
-      status = read_json(result / "status.json");
-    } catch (...) {
-    }
-    // A completed record is immutable even when old lifecycle metadata is
-    // absent.
-    if (status.is_object() && status.value("state", "") == "completed")
-      continue;
-    if (status.is_object() && status.value("state", "") == "failed" &&
-        !recoverable_fault(status))
-      continue;
-    try {
+      if (entry.path().extension() != ".claimed")
+        continue;
+      id = entry.path().stem().string();
+      valid_id(id);
+      const auto pending_ready = inbox / (id + ".ready");
+      if (std::filesystem::exists(pending_ready)) {
+        const auto quarantine =
+            inbox / (id + ".ready.quarantined." +
+                     worker.at("worker_id").get<std::string>());
+        std::filesystem::rename(pending_ready, quarantine);
+      }
+      const auto result = inbox / "results" / id;
+      Json status;
+      try {
+        status = read_json(result / "status.json");
+      } catch (...) {
+      }
+      // Fixtures, kernels and optimizer publish .actual.json and never write
+      // results/<id>/status.json. Their leftover .claimed files are success.
+      if (!status.is_object() &&
+          std::filesystem::exists(inbox / (id + ".actual.json")))
+        continue;
+      // A completed record is immutable even when old lifecycle metadata is
+      // absent.
+      if (status.is_object() && status.value("state", "") == "completed")
+        continue;
+      if (status.is_object() && status.value("state", "") == "failed" &&
+          !recoverable_fault(status))
+        continue;
       auto owner = read_json(inbox / (id + ".owner.json"));
       // A crash after publishing a replacement owner but before its first
       // result must retain the previous submission's immutable binding.
@@ -362,7 +368,24 @@ void reconcile_claims(const std::filesystem::path &inbox, const Json &worker) {
       verify_orphan(inbox, owner, worker, status);
       if (read_json(inbox / (id + ".owner.json")) != owner)
         atomic_json(inbox / (id + ".owner.json"), owner);
+      std::filesystem::create_directories(result);
+      atomic_json(result / "status.json", status);
     } catch (const std::exception &error) {
+      if (id.empty())
+        continue;
+      try {
+        valid_id(id);
+      } catch (...) {
+        continue;
+      }
+      if (std::filesystem::exists(inbox / (id + ".actual.json")))
+        continue;
+      Json status = Json::object();
+      const auto result = inbox / "results" / id;
+      try {
+        status = read_json(result / "status.json");
+      } catch (...) {
+      }
       if (!status.is_object())
         status = Json::object();
       status["state"] = "failed";
@@ -371,9 +394,9 @@ void reconcile_claims(const std::filesystem::path &inbox, const Json &worker) {
           std::string("orphan_verification_failed: ") + error.what();
       // Integrity failures cannot inherit a retryable GPU classification.
       status.erase("runtime_fault");
+      std::filesystem::create_directories(result);
+      atomic_json(result / "status.json", status);
     }
-    std::filesystem::create_directories(result);
-    atomic_json(result / "status.json", status);
   }
 }
 } // namespace e0
