@@ -19,7 +19,7 @@ Platform facts (Microsoft/Xbox public documentation, not our benches) live under
 | Fase 5: QAT/WSD schedule + `--qat-smoke --steps 16` | Invent quality curves; skip cooldown isolation; add CUDA |
 | Fase 6: [docs/console.md](console.md) deploy / PIX / `BLOCKED` table | Invent Series S\|X tok/s; claim GDKX / ID@Xbox; treat DirectML as trainer |
 
-Fase 0–5 Windows work is **not** gated on a Dev Mode console. Console validation is Fase 6: [docs/console.md](console.md), [blockers-fase6-validation.md](platform/blockers-fase6-validation.md). This lane reports **`BLOCKED: no console`**.
+Fase 0–5 Windows work is **not** gated on a Dev Mode console. Console validation is Fase 6: [docs/console.md](console.md), [blockers-fase6-validation.md](platform/blockers-fase6-validation.md). The separate E0 UWP lane has measured Series S evidence; see console status.
 
 ## Toolchain
 
@@ -74,7 +74,7 @@ Upstream releases: [microsoft/DirectXShaderCompiler](https://github.com/microsof
 
 Fase 0 documents the install. This repository does **not** include a PIX capture, a `.wpix` artifact, or a timing table. Do not invent one.
 
-Fase 6 checklist: [docs/console.md](console.md#pix-capture-checklist). Status: **`BLOCKED: no console`** — no Dev Mode capture, no `.wpix`. PIX on Windows install notes are **not** a console timing result.
+Fase 6 checklist: [docs/console.md](console.md#pix-capture-checklist). PIX remains unmeasured: no Dev Mode capture or `.wpix`. PIX on Windows install notes are **not** a console timing result.
 
 ## CMake (do not pin Visual Studio 2022)
 
@@ -269,7 +269,7 @@ REM Device Portal / Dev Mode deploy — exact cmd TBD in docs/console.md
 REM PIX: capture one compute shader dispatch on console if tooling allows
 ```
 
-**Not run on this host.** Verdict: `BLOCKED: no console` (no Dev Mode kit; GDKX / ID@Xbox not claimed). Empty metric cells stay empty. Do **not** assume Game designation for an App package. The **non-debug** package is the memory gate.
+Historical Win32 host workloads remain unmeasured on console. The separate E0 UWP lane is measured in [console.md](console.md); its results do not validate these host workloads. Do **not** assume Game designation for an App package. The **non-debug** package is the memory gate.
 
 ## Docs lint
 
@@ -293,4 +293,4 @@ python3 scripts/validate_qat_schedule.py examples/qat-wsd-smoke.json --dry-run
 | [directml-scope.md](platform/directml-scope.md) | DirectML is not the trainer |
 | [series-s-vs-x.md](platform/series-s-vs-x.md) | Public SKU specs, not our benches |
 | [blockers-fase6-validation.md](platform/blockers-fase6-validation.md) | Why console tables wait |
-| [console.md](console.md) | Fase 6 deploy / PIX / `BLOCKED: no console` table |
+| [console.md](console.md) | Fase 6 deployment, measured E0 and pending targets |

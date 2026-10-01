@@ -56,7 +56,7 @@ No tok/s or quality numbers until Fase 6 measures them on Dev Mode hardware (or 
 - [x] Chunk stream + 2-slot host double buffer ([src/cpp/stream_buffer.cpp](src/cpp/stream_buffer.cpp)). Logical corpus is never allocated as one tensor.
 - [x] Stress fixture [benchmarks/fixtures/stream_stress.json](benchmarks/fixtures/stream_stress.json) + `xbox_gpu_host --stream-stress --budget-mb 1024`.
 - [x] App **~1 GB** (1024 MiB) planning budget documented; Creators **Game ~5 GB** (5120 MiB) documented as the **other** designation only — not assumed for App packages. Contract: [docs/memory-budget.md](docs/memory-budget.md). SoT: [docs/platform/uwp-resources.md](docs/platform/uwp-resources.md) (debugger can mask OOM; non-debug is the gate).
-- [x] Peak working-set printed from the host that actually ran. Linux desktop (this implementation host): **36.08 MiB** (`VmHWM`) vs App planning 1024 MiB — under budget, no OOM. **Console AppContainer UNVALIDATED** — no invented Series S|X numbers.
+- [x] Historical desktop peak working-set printed from the host that actually ran. Linux desktop (this implementation host): **36.08 MiB** (`VmHWM`) vs App planning 1024 MiB — under budget, no OOM. **Console AppContainer UNVALIDATED** — no invented Series S|X numbers.
 - [x] No new HLSL kernel. GPU path (when D3D12 exists) is ping-pong `CopyBufferRegion` of two tiles; otherwise `gpu_double_buffer: BLOCKED: no D3D12 device`.
 - Status: **Fase 4 implementation**. Execution: [docs/execution-plan.md](docs/execution-plan.md#fase-4--memory-streaming). Label: `memory`, `phase-4`.
 
@@ -69,15 +69,33 @@ No tok/s or quality numbers until Fase 6 measures them on Dev Mode hardware (or 
 - [x] Default FakeQuant **ternary absmean** + STE (ADR 0002). 2-bit / 4-bit are **host** midrise FakeQuant (`--bit-width 2|4`); Fase 3 stubs are no longer no-ops. **No new HLSL** — GPU 2/4-bit FakeQuant not dispatched.
 - Status: **Fase 5 implementation**. Execution: [docs/execution-plan.md](docs/execution-plan.md#fase-5--qat-ternary24-bit--wsd). GPU path without D3D12: `BLOCKED: no D3D12 device`. No quality / tok/s / Series numbers. Label: `research`, `phase-5`.
 
-## Phase 6 — Series S|X Dev Mode validation; speed/quality vs CPU-only
+## Phase 6 — Series S|X Dev Mode validation
 
-- [x] Deploy notes + PIX checklist scaffolding: [docs/console.md](docs/console.md) (pointer in [docs/setup.md](docs/setup.md)). Win32 host is **not** a UWP package; no AppX was deployed.
-- [x] Results table present with explicit **`BLOCKED: no console`** (empty metric cells). Reason: **no Dev Mode kit** in this lane; **GDKX / ID@Xbox not claimed**. No invented tok/s or Series benches.
-- [ ] Real Series S|X Dev Mode benches — **UNVALIDATED**. No kit; table not filled from hardware. Console validation is **not** complete.
-- [ ] CPU-only vs console comparison — not filled (both sides not measured on the same kit).
-- Status: **`BLOCKED: no console`**. Honest checkpoint (stop for a human with a kit). Known blockers stay accurate: [docs/platform/blockers-fase6-validation.md](docs/platform/blockers-fase6-validation.md) (UWP memory + debugger mask; no DirectML-as-trainer SoT; public GDK Windows-only; Dev Mode ≠ GDKX). Public SKU specs only: [docs/platform/series-s-vs-x.md](docs/platform/series-s-vs-x.md). Execution: [docs/execution-plan.md](docs/execution-plan.md#fase-6--series-sx-dev-mode-validation). Label: `phase-6`, `benchmark`.
+- [x] Separate E0 x64 UWP Release package built, signed with verified CI payloads,
+  installed and exercised on retail Series S in Dev Mode.
+- [x] Independent operation/model parity, identical-input optimizer, exact resume,
+  real suspension and worker reuse validated on the current package.
+- [x] Representative throughput, transfers and non-debug app memory measured.
+  [Evidence](docs/evidence/e0-20261001/notes.md), [console status](docs/console.md).
+- [ ] Full scientific E0 campaign and reserved final test: companion execution pending completion.
+- [ ] Series X, matched CPU comparison and PIX captures: no measurements available.
 
-## Phase 7 — publish results (paper/blog), public BitNet/peer comparison
+The Phase 0–5 entries above document the original desktop diagnostic lane. They
+do not establish console validation of those separate host workloads. The active
+E0 UWP trainer is governed by ADR 0003/0004; its measured results are listed here.
 
-- `docs/results.md`, figure placeholders, honest limitations, companion link to FloppyLM CPU path.
-- No fabricated numbers.
+## Phase 7 — Publication
+
+- [x] Publish functional evidence, exact package lineage, baseline failures and
+  limits in [docs/results.md](docs/results.md).
+- [ ] Publish scientific E0 selection, paired statistics, exclusions and costs
+  after the companion campaign passes all gates and the single final test finishes.
+- [ ] Peer/BitNet comparison or paper: requires a preregistered matched comparison;
+  no such result is claimed by the functional acceptance.
+
+## Completion sequence (2026-10-01)
+
+1. Merge the reviewed E0 trainer and keep validated source/package binding.
+2. Run the companion's sequential row16/row8log campaign with frozen hashes.
+3. Diagnose any failed native job; explicitly recover bound interrupted trials.
+4. Publish generated scientific results when available; keep unmeasured targets pending.

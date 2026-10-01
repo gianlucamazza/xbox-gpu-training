@@ -1,0 +1,110 @@
+[
+  {
+    "format": "ternary",
+    "policy": "row16",
+    "zero_row_scale": 0.0,
+    "reconstructed_row": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "ok": true
+  },
+  {
+    "format": "ternary",
+    "policy": "row8log",
+    "zero_row_scale": 0.0,
+    "reconstructed_row": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "ok": true
+  },
+  {
+    "format": "ternary",
+    "policy": "tensor16",
+    "zero_row_scale": 1.5,
+    "reconstructed_row": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "ok": false
+  },
+  {
+    "format": "2bit",
+    "policy": "row16",
+    "zero_row_scale": 0.0,
+    "reconstructed_row": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "ok": true
+  },
+  {
+    "format": "2bit",
+    "policy": "row8log",
+    "zero_row_scale": 0.0,
+    "reconstructed_row": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "ok": true
+  },
+  {
+    "format": "2bit",
+    "policy": "tensor16",
+    "zero_row_scale": 0.85107421875,
+    "reconstructed_row": [
+      0.425537109375,
+      0.425537109375,
+      0.425537109375,
+      0.425537109375
+    ],
+    "ok": false
+  },
+  {
+    "format": "4bit",
+    "policy": "row16",
+    "zero_row_scale": 0.0,
+    "reconstructed_row": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "ok": true
+  },
+  {
+    "format": "4bit",
+    "policy": "row8log",
+    "zero_row_scale": 0.0,
+    "reconstructed_row": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "ok": true
+  },
+  {
+    "format": "4bit",
+    "policy": "tensor16",
+    "zero_row_scale": 0.31494140625,
+    "reconstructed_row": [
+      0.157470703125,
+      0.157470703125,
+      0.157470703125,
+      0.157470703125
+    ],
+    "ok": false
+  }
+]

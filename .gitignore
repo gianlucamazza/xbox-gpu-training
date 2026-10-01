@@ -107,3 +107,7 @@ venv/
 # Logs
 *.log
 logs/
+
+# UWP generated packaging/metadata
+uwp/Generated Files/
+uwp/AppPackages/

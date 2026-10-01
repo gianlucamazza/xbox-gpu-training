@@ -91,7 +91,7 @@ This cloud / Linux / GitHub-hosted `windows-latest` path has **no Dev Mode conso
 - **marks console App ~1 GB / Game ~5 GB as UNVALIDATED**
 - does **not** invent Series S|X numbers
 
-Fase 6 is the lane that may fill a console table or write `BLOCKED: no console`. This implementation reports **`BLOCKED: no console`**: [docs/console.md](console.md). Blockers SoT: [blockers-fase6-validation.md](platform/blockers-fase6-validation.md).
+Fase 6 is the lane that may fill a console table or write `BLOCKED: no console`. This historical desktop stress fixture is unmeasured on console; current E0 measurements are separate: [docs/console.md](console.md). Blockers SoT: [blockers-fase6-validation.md](platform/blockers-fase6-validation.md).
 
 ## VRAM
 
@@ -104,4 +104,4 @@ Xbox App Mode is **not** full title GPU ([dx12-hlsl-compute.md](platform/dx12-hl
 - [docs/adr/0001-architecture.md](adr/0001-architecture.md) — do not assume the master fits in App RAM
 - [docs/setup.md](setup.md) — how to run the host
 - [docs/execution-plan.md](execution-plan.md) — Fase 4 playbook
-- [docs/console.md](console.md) — Fase 6 `BLOCKED: no console` table
+- [docs/console.md](console.md) — Fase 6 console evidence and pending targets

@@ -1,0 +1,6 @@
+namespace Xgpu {
+  [default_interface]
+  runtimeclass App : Windows.UI.Xaml.Application {
+    App();
+  }
+}

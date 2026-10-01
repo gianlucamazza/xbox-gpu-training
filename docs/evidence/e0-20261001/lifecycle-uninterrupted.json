@@ -1,0 +1,58 @@
+{
+ "adapter": "SraKmd_arden",
+ "branches": [
+  {
+   "artifact": {
+    "bytes": 311964,
+    "path": "results/lifecycle-20260930T235038Z-b5beee-full/branch-512.json",
+    "sha256": "d7a4754f70f3e82611305ad0d4871ca05cdd3aa16370851b0ed9584814e0067e"
+   },
+   "cooldown_seconds": 7.338912728,
+   "cooldown_start": 461,
+   "cooldown_steps": 51,
+   "end_step": 512,
+   "tokens_seen": 8192
+  },
+  {
+   "artifact": {
+    "bytes": 310825,
+    "path": "results/lifecycle-20260930T235038Z-b5beee-full/branch-1024.json",
+    "sha256": "f62d6cbeb46059144c9e49e570de9d8596a904b4667b05c025232481d0a70a0e"
+   },
+   "cooldown_seconds": 14.89936837,
+   "cooldown_start": 922,
+   "cooldown_steps": 102,
+   "end_step": 1024,
+   "tokens_seen": 16384
+  },
+  {
+   "artifact": {
+    "bytes": 310067,
+    "path": "results/lifecycle-20260930T235038Z-b5beee-full/branch-2048.json",
+    "sha256": "e6b7785fc5fc72249cf8b5abc2de8d1ab894bc247e57f479cf7ffde974147918"
+   },
+   "cooldown_seconds": 29.72405229,
+   "cooldown_start": 1844,
+   "cooldown_steps": 204,
+   "end_step": 2048,
+   "tokens_seen": 32768
+  }
+ ],
+ "checkpoint": {
+  "bytes": 1010073,
+  "path": "results/lifecycle-20260930T235038Z-b5beee-full/checkpoint.json",
+  "sha256": "9f41516d6ce14a9b0ca5889b33575edb28232da46000e76b57c6791819da23c5"
+ },
+ "dispatches": 268522,
+ "gpu_seconds": 2.783614716792297,
+ "hardware_gpu": true,
+ "job_id": "lifecycle-20260930T235038Z-b5beee-full",
+ "job_sha256": "992a4bda411393121c71c308e46fd54137acd677fd4ab584d80c191cd87438b4",
+ "last_loss": 0.1232983342811167,
+ "peak_memory_bytes": 21983232,
+ "schema": "floppylm.e0.result.v1",
+ "state": "completed",
+ "transfer_bytes": 3244238784,
+ "trunk_step": 1844,
+ "wall_seconds": 321.237586318
+}

@@ -48,7 +48,15 @@ Playbook Cursor: [docs/execution-plan.md](docs/execution-plan.md). Tabella compl
 
 ### Stato attuale
 
-Fase 6: **`BLOCKED: no console`** — nessun kit Dev Mode in questa lane; GDKX / ID@Xbox non rivendicati. Pagina: [docs/console.md](docs/console.md) (deploy / PIX / tabella vuota). I quattro blocker restano veri: [docs/platform/blockers-fase6-validation.md](docs/platform/blockers-fase6-validation.md). Fase 5 resta il massimo host (`--qat-smoke --steps 16`). Setup: [docs/setup.md](docs/setup.md). **Nessun tok/s o banco Series S|X inventato.** xllama **non** modificato. Il smoke `benchmarks/run_smoke.py` resta stub.
+The separate E0 UWP backend passed 52 independent operation cases, 36 model
+fixtures, identical-input AdamW, exact recovery and real suspension on a retail
+**Series S**. The representative synthetic trial measured **964 token/s**,
+**87.2 MiB** peak app memory and
+153.0 seconds wall time. Wrong identities and oversized
+dispatches are rejected without breaking subsequent GPU work.
+[Current evidence and exact package lineage](docs/evidence/e0-20261001/notes.md).
+The companion accepted row16/row8log scientific E0; the full campaign and final
+test still need to finish. These functional results make no quality claim.
 
 ### Come contribuire
 
@@ -89,7 +97,10 @@ Cursor playbook: [docs/execution-plan.md](docs/execution-plan.md). Full table: [
 
 ### Current status
 
-Fase 6: **`BLOCKED: no console`** — no Dev Mode kit in this lane; GDKX / ID@Xbox not claimed. Page: [docs/console.md](docs/console.md) (deploy / PIX / empty table). The four blockers stay accurate: [docs/platform/blockers-fase6-validation.md](docs/platform/blockers-fase6-validation.md). Fase 5 remains the host ceiling (`--qat-smoke --steps 16`). Setup: [docs/setup.md](docs/setup.md). **No invented tok/s or Series S|X benches.** xllama **not** modified. `benchmarks/run_smoke.py` remains a stub.
+The E0 UWP backend has measured Series S functional evidence, including exact
+runner recovery and a real suspension lifecycle. The companion protocol now
+selects row16/row8log for scientific E0. Quality results remain pending campaign
+completion. [Package, results and limits](docs/evidence/e0-20261001/notes.md).
 
 ### How to contribute
 
@@ -109,7 +120,7 @@ Fase 6: **`BLOCKED: no console`** — no Dev Mode kit in this lane; GDKX / ID@Xb
 | `docs/ste-adamw.md` | Fase 3 FakeQuant / STE / AdamW contract + grad-check tolerances |
 | `docs/memory-budget.md` | Fase 4 App ~1 GB / Game ~5 GB streaming contract |
 | `docs/qat-wsd.md` | Fase 5 QAT bit-widths + WSD + isolated cooldowns (N=16) |
-| `docs/console.md` | Fase 6 Dev Mode deploy / PIX / `BLOCKED: no console` table |
+| `docs/console.md` | Fase 6 measured E0 console results and pending targets |
 | `docs/`, `docs/adr/` | Architecture + ADRs (`0001`, `0002`) |
 | `docs/platform/` | Public Xbox / Dev Mode / GDK / UWP fact packs |
 | `docs/execution-plan.md` | Cursor phase playbook |
