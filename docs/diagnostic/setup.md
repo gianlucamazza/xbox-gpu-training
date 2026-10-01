@@ -136,7 +136,7 @@ Do **not** invent a dispatch log when the process never created a device.
 | Piece | Path |
 | --- | --- |
 | Shader | [`src/hlsl/matmul.hlsl`](../../src/hlsl/matmul.hlsl) — `CSMain` / `CSMainFP32` / `CSMainFP16` |
-| CPU reference | [`src/cpp/cpu_matmul.*`](../../src/cpp/cpu_matmul.h) — portable GEMM; ggml not vendored ([docs/ggml-baseline.md](ggml-baseline.md)) |
+| CPU reference | [`src/cpp/cpu_matmul.*`](../../src/cpp/cpu_matmul.h) — portable GEMM; ggml not vendored ([docs/diagnostic/ggml-baseline.md](ggml-baseline.md)) |
 | Harness | `xbox_gpu_host --bench matmul --out benchmarks\results\matmul.csv` |
 
 ```bat
@@ -161,7 +161,7 @@ Tolerances (chosen TBD): FP32 max-abs `1e-4` / max-rel `1e-3`; FP16 max-abs `5e-
 | Shaders | [`src/hlsl/rmsnorm.hlsl`](../../src/hlsl/rmsnorm.hlsl), [`rope.hlsl`](../../src/hlsl/rope.hlsl), [`flp2_decode.hlsl`](../../src/hlsl/flp2_decode.hlsl), [`flp2_forward.hlsl`](../../src/hlsl/flp2_forward.hlsl) |
 | CPU reference | [`src/cpp/cpu_flp2.*`](../../src/cpp/cpu_flp2.h) |
 | Fixture | [`benchmarks/fixtures/tiny_flp2.json`](../../benchmarks/fixtures/tiny_flp2.json) |
-| Contract | [`docs/flp2-forward.md`](flp2-forward.md) |
+| Contract | [`docs/diagnostic/flp2-forward.md`](flp2-forward.md) |
 
 ```bat
 dxc -T cs_6_0 -E CSMain -Fo build\rmsnorm.cso      src\hlsl\rmsnorm.hlsl
@@ -185,7 +185,7 @@ Tolerance (chosen TBD): max-abs `1e-5` / max-rel `1e-4`. Binary FLP2 envelope is
 | Piece | Path |
 | --- | --- |
 | Mapping | [`docs/adr/0002-ste-qat-mapping.md`](../adr/0002-ste-qat-mapping.md) |
-| Contract | [`docs/ste-adamw.md`](ste-adamw.md) |
+| Contract | [`docs/diagnostic/ste-adamw.md`](ste-adamw.md) |
 | Shaders | [`src/hlsl/fakequant_ternary.hlsl`](../../src/hlsl/fakequant_ternary.hlsl), [`matmul_grad.hlsl`](../../src/hlsl/matmul_grad.hlsl), [`relu2_grad.hlsl`](../../src/hlsl/relu2_grad.hlsl), [`ste_backward.hlsl`](../../src/hlsl/ste_backward.hlsl) |
 | Host | `xbox_gpu_host --grad-check` / `--train-step 1` (AdamW on master fp32) |
 
@@ -212,7 +212,7 @@ Grad-check tolerance (chosen TBD): STE-identity max-abs `1e-3`; max-rel `2e-2` w
 
 | Piece | Path |
 | --- | --- |
-| Contract | [`docs/memory-budget.md`](memory-budget.md) |
+| Contract | [`docs/diagnostic/memory-budget.md`](memory-budget.md) |
 | SoT caps | [`docs/platform/uwp-resources.md`](../platform/uwp-resources.md) — App **~1 GB**; Creators Game **~5 GB** |
 | Fixture | [`benchmarks/fixtures/stream_stress.json`](../../benchmarks/fixtures/stream_stress.json) |
 | Host | `xbox_gpu_host --stream-stress --budget-mb 1024` |
@@ -235,7 +235,7 @@ No new HLSL kernel. GPU work (when a D3D12 device exists) is a ping-pong `CopyBu
 
 | Piece | Path |
 | --- | --- |
-| Contract | [`docs/qat-wsd.md`](qat-wsd.md) |
+| Contract | [`docs/diagnostic/qat-wsd.md`](qat-wsd.md) |
 | Mapping | [`docs/adr/0002-ste-qat-mapping.md`](../adr/0002-ste-qat-mapping.md) |
 | Config | [`examples/qat-wsd-smoke.json`](../../examples/qat-wsd-smoke.json) |
 | Host | `xbox_gpu_host --qat-smoke --steps 16` (N=16) |

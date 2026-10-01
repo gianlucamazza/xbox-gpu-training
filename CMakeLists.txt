@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.20)
 project(xbox_gpu_training LANGUAGES CXX)
 
-# Fase 5 host: DirectX 12 hello + matmul + FLP2 + STE/AdamW + stream + QAT/WSD.
+# Builds the E0 trainer (xgpu_e0, xgpu_e0_train, e0_tensor.cso) and the diagnostic
+# host (xbox_gpu_host: DirectX 12 hello + matmul + FLP2 + STE/AdamW + stream + QAT/WSD).
 # Compiles as a no-GPU smoke check on non-Windows (reports BLOCKED: no D3D12 device).
 # CPU tests (--cpu-ref / --bench matmul / --forward-fixture / --grad-check /
 # --train-step / --stream-stress / --qat-smoke) stay green without a GPU.

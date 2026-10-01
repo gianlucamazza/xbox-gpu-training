@@ -1,9 +1,9 @@
-# ADR 0004: Independent E0 numerical gates
+# ADR 0004 — Independent E0 numerical gates
 
-## Status
-
-Accepted — 2026-09-30, explicit owner acceptance of the numerical validation proposal.
-Supersedes only the numerical thresholds in ADR 0003.
+- Status: Accepted
+- Date: 2026-09-30 (explicit owner acceptance of the numerical validation proposal)
+- Supersedes: the numerical thresholds in ADR 0003 only
+- Labels: `adr`, `research`, `phase-6`
 
 ## Context
 
@@ -28,7 +28,7 @@ produced a 1.41759e-5 parameter difference. This compares different optimizer in
 Record the exploratory failures rather than changing them into successes. No
 scientific E0 campaign runs before the independent and console gates pass.
 
-## Alternatives
+## Alternatives considered
 
 Relaxing an integrated update threshold to fit a single observed example would hide
 the ill-conditioned test. Matching a particular CPU reduction order is not an

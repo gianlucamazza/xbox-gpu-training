@@ -1,6 +1,6 @@
 # QAT + WSD (Fase 5)
 
-Schedule source of truth for quantized-aware training on **host** AdamW. Mapping for FakeQuant / STE / master fp32: [docs/adr/0002-ste-qat-mapping.md](../adr/0002-ste-qat-mapping.md). Fase 3 one-step contract: [docs/ste-adamw.md](ste-adamw.md).
+Schedule source of truth for quantized-aware training on **host** AdamW. Mapping for FakeQuant / STE / master fp32: [docs/adr/0002-ste-qat-mapping.md](../adr/0002-ste-qat-mapping.md). Fase 3 one-step contract: [docs/diagnostic/ste-adamw.md](ste-adamw.md).
 
 QAT & WSD owns **schedule semantics**. HLSL Kernels owns compute-shader **shape**. This phase adds **no new HLSL**. 2-bit / 4-bit FakeQuant run on the host. DirectML is not the trainer or optimizer. No CUDA. xllama is not modified.
 

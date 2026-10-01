@@ -1,44 +1,36 @@
 # Contributing
 
-Evidence-first research repository. Read [README.md](README.md), [ROADMAP.md](ROADMAP.md), [docs/execution-plan.md](docs/execution-plan.md), [docs/adr/0001-architecture.md](docs/adr/0001-architecture.md), [docs/adr/0002-ste-qat-mapping.md](docs/adr/0002-ste-qat-mapping.md), and the public platform packs under [docs/platform/](docs/platform/dev-mode.md) before opening a pull request.
+Evidence-first research repository. Before opening a pull request read
+[README.md](README.md), [docs/claims-policy.md](docs/claims-policy.md) and the doc
+for the area you touch ([docs/README.md](docs/README.md)).
 
-## Companion repo
+## Rules
 
-FloppyLM semantics, FLP2 and the `floppylm.*.v1` contracts are owned by the local FloppyLM repo (`Workspace/experiments/floppy_4mb`, ADR 0012); this repository is its only native training backend (E0 DX12/UWP). **Do not modify [xllama](https://github.com/gianlucamazza/xllama) from this project**; it contains no FloppyLM logic (PR #301 closed).
+- Follow the [claims policy](docs/claims-policy.md): no invented numbers; every metric
+  is Sourced, UNMEASURED, BLOCKED, UNVALIDATED or a Placeholder.
+- Current-state values (package, throughput, memory, gate counts) are edited only in
+  [docs/status.md](docs/status.md) and evidence directories; other pages link to them.
+- Architecture changes need an ADR ([docs/adr/](docs/adr/README.md)) and the `adr` label.
+- E0 engine changes follow the bit-identity rule or bring fresh gates
+  ([docs/e0/engine.md](docs/e0/engine.md#bit-identity-rule)).
+- A new console package needs its own acceptance and an evidence directory
+  ([docs/e0/acceptance.md](docs/e0/acceptance.md)).
+- Do not modify [xllama](https://github.com/gianlucamazza/xllama) from this project.
 
-## Language
+## Language and style
 
-- Code, comments, commit messages, and PR titles: **English**.
-- Conventional commits (`feat:`, `fix:`, `docs:`, `chore:`, `test:`, `refactor:`).
-- Italian is welcome in GitHub Discussions and issue conversation.
-- README keeps complete **Italiano** and **English** sections.
+- Code, comments, docs, commit messages and PR titles: **English**.
+- Conventional commits (`feat:`, `fix:`, `docs:`, `chore:`, `test:`, `refactor:`, `perf:`).
+- Terms and spelling: [docs/glossary.md](docs/glossary.md).
+- State each fact once and link to it; do not copy disclaimers between pages.
 
-## Evidence-first rules
+## Branches and pull requests
 
-- Do **not** invent tok/s, latency, perplexity, or quality scores.
-- Stubs must say `not implemented` / `status: stub`.
-- CPU ggml is the numerical and timing baseline once Fase 1 exists. ggml is **not vendored**; the portable GEMM in `src/cpp/cpu_matmul.*` is the current interface ([docs/ggml-baseline.md](docs/ggml-baseline.md)).
-- Xbox Series S|X numbers are valid only after Dev Mode measurement (or an explicit `BLOCKED` / **UNMEASURED** note). Measured Series S E0: [docs/console.md](docs/console.md). Other Series cells stay empty until measured. Honest Fase 0–7 summary: [docs/results.md](docs/results.md).
-- Architecture changes need a new or updated file under `docs/adr/` and the `adr` label.
-
-## What this repo is not
-
-- Xbox has **no CUDA**. Do not add CUDA/cuDNN paths or assume NVIDIA tooling.
-- DirectML on console is **inference/forward-focused**. Do not describe DirectML as the trainer.
-- Public **GDK** / Windows SDK / DirectX 12 is the documented host path.
-- **GDKX** / **ID@Xbox** are NDA/partner programmes. This repo does **not** claim access to them.
-- Dev Mode purpose licence: develop and test apps, not run a GPU farm. Dev Mode is limited (≤3 consoles per account, typical public documentation). Detail: [docs/platform/dev-mode.md](docs/platform/dev-mode.md), [docs/platform/gdk-vs-gdkx.md](docs/platform/gdk-vs-gdkx.md), [docs/platform/directml-scope.md](docs/platform/directml-scope.md).
-
-## Branch and PR protocol (Cursor and humans)
-
-Follow [docs/execution-plan.md](docs/execution-plan.md):
-
-- One phase at a time. Branch `phase-N/<short-slug>` from latest `main`.
-- One PR per phase → `main`.
-- Labels: matching `phase-0` … `phase-7` plus topic (`kernel`, `memory`, `benchmark`, `research`, `adr`).
-- Milestone: matching **Fase N** (Italian titles already on GitHub).
-- PR body: objective, commands run, acceptance results (paste), what was **not** done.
-- Do not merge if **CI** jobs `lint-docs` or `build-windows` are red.
+- Branch `<type>/<short-slug>` from the latest `main`; one PR per change.
+- Labels: topic (`research`, `kernel`, `memory`, `benchmark`, `adr`).
+- PR body: objective, commands run, results (paste), what was **not** done
+  ([template](.github/PULL_REQUEST_TEMPLATE.md)).
+- Do not merge with red CI (`lint-docs`, `build-windows`, and `E0 UWP` when E0 paths change).
 
 ## Local checks
 
@@ -46,38 +38,17 @@ Follow [docs/execution-plan.md](docs/execution-plan.md):
 python3 scripts/check_required_docs.py
 python3 scripts/check_glossary.py
 python3 scripts/check_relative_links.py
-python3 benchmarks/run_smoke.py
-python3 benchmarks/run_matmul.py
+python3 scripts/check_doc_claims.py
+python3 -m unittest discover -s scripts/tests
+python3 scripts/validate_qat_schedule.py examples/qat-wsd-smoke.json --dry-run
 cmake -S . -B build && cmake --build build
-./build/xbox_gpu_host --cpu-ref
-./build/xbox_gpu_host --bench matmul --out benchmarks/results/matmul.csv
-./build/xbox_gpu_host --forward-fixture benchmarks/fixtures/tiny_flp2.json
-./build/xbox_gpu_host --grad-check
-./build/xbox_gpu_host --train-step 1
-./build/xbox_gpu_host --stream-stress --budget-mb 1024
+./build/xgpu_e0_train --help
 ```
 
-On Windows with the Windows SDK, compile HLSL with `dxc` and run the host (see [docs/setup.md](docs/setup.md) and `src/hlsl/README.md`). CMake must auto-detect the Visual Studio generator (`cmake -S . -B build -A x64`); do not pin `-G "Visual Studio 17 2022"`.
-
-## Canonical glossary
-
-Use these terms consistently (IT and EN prose):
-
-| Term | Rule |
-| --- | --- |
-| GPU | Uppercase in prose. Folders stay lowercase (`src/`, `src/hlsl/`). |
-| DirectX 12 | First mention; `DX12` is OK afterwards. |
-| HLSL | Uppercase. Folder: `src/hlsl/`. |
-| compute shader | Two words. |
-| DirectML | Inference/forward-focused on console. Never as the trainer. |
-| FLP2, codec, QAT, WSD | As written. |
-| RMSNorm, RoPE, AdamW | As written. |
-| straight-through estimator (STE) | Spell out once, then STE. |
-| Dev Mode, UWP, GDK | Public path. |
-| GDKX / ID@Xbox | Only when noting the NDA/partner path we do **not** claim. |
-| No CUDA on Xbox | Phrase as absence, not as a stack we use. |
-| Labels | `research`, `kernel`, `memory`, `benchmark`, `adr`, `phase-0` … `phase-7`. |
-| Milestones | **Fase 0–7** (Italian titles). |
+On Windows, let CMake pick the Visual Studio generator (`cmake -S . -B build -A x64`);
+do not pin `-G "Visual Studio 17 2022"`. Diagnostic-host commands:
+[docs/diagnostic/setup.md](docs/diagnostic/setup.md). E0 package build and deploy:
+[docs/e0/runbook.md](docs/e0/runbook.md).
 
 ## Code owners
 

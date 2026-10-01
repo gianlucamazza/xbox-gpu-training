@@ -1,6 +1,6 @@
 # Xbox Series S vs Series X (public product specs only)
 
-Fact pack (XGPU Dev Mode Counsel, 2026-09-30). **Honest product differences as publicly documented.** These are **not** benches of this repository’s kernels, not tok/s, and not Fase 6 results.
+**Honest product differences as publicly documented.** These are **not** benches of this repository’s kernels, not throughput, and not console results.
 
 ## Public hardware (not our measurements)
 
@@ -20,7 +20,7 @@ Retail product pages also list other SKU differences (resolution targets, disc d
 ## What we do not invent
 
 - No fabricated memory or performance benches for **our** kernels on Series S vs Series X.
-- No tok/s, latency, or quality scores until Fase 6 measures them on Dev Mode hardware (or reports `BLOCKED: no console`).
+- No throughput, latency or quality figures except those measured on Dev Mode hardware and listed in [status.md](../status.md) (Series S only; Series X is UNMEASURED).
 - Marketing TFLOPS / TOPS (including Xbox Wire ML/DirectML capability figures) are **hardware capability copy**, not a training product claim and not a result table. See [directml-scope.md](directml-scope.md).
 
 UWP App / Creators Game **usable RAM** is **not** the same as the 10 GB / 16 GB GDDR6 product figures. Planning budgets remain **1 GB** (Apps) and **5 GB** (Creators games). See [uwp-resources.md](uwp-resources.md).
@@ -28,4 +28,4 @@ UWP App / Creators Game **usable RAM** is **not** the same as the 10 GB / 16 GB 
 ## Related
 
 - [dx12-hlsl-compute.md](dx12-hlsl-compute.md) — FL 11.0, App vs Game GPU share
-- [blockers-fase6-validation.md](blockers-fase6-validation.md)
+- [console-constraints.md](console-constraints.md)

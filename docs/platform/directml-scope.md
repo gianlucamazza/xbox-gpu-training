@@ -1,6 +1,6 @@
 # DirectML scope (inference / forward only)
 
-Fact pack (XGPU Dev Mode Counsel, 2026-09-30). **DirectML is not the trainer** in this repository. There is **no** primary Microsoft claim of on-console LLM or GPU training via DirectML or ONNX Runtime (ORT) that this project treats as source of truth.
+**DirectML is not the trainer** in this repository. There is **no** primary Microsoft claim of on-console LLM or GPU training via DirectML or ONNX Runtime (ORT) that this project treats as source of truth.
 
 ## How Microsoft frames DirectML
 
@@ -37,5 +37,5 @@ Until such a primary source exists, **on-console training via DirectML remains u
 
 ## Related
 
-- [blockers-fase6-validation.md](blockers-fase6-validation.md)
+- [console-constraints.md](console-constraints.md)
 - [docs/adr/0001-architecture.md](../adr/0001-architecture.md)

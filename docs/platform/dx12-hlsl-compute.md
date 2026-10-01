@@ -1,6 +1,6 @@
 # DirectX 12 / HLSL compute (research path)
 
-Fact pack (XGPU Dev Mode Counsel, 2026-09-30). This repository’s research path on Windows and public GDK is **DirectX 12** compute shaders written in **HLSL**. After first mention, **DX12** is fine.
+This repository’s research path on Windows and public GDK is **DirectX 12** compute shaders written in **HLSL**. After first mention, **DX12** is fine.
 
 Xbox has **no CUDA**. That is an absence, not a stack this repo uses.
 
@@ -10,12 +10,7 @@ On **Xbox Series X|S**, both UWP **Apps** and **Games** document **DirectX 11 an
 
 - [System resources for UWP apps and games on Xbox](https://learn.microsoft.com/en-us/windows/uwp/xbox-apps/system-resource-allocation)
 
-That page also states (Apps vs Games):
-
-| Resource | Apps | Games |
-| --- | --- | --- |
-| GPU | share of **~45%** of the GPU (depends on other apps/games) | **full access to available GPU** cycles |
-| CPU | share of **2–4** cores | **4 exclusive + 2 shared** cores |
+That page gives Apps a shared GPU slice (about 45%) and Games full access to available GPU cycles; the CPU/GPU table is recorded once in [uwp-resources.md](uwp-resources.md#cpu--gpu-share-same-page).
 
 **App Mode is not full title GPU.** Do not treat an App-class UWP package as a retail title’s GPU budget.
 
@@ -25,7 +20,7 @@ UWP documents a Direct3D **compute pipeline**. A **compute shader** is written i
 
 - [Compute pipeline (UWP)](https://learn.microsoft.com/en-us/windows/uwp/graphics-concepts/compute-pipeline)
 
-That is the documented public compute path this research follows. Kernels live under `src/hlsl/`. Host dispatch on Windows is the Fase 0–5 lane.
+That is the documented public compute path this research follows. Kernels live under `src/hlsl/`: the E0 trainer dispatches `e0_tensor.hlsl` inside the UWP App; the diagnostic lane dispatches the other kernels from a Win32 desktop host.
 
 ## ATG note (Walbourn): FL 11.0, SM 5.1–6.4, Ultimate-class features
 
