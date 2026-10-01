@@ -1,0 +1,168 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/gianlucamazza/floppylm/schemas/floppylm.e0.kernels.v1.json",
+  "title": "E0 per-operation kernel fixture",
+  "description": "Independent cases for every tensor operation of the backend. The op ids below are part of this contract. mode 0 is forward; mode i+1 is the gradient for input i. Each case passes exactly five buffers (three inputs, output, upstream gradient), empty when unused.",
+  "$defs": {
+    "op": {
+      "oneOf": [
+        {
+          "const": 0,
+          "title": "add"
+        },
+        {
+          "const": 1,
+          "title": "linear"
+        },
+        {
+          "const": 2,
+          "title": "rmsnorm"
+        },
+        {
+          "const": 3,
+          "title": "rope"
+        },
+        {
+          "const": 4,
+          "title": "activation"
+        },
+        {
+          "const": 5,
+          "title": "heads"
+        },
+        {
+          "const": 6,
+          "title": "unheads"
+        },
+        {
+          "const": 7,
+          "title": "embedding"
+        },
+        {
+          "const": 8,
+          "title": "slice"
+        },
+        {
+          "const": 9,
+          "title": "multiply"
+        },
+        {
+          "const": 10,
+          "title": "cross-entropy"
+        },
+        {
+          "const": 11,
+          "title": "scores"
+        },
+        {
+          "const": 12,
+          "title": "softmax"
+        },
+        {
+          "const": 13,
+          "title": "weighted"
+        }
+      ]
+    },
+    "command": {
+      "type": "object",
+      "required": [
+        "op",
+        "count"
+      ],
+      "properties": {
+        "op": {
+          "$ref": "#/$defs/op"
+        },
+        "mode": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16777216
+        },
+        "rows": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cols": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "out": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "batch": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "seq": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "heads": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "aux": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "epsilon": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "type": "object",
+  "required": [
+    "schema",
+    "seed",
+    "cases"
+  ],
+  "properties": {
+    "schema": {
+      "const": "floppylm.e0.kernels.v1"
+    },
+    "seed": {
+      "type": "integer"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "command",
+          "inputs"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "command": {
+            "$ref": "#/$defs/command"
+          },
+          "inputs": {
+            "type": "array",
+            "minItems": 5,
+            "maxItems": 5,
+            "items": {
+              "$ref": "floppylm.e0.common.v1.json#/$defs/values"
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

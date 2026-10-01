@@ -3,7 +3,7 @@
 
 1. contracts/floppylm/ is byte-identical to PIN.json (no local edits).
 2. The pinned schemas accept every valid golden fixture and reject every invalid one.
-3. Every floppylm.e0.result.v1 / floppylm.device.v1 object in docs/evidence matches.
+3. Every object in docs/evidence that names a pinned contract in its "schema" field matches it.
 
 Requires jsonschema>=4.18. Refresh the copy with sync_floppylm_contracts.py.
 """
@@ -19,7 +19,6 @@ from jsonschema import Draft202012Validator
 from referencing import Registry, Resource
 
 ROOT = Path(__file__).resolve().parents[1]
-NATIVE = ("floppylm.e0.result.v1", "floppylm.device.v1")
 
 
 def load(path: Path):
@@ -42,15 +41,15 @@ def integrity(pinned: Path) -> list[str]:
     return errors
 
 
-def native_objects(value):
+def named_objects(value, names):
     if isinstance(value, dict):
-        if value.get("schema") in NATIVE:
+        if value.get("schema") in names:
             yield value
         for child in value.values():
-            yield from native_objects(child)
+            yield from named_objects(child, names)
     elif isinstance(value, list):
         for child in value:
-            yield from native_objects(child)
+            yield from named_objects(child, names)
 
 
 def check(root: Path) -> tuple[list[str], dict[str, int]]:
@@ -70,7 +69,7 @@ def check(root: Path) -> tuple[list[str], dict[str, int]]:
                 errors.append(f"{kind} fixture {path.name} was {'accepted' if ok else 'rejected'}")
             counts[kind] += 1
     for path in sorted((root / "docs" / "evidence").rglob("*.json")):
-        for report in native_objects(load(path)):
+        for report in named_objects(load(path), validators.keys()):
             for error in validators[report["schema"]].iter_errors(report):
                 errors.append(f"{path.relative_to(root)}: {error.message[:200]}")
             counts["evidence"] += 1

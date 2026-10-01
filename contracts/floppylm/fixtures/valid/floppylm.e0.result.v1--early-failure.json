@@ -1,5 +1,1 @@
-{
- "error": "job_id must match job file name",
- "job_id": "tiny",
- "state": "failed"
-}
+{"error":"job_id must match job file name","job_id":"tiny","state":"failed"}

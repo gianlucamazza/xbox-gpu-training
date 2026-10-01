@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/gianlucamazza/floppylm/schemas/floppylm.e0.optimizer.v1.json",
+  "title": "E0 optimizer fixture (identical input gradients)",
+  "description": "Initial tensors and a sequence of steps whose gradients are given, so the backend's AdamW is compared with PyTorch on identical inputs (ADR 0010). Gradients follow the tensor order.",
+  "type": "object",
+  "required": [
+    "schema",
+    "config",
+    "tensors",
+    "steps"
+  ],
+  "properties": {
+    "schema": {
+      "const": "floppylm.e0.optimizer.v1"
+    },
+    "config": {
+      "$ref": "floppylm.e0.common.v1.json#/$defs/config"
+    },
+    "tensors": {
+      "$ref": "floppylm.e0.common.v1.json#/$defs/tensors"
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "gradients",
+          "lr",
+          "wd",
+          "step"
+        ],
+        "properties": {
+          "gradients": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "floppylm.e0.common.v1.json#/$defs/named_values"
+            }
+          },
+          "lr": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "wd": {
+            "type": "number",
+            "minimum": 0
+          },
+          "step": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,202 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/gianlucamazza/floppylm/schemas/floppylm.xbox.acceptance.v1.json",
+  "title": "Xbox backend acceptance proof",
+  "description": "Result of running floppylm's gates (ADR 0009, ADR 0010) against one installed package. A scientific run binds a proof whose package and commit match the device and whose kernels gate passed. Earlier proofs omit the kernels gate or carry extra per-fixture hashes; both forms are part of this contract. A failed acceptance stops early and omits the optimizer and resume sections.",
+  "type": "object",
+  "required": [
+    "schema",
+    "commit",
+    "created",
+    "device",
+    "fixtures",
+    "ok",
+    "package",
+    "purpose"
+  ],
+  "properties": {
+    "schema": {
+      "const": "floppylm.xbox.acceptance.v1"
+    },
+    "commit": {
+      "type": "string",
+      "minLength": 1
+    },
+    "created": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "device": {
+      "$ref": "floppylm.device.v1.json"
+    },
+    "package": {
+      "type": "string",
+      "minLength": 1
+    },
+    "purpose": {
+      "const": "functional"
+    },
+    "ok": {
+      "type": "boolean"
+    },
+    "fixtures": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "path",
+          "actual_sha256",
+          "ok"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "actual_sha256": {
+            "$ref": "floppylm.e0.common.v1.json#/$defs/sha256"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "config": {
+            "$ref": "floppylm.e0.common.v1.json#/$defs/config"
+          },
+          "seed": {
+            "type": "integer"
+          },
+          "fixture_sha256": {
+            "$ref": "floppylm.e0.common.v1.json#/$defs/sha256"
+          },
+          "expected_sha256": {
+            "$ref": "floppylm.e0.common.v1.json#/$defs/sha256"
+          },
+          "parity_sha256": {
+            "$ref": "floppylm.e0.common.v1.json#/$defs/sha256"
+          },
+          "dispatches": {
+            "$ref": "floppylm.e0.common.v1.json#/$defs/count"
+          },
+          "hardware_gpu": {
+            "type": "boolean"
+          },
+          "hashes": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "floppylm.e0.common.v1.json#/$defs/sha256"
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "kernels": {
+      "type": "object",
+      "required": [
+        "purpose",
+        "oracle",
+        "hardware_gpu",
+        "case_count",
+        "gates",
+        "ok"
+      ],
+      "properties": {
+        "purpose": {
+          "const": "functional"
+        },
+        "oracle": {
+          "type": "string"
+        },
+        "hardware_gpu": {
+          "type": "boolean"
+        },
+        "case_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "gates": {
+          "$ref": "floppylm.e0.common.v1.json#/$defs/gates"
+        },
+        "ok": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "optimizer": {
+      "type": "object",
+      "required": [
+        "purpose",
+        "oracle",
+        "gates",
+        "ok"
+      ],
+      "properties": {
+        "purpose": {
+          "const": "functional"
+        },
+        "oracle": {
+          "type": "string"
+        },
+        "gates": {
+          "$ref": "floppylm.e0.common.v1.json#/$defs/gates"
+        },
+        "ok": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "resume": {
+      "type": "object",
+      "required": [
+        "ok",
+        "reports"
+      ],
+      "properties": {
+        "ok": {
+          "type": "boolean"
+        },
+        "reports": {
+          "type": "array",
+          "items": {
+            "$ref": "floppylm.e0.result.v1.json"
+          },
+          "minItems": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "raw_local_directory": {
+      "type": "string"
+    },
+    "raw_evidence": {
+      "type": "string"
+    },
+    "scope": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "ok": {
+            "const": true
+          }
+        },
+        "required": [
+          "ok"
+        ]
+      },
+      "then": {
+        "required": [
+          "optimizer",
+          "resume"
+        ]
+      }
+    }
+  ]
+}

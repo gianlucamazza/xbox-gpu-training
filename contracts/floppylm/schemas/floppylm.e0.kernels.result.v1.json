@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/gianlucamazza/floppylm/schemas/floppylm.e0.kernels.result.v1.json",
+  "title": "E0 per-operation kernel results",
+  "description": "Output values and dispatch count of every case of a floppylm.e0.kernels.v1 fixture, in order.",
+  "allOf": [
+    {
+      "$ref": "floppylm.e0.common.v1.json#/$defs/execution"
+    }
+  ],
+  "required": [
+    "schema",
+    "cases"
+  ],
+  "properties": {
+    "schema": {
+      "const": "floppylm.e0.kernels.result.v1"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "values",
+          "dispatches"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "values": {
+            "$ref": "floppylm.e0.common.v1.json#/$defs/values"
+          },
+          "dispatches": {
+            "$ref": "floppylm.e0.common.v1.json#/$defs/count"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "unevaluatedProperties": false
+}

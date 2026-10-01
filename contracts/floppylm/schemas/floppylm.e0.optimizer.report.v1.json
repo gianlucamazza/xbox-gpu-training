@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/gianlucamazza/floppylm/schemas/floppylm.e0.optimizer.report.v1.json",
+  "title": "E0 optimizer fixture report",
+  "description": "Tensors, AdamW moments and gradient norm after every step. The file carries no schema field.",
+  "type": "object",
+  "required": [
+    "purpose",
+    "optimizer_host",
+    "steps"
+  ],
+  "properties": {
+    "purpose": {
+      "const": "functional"
+    },
+    "optimizer_host": {
+      "type": "boolean"
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "tensors",
+          "moments",
+          "gradient_norm"
+        ],
+        "properties": {
+          "tensors": {
+            "$ref": "floppylm.e0.common.v1.json#/$defs/tensors"
+          },
+          "moments": {
+            "$ref": "floppylm.e0.common.v1.json#/$defs/moments"
+          },
+          "gradient_norm": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

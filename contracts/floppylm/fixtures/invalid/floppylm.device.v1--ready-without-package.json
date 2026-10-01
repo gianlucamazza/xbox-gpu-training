@@ -1,7 +1,1 @@
-{
- "adapter": "SraKmd_arden",
- "commit": "25f8bc3966ffae940658be94161d31edd83492c9",
- "hardware_gpu": true,
- "schema": "floppylm.device.v1",
- "state": "ready"
-}
+{"adapter":"SraKmd_arden","commit":"25f8bc3966ffae940658be94161d31edd83492c9","hardware_gpu":true,"schema":"floppylm.device.v1","state":"ready"}

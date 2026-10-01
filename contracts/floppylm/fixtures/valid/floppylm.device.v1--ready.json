@@ -1,8 +1,1 @@
-{
- "adapter": "SraKmd_arden",
- "commit": "25f8bc3966ffae940658be94161d31edd83492c9",
- "hardware_gpu": true,
- "package": "GianlucaMazza.XgpuE0_0.1.0.28_x64__g0p5dcfz4t9z4",
- "schema": "floppylm.device.v1",
- "state": "ready"
-}
+{"adapter":"SraKmd_arden","commit":"25f8bc3966ffae940658be94161d31edd83492c9","hardware_gpu":true,"package":"GianlucaMazza.XgpuE0_0.1.0.28_x64__g0p5dcfz4t9z4","schema":"floppylm.device.v1","state":"ready"}

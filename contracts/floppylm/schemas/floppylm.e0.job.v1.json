@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/gianlucamazza/floppylm/schemas/floppylm.e0.job.v1.json",
   "title": "E0 training job (host to native backend)",
-  "description": "Written by floppylm.xbox.prepare_job; Portal.submit adds purpose and acceptance_sha256, Portal.resume adds resume. Native run_job requires the three-branch WSD protocol.",
+  "description": "A training job. Produced by floppylm_xbox.jobs.prepare_job; submission adds purpose and acceptance_sha256, resumption adds resume and drops stop_after. It requires the three-branch WSD protocol.",
   "type": "object",
   "required": [
     "schema",
@@ -24,49 +24,7 @@
       "$ref": "floppylm.e0.common.v1.json#/$defs/config"
     },
     "spec": {
-      "type": "object",
-      "required": [
-        "tokens",
-        "branches",
-        "batch",
-        "lr",
-        "wd",
-        "warmup_frac",
-        "cooldown_frac",
-        "seed"
-      ],
-      "properties": {
-        "tokens": {
-          "type": "integer",
-          "minimum": 1
-        },
-        "branches": {
-          "const": 3
-        },
-        "batch": {
-          "type": "integer",
-          "minimum": 1
-        },
-        "lr": {
-          "type": "number",
-          "exclusiveMinimum": 0
-        },
-        "wd": {
-          "type": "number",
-          "minimum": 0
-        },
-        "warmup_frac": {
-          "const": 0.02
-        },
-        "cooldown_frac": {
-          "const": 0.1
-        },
-        "seed": {
-          "type": "integer",
-          "minimum": 0
-        }
-      },
-      "additionalProperties": false
+      "$ref": "floppylm.e0.common.v1.json#/$defs/spec"
     },
     "initialization": {
       "$ref": "floppylm.e0.common.v1.json#/$defs/descriptor"

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/gianlucamazza/floppylm/schemas/floppylm.e0.result.v1.json",
   "title": "E0 job status/result (native backend to host)",
-  "description": "results/<job_id>/status.json from native run_job. A job that fails before run_job writes its first status (App worker) carries only job_id, state=failed and error. The host's result.json may add execution_segments, one full report per resumed segment. Producers from xbox-gpu-training PR #20 onward also publish schedule and phase, including status updates during cooldowns.",
+  "description": "results/<job_id>/status.json of a training job (inbox protocol, docs/contracts/inbox-protocol.md). A job that fails before training starts carries only job_id, state=failed and error. The host's result.json may add execution_segments, one full report per resumed segment. Optional schedule and phase describe the executed WSD schedule and whether a cooldown is running.",
   "$defs": {
     "branch": {
       "type": "object",
@@ -239,7 +239,7 @@
       "unevaluatedProperties": false
     },
     "schedule": {
-      "description": "WSD schedule as executed by run_job; steps are optimizer steps.",
+      "description": "WSD schedule as executed; steps are optimizer steps.",
       "type": "object",
       "required": [
         "T",

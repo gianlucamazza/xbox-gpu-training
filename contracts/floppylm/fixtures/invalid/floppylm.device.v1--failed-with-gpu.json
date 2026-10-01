@@ -1,6 +1,1 @@
-{
- "commit": "25f8bc3966ffae940658be94161d31edd83492c9",
- "error": "no hardware adapter",
- "hardware_gpu": true,
- "state": "failed"
-}
+{"commit":"25f8bc3966ffae940658be94161d31edd83492c9","error":"no hardware adapter","hardware_gpu":true,"state":"failed"}
