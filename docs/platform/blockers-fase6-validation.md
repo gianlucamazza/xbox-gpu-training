@@ -37,7 +37,7 @@ Detail: [dev-mode.md](dev-mode.md).
 | Lane | What is in scope |
 | --- | --- |
 | **Fase 0–5** | Public GDK + Windows **DirectX 12** / **HLSL** compute shaders. CPU ggml baseline. No console tok/s. |
-| **Fase 6** | Series S|X **Dev Mode** validation. Series S E0 functional execution is measured; quality / Series X / PIX remain **UNMEASURED**. |
+| **Fase 6** | Series S\|X **Dev Mode** validation. Series S E0 functional execution is measured; quality / Series X / PIX remain **UNMEASURED**. |
 | **Fase 7** | Honest publication of measured (or explicitly unmeasured) results. |
 
 ## Related
