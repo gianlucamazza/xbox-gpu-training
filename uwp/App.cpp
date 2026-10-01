@@ -4,6 +4,7 @@
 #include "App.g.cpp"
 #include "pch.h"
 #include <winrt/Windows.Media.Capture.h>
+#include <winrt/Windows.UI.Core.h>
 #include <atomic>
 #include <chrono>
 #include <condition_variable>
@@ -186,8 +187,38 @@ void App::OnLaunched(
   window.Activate();
 }
 } // namespace winrt::Xgpu::implementation
+namespace {
+struct IdleCoreView : winrt::implements<IdleCoreView, winrt::Windows::ApplicationModel::Core::IFrameworkView> {
+  void Initialize(winrt::Windows::ApplicationModel::Core::CoreApplicationView const &view) {
+    view.Activated([](auto const &, auto const &) {
+      winrt::Windows::UI::Core::CoreWindow::GetForCurrentThread().Activate();
+    });
+  }
+  void SetWindow(winrt::Windows::UI::Core::CoreWindow const &window) { window_ = window; }
+  void Load(winrt::hstring const &) {}
+  void Run() {
+    auto local = std::filesystem::path(winrt::Windows::Storage::ApplicationData::Current().LocalFolder().Path().c_str());
+    e0::atomic_json(local / L"device.json", {{"state", "diagnostic"}, {"hardware_gpu", false},
+      {"commit", XGPU_COMMIT}, {"package", winrt::to_string(winrt::Windows::ApplicationModel::Package::Current().Id().FullName())},
+      {"probe", {{"core", true}}}});
+    window_.Dispatcher().ProcessEvents(winrt::Windows::UI::Core::CoreProcessEventsOption::ProcessUntilQuit);
+  }
+  void Uninitialize() {}
+  winrt::Windows::UI::Core::CoreWindow window_{nullptr};
+};
+struct IdleCoreSource : winrt::implements<IdleCoreSource, winrt::Windows::ApplicationModel::Core::IFrameworkViewSource> {
+  winrt::Windows::ApplicationModel::Core::IFrameworkView CreateView() { return winrt::make<IdleCoreView>(); }
+};
+}
 int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
   try {
+    winrt::init_apartment(winrt::apartment_type::single_threaded);
+    auto local = std::filesystem::path(winrt::Windows::Storage::ApplicationData::Current().LocalFolder().Path().c_str());
+    auto path = local / L"idle-probe.json";
+    if (std::filesystem::exists(path) && e0::read_json(path).value("core", false)) {
+      winrt::Windows::ApplicationModel::Core::CoreApplication::Run(winrt::make<IdleCoreSource>());
+      return 0;
+    }
     winrt::Windows::UI::Xaml::Application::Start(
         [](auto &&) { winrt::make<winrt::Xgpu::implementation::App>(); });
     return 0;
