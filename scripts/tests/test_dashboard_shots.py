@@ -6,7 +6,13 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from e0_dashboard_shots import PNG_SIGNATURE, app_running, milestone, png_size  # noqa: E402
+from e0_dashboard_shots import (  # noqa: E402
+    PNG_SIGNATURE,
+    app_running,
+    milestone,
+    png_size,
+    seen_labels,
+)
 
 SCHEDULE = {"ends": [879, 1758, 3516], "cooldown_starts": [792, 1583, 3165]}
 
@@ -37,6 +43,19 @@ class Milestones(unittest.TestCase):
     def test_final_states(self):
         for state in ("completed", "interrupted", "failed"):
             self.assertEqual(milestone({"state": state}, {"running"}), state)
+
+
+class Seen(unittest.TestCase):
+    def test_only_shots_of_the_watched_job_count(self):
+        record = {
+            "shots": [
+                {"label": "idle-cold", "status": {}},
+                {"label": "running", "status": {"job_id": "a"}},
+                {"label": "completed", "status": {"job_id": "b"}},
+            ]
+        }
+        self.assertEqual(seen_labels(record, "a"), {"running"})
+        self.assertEqual(seen_labels(record, "c"), set())
 
 
 class App(unittest.TestCase):

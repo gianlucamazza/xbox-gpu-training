@@ -60,6 +60,15 @@ def app_running(processes: dict, package: str) -> bool:
     )
 
 
+def seen_labels(record: dict, job_id: str) -> set[str]:
+    """Labels already captured for this job; shots of other jobs do not count."""
+    return {
+        s["label"]
+        for s in record["shots"]
+        if s.get("status", {}).get("job_id") == job_id
+    }
+
+
 def milestone(status: dict, seen: set[str], running_step: int = 0) -> str | None:
     """Label of the first status showing a new dashboard state, else None.
 
@@ -222,10 +231,14 @@ def watch(
     running_step: int,
 ) -> int:
     """Capture each milestone of one job, then the dashboard after it ends."""
-    seen = {s["label"] for s in recorder.record["shots"]}
+    seen = seen_labels(recorder.record, job_id)
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         status = recorder.portal.status(job_id)
+        state = status.get("state") if status else None
+        if state in FINAL_STATES and state in seen:
+            # Already recorded for this job: nothing left to wait for.
+            return 0 if state == "completed" else 1
         label = milestone(status, seen, running_step) if status else None
         if label:
             # The dashboard polls once per second; let it render this status.
