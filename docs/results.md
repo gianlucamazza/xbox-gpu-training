@@ -81,7 +81,7 @@ throughput or memory into these tables.
 | Peer                     | What we take                                                      | What we do not claim                                         |
 | ------------------------ | ----------------------------------------------------------------- | ------------------------------------------------------------ |
 | BitNet / BitNet b1.58    | Ternary `{-1,0,+1}` quantization as a known recipe                | Their perplexity, latency, energy or A100 throughput as ours |
-| FloppyLM (`floppy_4mb`)  | Model, quantization, optimizer and FLP2 semantics (oracle)        | Its scientific results as GPU results                        |
+| FloppyLM (`gianlucamazza/floppylm`) | Model, quantization, optimizer and FLP2 semantics (oracle)        | Its scientific results as GPU results                        |
 | Soul Player / ternary15M | Train↔deploy code agreement; STE clip (diagnostic lane, ADR 0002) | Their quality numbers                                        |
 
 ### BitNet b1.58 — paper numbers

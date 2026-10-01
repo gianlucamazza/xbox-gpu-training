@@ -1,7 +1,7 @@
 # E0 runbook
 
 How to build, install, accept and run an E0 package on a Series S in Dev Mode.
-Companion commands run from the FloppyLM repository (`floppy_4mb`) with
+Companion commands run from a clone of the FloppyLM repository (`gianlucamazza/floppylm`) with
 `PYTHONPATH=src`. Never commit Device Portal credentials or certificates.
 
 ## 1. Build

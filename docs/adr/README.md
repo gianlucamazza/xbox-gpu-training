@@ -12,4 +12,4 @@ rewritten; superseding ADRs say what they replace.
 | [0004](0004-independent-e0-gates.md) | Independent E0 numerical gates | Accepted | E0 acceptance thresholds |
 
 Companion decisions (FloppyLM ADR 0011 campaign, ADR 0012 repository boundaries)
-live in the `floppy_4mb` repository.
+live in the [FloppyLM](https://github.com/gianlucamazza/floppylm) repository.

@@ -2,14 +2,14 @@
 
 - Status: Accepted
 - Date: 2026-09-30 (owner request to implement the cross-project plan)
-- Amended: 2026-10-01 — repository boundaries follow `floppy_4mb` ADR 0012 (this repo is the only native FloppyLM backend)
+- Amended: 2026-10-01 — repository boundaries follow FloppyLM ADR 0012 (this repo is the only native FloppyLM backend)
 - Supersedes: ADR 0002 for the E0 backend only; diagnostic-lane smokes keep their contract
 - Superseded in part by: ADR 0004 (numerical thresholds)
 - Labels: `adr`, `research`, `phase-6`
 
 ## Context
 
-The local FloppyLM bench at `Workspace/experiments/floppy_4mb` is the independent
+The FloppyLM repository (`gianlucamazza/floppylm`) is the independent
 Python oracle. The owner selected a dedicated Series S in Dev Mode. Existing host
 smokes are not a full transformer trainer and are not an Xbox UWP package.
 

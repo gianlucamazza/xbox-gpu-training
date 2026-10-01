@@ -1,6 +1,6 @@
 # FLP2 reconstructed forward (Fase 2)
 
-GPU-track reconstruction of the FloppyLM **scalar** decode + a tiny decoder-block forward. Reference: FloppyLM `codec.py` / `pack.py` in `Workspace/experiments/floppy_4mb` (owner, ADR 0012). **This repository does not modify xllama.** DirectML is not the trainer.
+GPU-track reconstruction of the FloppyLM **scalar** decode + a tiny decoder-block forward. Reference: FloppyLM `codec.py` / `pack.py` in FloppyLM (`gianlucamazza/floppylm`, owner, ADR 0012). **This repository does not modify xllama.** DirectML is not the trainer.
 
 ## What is specified (implemented)
 

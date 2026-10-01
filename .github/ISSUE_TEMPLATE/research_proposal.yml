@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Model and protocol semantics are owned by FloppyLM (floppy_4mb, ADR 0012); propose those changes there.
+        Model and protocol semantics are owned by FloppyLM (gianlucamazza/floppylm, ADR 0012); propose those changes there.
         Claims and non-claims: https://github.com/gianlucamazza/xbox-gpu-training/blob/main/docs/claims-policy.md
   - type: dropdown
     id: lane
