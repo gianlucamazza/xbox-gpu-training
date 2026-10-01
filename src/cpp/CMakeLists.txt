@@ -74,7 +74,7 @@ add_custom_command(TARGET xbox_gpu_host POST_BUILD
 install(TARGETS xbox_gpu_host RUNTIME DESTINATION bin)
 
 # E0 is independent of the historical tiny-network smoke contract.
-add_library(xgpu_e0 STATIC e0/tensor.cpp e0/model.cpp e0/job.cpp e0/dx12_kernel.cpp)
+add_library(xgpu_e0 STATIC e0/tensor.cpp e0/model.cpp e0/job.cpp e0/dx12_kernel.cpp e0/runtime_lifecycle.cpp)
 target_include_directories(xgpu_e0 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/e0
   ${CMAKE_SOURCE_DIR}/vendor)
 if(WIN32)
@@ -92,3 +92,12 @@ install(TARGETS xgpu_e0_train RUNTIME DESTINATION bin)
 add_executable(xgpu_e0_constants_test e0/tests/constants_test.cpp)
 target_link_libraries(xgpu_e0_constants_test PRIVATE xgpu_e0)
 add_test(NAME e0_constants COMMAND xgpu_e0_constants_test ${CMAKE_SOURCE_DIR})
+
+find_package(Threads REQUIRED)
+target_link_libraries(xgpu_e0 PUBLIC Threads::Threads)
+add_executable(xgpu_e0_runtime_lifecycle_test e0/tests/runtime_lifecycle_test.cpp)
+target_link_libraries(xgpu_e0_runtime_lifecycle_test PRIVATE xgpu_e0)
+add_test(NAME e0_runtime_lifecycle COMMAND xgpu_e0_runtime_lifecycle_test ${CMAKE_SOURCE_DIR})
+add_executable(xgpu_e0_gpu_wait_test e0/tests/gpu_wait_test.cpp)
+target_link_libraries(xgpu_e0_gpu_wait_test PRIVATE xgpu_e0)
+add_test(NAME e0_gpu_wait COMMAND xgpu_e0_gpu_wait_test ${CMAKE_SOURCE_DIR})

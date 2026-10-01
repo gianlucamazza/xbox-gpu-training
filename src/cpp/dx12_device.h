@@ -1,5 +1,6 @@
 #pragma once
 
+#include "gpu_wait.h"
 #include <string>
 
 #ifdef _WIN32
@@ -25,6 +26,9 @@ struct Dx12Device {
   UINT64 fence_value = 0;
   std::string adapter_name;
   bool warp = false;
+  GpuRuntimeFault fault;
+  std::string last_operation = "command queue submission";
+  std::string fault_probe;
 };
 
 struct Dx12CreateResult {
@@ -35,8 +39,8 @@ struct Dx12CreateResult {
 };
 
 Dx12CreateResult CreateDx12Device();
-void DestroyDx12Device(Dx12Device& ctx);
-bool WaitForGpu(Dx12Device& ctx, std::string& err);
+void DestroyDx12Device(Dx12Device &ctx);
+bool WaitForGpu(Dx12Device &ctx, std::string &err);
 std::string HrHex(long hr);
 
-#endif  // _WIN32
+#endif // _WIN32

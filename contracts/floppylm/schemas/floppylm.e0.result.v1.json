@@ -55,6 +55,39 @@
         },
         "error": {
           "type": "string"
+        },
+        "runtime_fault": {
+          "type": "object",
+          "required": [
+            "kind",
+            "error",
+            "requested_fence",
+            "completed_fence",
+            "elapsed_ms"
+          ],
+          "properties": {
+            "kind": {
+              "type": "string",
+              "minLength": 1
+            },
+            "error": {
+              "type": "string",
+              "minLength": 1
+            },
+            "requested_fence": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "completed_fence": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "elapsed_ms": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": false
@@ -149,6 +182,39 @@
         },
         "cooldown_step": {
           "$ref": "floppylm.e0.common.v1.json#/$defs/count"
+        },
+        "runtime_fault": {
+          "type": "object",
+          "required": [
+            "kind",
+            "error",
+            "requested_fence",
+            "completed_fence",
+            "elapsed_ms"
+          ],
+          "properties": {
+            "kind": {
+              "type": "string",
+              "minLength": 1
+            },
+            "error": {
+              "type": "string",
+              "minLength": 1
+            },
+            "requested_fence": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "completed_fence": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "elapsed_ms": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false
         }
       },
       "allOf": [

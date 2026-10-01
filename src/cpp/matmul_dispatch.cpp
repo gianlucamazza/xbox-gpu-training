@@ -519,6 +519,7 @@ struct GpuKernel {
 bool DispatchMatmul(Dx12Device& gpu, const GpuKernel& kernel, MatmulShape shape,
                     const std::vector<std::uint32_t>& a_bits, const std::vector<std::uint32_t>& b_bits,
                     std::vector<std::uint32_t>& c_bits, double& gpu_ms, std::string& err) {
+  if (gpu.fault) { err = gpu.fault.error; return false; }
   const UINT64 a_bytes = a_bits.size() * sizeof(std::uint32_t);
   const UINT64 b_bytes = b_bits.size() * sizeof(std::uint32_t);
   const UINT64 c_bytes = static_cast<UINT64>(MatmulCCount(shape)) * sizeof(std::uint32_t);
@@ -627,6 +628,9 @@ bool DispatchMatmul(Dx12Device& gpu, const GpuKernel& kernel, MatmulShape shape,
   ID3D12CommandList* lists[] = {gpu.list.Get()};
   gpu.queue->ExecuteCommandLists(1, lists);
   if (!WaitForGpu(gpu, err)) {
+    buf_a.Detach(); buf_b.Detach(); buf_c.Detach();
+    upload.Detach(); readback.Detach();
+    kernel.root_sig->AddRef(); kernel.pso->AddRef();
     return false;
   }
   const auto t1 = std::chrono::steady_clock::now();

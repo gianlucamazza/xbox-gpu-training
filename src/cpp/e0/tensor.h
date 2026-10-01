@@ -1,7 +1,10 @@
 #pragma once
+#include "../gpu_wait.h"
 #include "constants.h"
 #include <cstdint>
+#include <functional>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -60,6 +63,19 @@ struct Kernel {
   virtual bool hardware() const { return false; }
   virtual std::string adapter() const { return "CPU reference"; }
   void observe();
+  GpuRuntimeFault runtime_fault;
+  bool poisoned() const { return bool(runtime_fault); }
+  uint64_t completed_fence = 0;
+  std::function<void(const std::string &, uint64_t, uint64_t)>
+      progress_callback;
+  std::function<void(uint64_t, const std::string &)> gpu_progress;
+  virtual void inject_runtime_fault(const std::string &) {
+    throw std::runtime_error("runtime fault probes require the GPU backend");
+  }
+  void require_healthy() const {
+    if (poisoned())
+      throw std::runtime_error(runtime_fault.kind + ": " + runtime_fault.error);
+  }
   uint64_t dispatches = 0, transfer_bytes = 0, peak_memory_bytes = 0;
   double gpu_seconds = 0;
 };

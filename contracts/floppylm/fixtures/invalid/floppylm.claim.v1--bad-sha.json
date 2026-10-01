@@ -1,0 +1,9 @@
+{
+ "commit": "commit",
+ "job_id": "trial",
+ "job_payload": "{\n  \"config\": {\n    \"core_fmt\": \"ternary\",\n    \"ctx\": 8,\n    \"d\": 8,\n    \"d_ff\": 8,\n    \"delta\": 0.5,\n    \"emb_fmt\": \"4bit\",\n    \"mlp\": \"gelu\",\n    \"n_heads\": 2,\n    \"n_layers\": 1,\n    \"qk_norm\": false,\n    \"scale_policy\": \"row16\",\n    \"vocab\": 256\n  },\n  \"data\": {\n    \"bytes\": 3,\n    \"path\": \"data.bin\",\n    \"sha256\": \"ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad\"\n  },\n  \"indices\": {\n    \"bytes\": 32,\n    \"path\": \"indices.bin\",\n    \"sha256\": \"66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925\"\n  },\n  \"initialization\": {\n    \"bytes\": 50196,\n    \"path\": \"initial.json\",\n    \"sha256\": \"dbaabcd86e6dcd2be685dec315f56880774221e879ec67449109e0a5b0d31e9c\"\n  },\n  \"job_id\": \"trial\",\n  \"schema\": \"floppylm.e0.job.v1\",\n  \"spec\": {\n    \"batch\": 1,\n    \"branches\": 3,\n    \"cooldown_frac\": 0.1,\n    \"lr\": 0.001,\n    \"tokens\": 8,\n    \"warmup_frac\": 0.02,\n    \"wd\": 0.0\n  }\n}\n",
+ "job_sha256": "bad",
+ "package": "package",
+ "schema": "floppylm.claim.v1",
+ "worker_id": "old-worker"
+}

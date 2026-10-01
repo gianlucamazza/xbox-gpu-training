@@ -493,6 +493,8 @@ GpuStreamResult RunGpuDoubleBuffer(const StreamPlan& plan, DoubleBuffer& host,
       FillChunk(host.slot[static_cast<std::size_t>(slot)].data(), n, chunk_i + pass * count);
       if (inflight) {
         if (!WaitForGpu(ctx, err)) {
+          for (auto &buffer : upload) buffer.Detach();
+          for (auto &buffer : def) buffer.Detach();
           gpu.failed = true;
           gpu.message = err;
           DestroyDx12Device(ctx);
@@ -511,6 +513,8 @@ GpuStreamResult RunGpuDoubleBuffer(const StreamPlan& plan, DoubleBuffer& host,
     }
   }
   if (inflight && !WaitForGpu(ctx, err)) {
+    for (auto &buffer : upload) buffer.Detach();
+    for (auto &buffer : def) buffer.Detach();
     gpu.failed = true;
     gpu.message = err;
     DestroyDx12Device(ctx);

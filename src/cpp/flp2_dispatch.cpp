@@ -324,6 +324,7 @@ bool CreatePso(ID3D12Device* device, const std::vector<std::uint8_t>& dxil, UINT
 bool DispatchSimple(Dx12Device& gpu, const Kernel2in& k, const std::uint32_t* consts, UINT nconst,
                     const std::vector<std::vector<std::uint32_t>>& srvs,
                     std::vector<std::uint32_t>& uav, UINT groups_x, UINT groups_y, std::string& err) {
+  if (gpu.fault) { err = gpu.fault.error; return false; }
   HRESULT hr = S_OK;
   std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> buf_srv(srvs.size());
   UINT64 upload_bytes = 0;
@@ -438,6 +439,9 @@ bool DispatchSimple(Dx12Device& gpu, const Kernel2in& k, const std::uint32_t* co
   ID3D12CommandList* lists[] = {gpu.list.Get()};
   gpu.queue->ExecuteCommandLists(1, lists);
   if (!WaitForGpu(gpu, err)) {
+    for (auto &buffer : buf_srv) buffer.Detach();
+    buf_uav.Detach(); upload.Detach(); readback.Detach();
+    k.root_sig->AddRef(); k.pso->AddRef();
     return false;
   }
   mapped = nullptr;
