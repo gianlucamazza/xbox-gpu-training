@@ -1,6 +1,6 @@
 # Architecture (high-level)
 
-This is the GPU research track for quantized LLM work on Xbox Series S|X. Decisions and constraints are recorded in [docs/adr/0001-architecture.md](adr/0001-architecture.md). Execution order is [docs/execution-plan.md](execution-plan.md). Fase 0 install and host run: [docs/setup.md](setup.md). Fase 6 console lane: [docs/console.md](console.md) (`BLOCKED: no console` on `main` until a measured follow-up). Public Microsoft/Xbox constraints (not measured results) live under [docs/platform/](platform/dev-mode.md).
+This is the GPU research track for quantized LLM work on Xbox Series S|X. Decisions and constraints are recorded in [docs/adr/0001-architecture.md](adr/0001-architecture.md) (E0 backend: [0003](adr/0003-floppylm-e0.md), [0004](adr/0004-independent-e0-gates.md)). Execution order is [docs/execution-plan.md](execution-plan.md). Fase 0 install and host run: [docs/setup.md](setup.md). Fase 6 console lane: [docs/console.md](console.md) (Series S E0 measured; other targets pending). Fase 7 honest write-up: [docs/results.md](results.md). Public Microsoft/Xbox constraints (not measured results) live under [docs/platform/](platform/dev-mode.md).
 
 ## Problem
 
@@ -49,9 +49,9 @@ These are public SoT notes. They do **not** complete Fase 6 and do **not** inven
 | [platform/gdk-vs-gdkx.md](platform/gdk-vs-gdkx.md) | Public GDK is Windows-only; GDKX / ID@Xbox not claimed |
 | [platform/series-s-vs-x.md](platform/series-s-vs-x.md) | Public SKU specs only; no fabricated Series S\|X benches |
 | [platform/blockers-fase6-validation.md](platform/blockers-fase6-validation.md) | Fase 6 blockers; Fase 0–5 is not gated by Fase 6 |
-| [console.md](console.md) | Fase 6 deploy / PIX / results table — `BLOCKED: no console` on `main` until a measured follow-up |
-| [results.md](results.md) | Fase 7 honest publication (host sourced; console UNMEASURED) |
+| [console.md](console.md) | Fase 6 deployment and measured Series S E0 results; other Series cells UNMEASURED |
+| [results.md](results.md) | Fase 7 honest publication (host sourced; E0 cited; rest UNMEASURED) |
 
 ## Honesty bar
 
-No tok/s or quality claims until measured. Fase 6 on `main` reports `BLOCKED: no console` in [console.md](console.md). Fase 7 publishes that state in [results.md](results.md) — an empty console table is **not** presented as hardware. BitNet/peer numbers are paper-sourced or marked UNMEASURED. A Dev Mode kit may reopen console validation as a follow-up PR; it does not back-fill invented Series cells.
+No tok/s or quality claims until measured. Fase 6 records measured Series S E0 hardware evidence in [console.md](console.md). Fase 7 publishes that evidence in [results.md](results.md) and keeps every other Series / quality / PIX / peer cell **UNMEASURED** — an empty cell is **not** hardware. BitNet/peer numbers are paper-sourced or marked UNMEASURED. Do not invent tok/s beyond the E0 already on `main`.

@@ -1,0 +1,20 @@
+{
+  "ci_run": "36751689355",
+  "ci_package_sha256": "8398c014c3eef9df66031a2ea43237dfb92f060571b65698f28e52e80d6c9057",
+  "signed_package_sha256": "c19e7e1614789b662ada8c65979960e4ff515f9b29d84dd7d5edacba33a64c1b",
+  "payloads_preserved": true,
+  "payloads": {
+    "Assets/SplashScreen.png": "edfe7e4d70af5fbe5f5ffcb65070890652158f9b7211eeb78ec9ca9e9568f899",
+    "Assets/Square150x150Logo.png": "32a61fbd3fd32ecb510622dbe6874c672a2230947de4f42d377e2cedb124ba5b",
+    "Assets/Square44x44Logo.png": "e327904750554d042d6bd92b4caae66a680b9b7c465e9c295fdadc4d160ff1f6",
+    "Assets/StoreLogo.png": "43c67680f58ce418a71a46fdf70a8892adc68d18847031674bb70c8914952073",
+    "Assets/e0_tensor.cso": "a6e6c2f641b6a1362e69c06d92f4faf2ae86b41baea9a681a86655ac994ca50f",
+    "Xgpu.winmd": "6ecb9f77049eb00df3805096ed6136c6f78b08408eb10be006176d23ca446e27",
+    "XgpuE0.exe": "8f78193150a573e0dfb1fa667928850cd20b33e85b57aac8577cbd16d3841def",
+    "resources.pri": "d3ec79b2d2f42c1c825f5d80181052447bec92c7eb3d11574bad7c27c2a1ba94",
+    "AppxManifest.xml": "bcfac5ef871b969d5f046f89b1aec1b51e39199946b9848da365e6e524e6b630"
+  },
+  "source_commit": "6dbc407c2f9de06f369c7f24bbbcf671246ce579",
+  "branch_commit": "762628a910ecf8d5130beff90f277bffc02c9f73",
+  "pr_merge_tree_matches_branch": true
+}

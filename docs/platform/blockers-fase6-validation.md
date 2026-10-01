@@ -37,13 +37,13 @@ Detail: [dev-mode.md](dev-mode.md).
 | Lane | What is in scope |
 | --- | --- |
 | **Fase 0–5** | Public GDK + Windows **DirectX 12** / **HLSL** compute shaders. CPU ggml baseline. No console tok/s. |
-| **Fase 6** | Series S|X **Dev Mode** validation. Blocked until hardware exists **or** the phase reports `BLOCKED: no console` with reason. |
-| **Fase 7** | Honest publication only after measured (or explicitly unmeasured) results. |
+| **Fase 6** | Series S|X **Dev Mode** validation. Series S E0 functional execution is measured; quality / Series X / PIX remain **UNMEASURED**. |
+| **Fase 7** | Honest publication of measured (or explicitly unmeasured) results. |
 
 ## Related
 
-- [docs/console.md](../console.md) — Fase 6 deploy / PIX / results table (`BLOCKED: no console` on `main` until a measured follow-up)
-- [docs/results.md](../results.md) — Fase 7 honest summary (console still UNVALIDATED)
+- [docs/console.md](../console.md) — Fase 6 deploy / PIX / measured Series S E0 and remaining UNMEASURED cells
+- [docs/results.md](../results.md) — Fase 7 honest summary (E0 cited; other Series cells UNMEASURED)
 - [series-s-vs-x.md](series-s-vs-x.md) — public SKU specs, not our benches
 - [dx12-hlsl-compute.md](dx12-hlsl-compute.md) — FL 11.0 research path
 - [ROADMAP.md](../../ROADMAP.md)

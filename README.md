@@ -48,7 +48,7 @@ Playbook Cursor: [docs/execution-plan.md](docs/execution-plan.md). Tabella compl
 
 ### Stato attuale
 
-Fase 7 (bozza): sintesi onesta in [docs/results.md](docs/results.md). Figure: solo placeholder ([docs/figures/README.md](docs/figures/README.md)) — **nessun grafico inventato**. Fase 6 su `main` (`66224e05`, [PR #15](https://github.com/gianlucamazza/xbox-gpu-training/pull/15)) resta **`BLOCKED: no console`** / **UNVALIDATED** — tabella vuota in [docs/console.md](docs/console.md). Un kit Dev Mode è **ora disponibile** (riattivato il 2026-09-30); la validazione console può riaprire solo come **PR di follow-up misurata**. GDKX / ID@Xbox non rivendicati. I quattro blocker restano veri: [docs/platform/blockers-fase6-validation.md](docs/platform/blockers-fase6-validation.md). Companion CPU FloppyLM: [gianlucamazza/xllama](https://github.com/gianlucamazza/xllama) (non modificato; `feat/floppylm-training` non toccato). **Nessun tok/s o ranking BitNet inventato.** Setup: [docs/setup.md](docs/setup.md). Il smoke `benchmarks/run_smoke.py` resta stub. Questa ricerca **non** è “pubblica” finché un umano non rivede `docs/results.md`.
+Fase 7 (bozza): sintesi onesta in [docs/results.md](docs/results.md). Figure: solo placeholder ([docs/figures/README.md](docs/figures/README.md)) — **nessun grafico inventato**. [PR #17](https://github.com/gianlucamazza/xbox-gpu-training/pull/17) (`aec1a2a`) ha misurato l’E0 UWP su **Series S**: 52 operation / 36 model fixtures, AdamW identical-input, recovery esatto e sospensione reale; trial sintetico rappresentativo **963.571 token/s** (147456 token / 153.030679 s; picco app 91418624 byte). Evidenza: [docs/evidence/e0-20261001/notes.md](docs/evidence/e0-20261001/notes.md). Qualità scientifica, Series X, PIX, confronto CPU e i workload Win32 storici restano **UNMEASURED** / **UNVALIDATED**. I quattro blocker restano veri: [docs/platform/blockers-fase6-validation.md](docs/platform/blockers-fase6-validation.md). GDKX / ID@Xbox non rivendicati. Companion CPU FloppyLM: [gianlucamazza/xllama](https://github.com/gianlucamazza/xllama) (non modificato; `feat/floppylm-training` non toccato). **Nessun tok/s o ranking BitNet inventato oltre l’E0 già su `main`.** Setup: [docs/setup.md](docs/setup.md). Il smoke `benchmarks/run_smoke.py` resta stub. Questa ricerca **non** è “pubblica” finché un umano non rivede `docs/results.md`.
 
 ### Come contribuire
 
@@ -89,7 +89,7 @@ Cursor playbook: [docs/execution-plan.md](docs/execution-plan.md). Full table: [
 
 ### Current status
 
-Fase 7 (draft): honest write-up in [docs/results.md](docs/results.md). Figures: placeholders only ([docs/figures/README.md](docs/figures/README.md)) — **no fabricated plots**. Fase 6 on `main` (`66224e05`, [PR #15](https://github.com/gianlucamazza/xbox-gpu-training/pull/15)) stays **`BLOCKED: no console`** / **UNVALIDATED** — empty table in [docs/console.md](docs/console.md). A Dev Mode kit is **now available** (re-enabled 2026-09-30); console validation may reopen only as a **follow-up measured PR**. GDKX / ID@Xbox not claimed. The four blockers stay accurate: [docs/platform/blockers-fase6-validation.md](docs/platform/blockers-fase6-validation.md). Companion FloppyLM **CPU** path: [gianlucamazza/xllama](https://github.com/gianlucamazza/xllama) (not modified; `feat/floppylm-training` not touched). **No invented tok/s or BitNet rankings.** Setup: [docs/setup.md](docs/setup.md). `benchmarks/run_smoke.py` remains a stub. This research is **not** “public” until a human reviews `docs/results.md`.
+Fase 7 (draft): honest write-up in [docs/results.md](docs/results.md). Figures: placeholders only ([docs/figures/README.md](docs/figures/README.md)) — **no fabricated plots**. [PR #17](https://github.com/gianlucamazza/xbox-gpu-training/pull/17) (`aec1a2a`) measured the E0 UWP backend on retail **Series S**: 52 operation / 36 model fixtures, identical-input AdamW, exact recovery and real suspension; representative synthetic trial **963.571 token/s** (147456 tokens / 153.030679 s; peak app 91418624 bytes). Evidence: [docs/evidence/e0-20261001/notes.md](docs/evidence/e0-20261001/notes.md). Scientific quality, Series X, PIX, matched CPU comparison, and historical Win32 host workloads stay **UNMEASURED** / **UNVALIDATED**. GDKX / ID@Xbox not claimed. The four blockers stay accurate: [docs/platform/blockers-fase6-validation.md](docs/platform/blockers-fase6-validation.md). Companion FloppyLM **CPU** path: [gianlucamazza/xllama](https://github.com/gianlucamazza/xllama) (not modified; `feat/floppylm-training` not touched). **No invented tok/s or BitNet rankings beyond the E0 already on `main`.** Setup: [docs/setup.md](docs/setup.md). `benchmarks/run_smoke.py` remains a stub. This research is **not** “public” until a human reviews `docs/results.md`.
 
 ### How to contribute
 
@@ -109,10 +109,12 @@ Fase 7 (draft): honest write-up in [docs/results.md](docs/results.md). Figures: 
 | `docs/ste-adamw.md` | Fase 3 FakeQuant / STE / AdamW contract + grad-check tolerances |
 | `docs/memory-budget.md` | Fase 4 App ~1 GB / Game ~5 GB streaming contract |
 | `docs/qat-wsd.md` | Fase 5 QAT bit-widths + WSD + isolated cooldowns (N=16) |
-| `docs/console.md` | Fase 6 Dev Mode deploy / PIX / `BLOCKED: no console` table |
-| `docs/results.md` | Fase 7 honest host/BLOCKED summary (human review before “public”) |
+| `docs/console.md` | Fase 6 measured Series S E0 and remaining UNMEASURED targets |
+| `docs/results.md` | Fase 7 honest host + sourced E0 summary (human review before “public”) |
 | `docs/figures/` | Figure **placeholders** only — no fabricated plots |
-| `docs/`, `docs/adr/` | Architecture + ADRs (`0001`, `0002`) |
+| `docs/evidence/` | Package lineage and Series S E0 acceptance (PR #17) |
+| `docs/`, `docs/adr/` | Architecture + ADRs (`0001`–`0004`) |
+| `src/cpp/e0/`, `uwp/` | Separate E0 trainer + x64 UWP package lane |
 | `docs/platform/` | Public Xbox / Dev Mode / GDK / UWP fact packs |
 | `docs/execution-plan.md` | Cursor phase playbook |
 | `benchmarks/` | Smoke stub + Fase 1 CSV + Fase 2 `fixtures/tiny_flp2.json` + Fase 4 `fixtures/stream_stress.json` |

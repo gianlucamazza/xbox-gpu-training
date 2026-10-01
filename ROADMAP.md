@@ -6,7 +6,7 @@ Milestones (Italian titles, already on GitHub): [Fase 0–7](https://github.com/
 
 Phase labels (English kebab-case): `phase-0` … `phase-7`. Topic labels: `research`, `kernel`, `memory`, `benchmark`, `adr`.
 
-No tok/s or quality numbers until Fase 6 measures them on Dev Mode hardware (or the phase reports `BLOCKED: no console`). Fase 0–5 Windows / public-GDK work is **not** gated by Fase 6. Explicit console blockers: [docs/platform/blockers-fase6-validation.md](docs/platform/blockers-fase6-validation.md).
+No tok/s or quality numbers until Dev Mode hardware measures them (or the phase reports `BLOCKED` / **UNMEASURED**). Series S E0 functional throughput is measured ([docs/console.md](docs/console.md)); scientific quality is not. Fase 0–5 Windows / public-GDK work is **not** gated by Fase 6. Explicit console blockers: [docs/platform/blockers-fase6-validation.md](docs/platform/blockers-fase6-validation.md).
 
 | Phase | Milestone | Branch pattern | Gate |
 | --- | --- | --- | --- |
@@ -56,7 +56,7 @@ No tok/s or quality numbers until Fase 6 measures them on Dev Mode hardware (or 
 - [x] Chunk stream + 2-slot host double buffer ([src/cpp/stream_buffer.cpp](src/cpp/stream_buffer.cpp)). Logical corpus is never allocated as one tensor.
 - [x] Stress fixture [benchmarks/fixtures/stream_stress.json](benchmarks/fixtures/stream_stress.json) + `xbox_gpu_host --stream-stress --budget-mb 1024`.
 - [x] App **~1 GB** (1024 MiB) planning budget documented; Creators **Game ~5 GB** (5120 MiB) documented as the **other** designation only — not assumed for App packages. Contract: [docs/memory-budget.md](docs/memory-budget.md). SoT: [docs/platform/uwp-resources.md](docs/platform/uwp-resources.md) (debugger can mask OOM; non-debug is the gate).
-- [x] Peak working-set printed from the host that actually ran. Linux desktop (this implementation host): **36.08 MiB** (`VmHWM`) vs App planning 1024 MiB — under budget, no OOM. **Console AppContainer UNVALIDATED** — no invented Series S|X numbers.
+- [x] Historical desktop peak working-set printed from the host that actually ran. Linux desktop (this implementation host): **36.08 MiB** (`VmHWM`) vs App planning 1024 MiB — under budget, no OOM. **Console AppContainer UNVALIDATED** — no invented Series S|X numbers.
 - [x] No new HLSL kernel. GPU path (when D3D12 exists) is ping-pong `CopyBufferRegion` of two tiles; otherwise `gpu_double_buffer: BLOCKED: no D3D12 device`.
 - Status: **Fase 4 implementation**. Execution: [docs/execution-plan.md](docs/execution-plan.md#fase-4--memory-streaming). Label: `memory`, `phase-4`.
 
@@ -69,21 +69,40 @@ No tok/s or quality numbers until Fase 6 measures them on Dev Mode hardware (or 
 - [x] Default FakeQuant **ternary absmean** + STE (ADR 0002). 2-bit / 4-bit are **host** midrise FakeQuant (`--bit-width 2|4`); Fase 3 stubs are no longer no-ops. **No new HLSL** — GPU 2/4-bit FakeQuant not dispatched.
 - Status: **Fase 5 implementation**. Execution: [docs/execution-plan.md](docs/execution-plan.md#fase-5--qat-ternary24-bit--wsd). GPU path without D3D12: `BLOCKED: no D3D12 device`. No quality / tok/s / Series numbers. Label: `research`, `phase-5`.
 
-## Phase 6 — Series S|X Dev Mode validation; speed/quality vs CPU-only
+## Phase 6 — Series S|X Dev Mode validation
 
-- [x] Deploy notes + PIX checklist scaffolding: [docs/console.md](docs/console.md) (pointer in [docs/setup.md](docs/setup.md)). Win32 host is **not** a UWP package; no AppX was deployed.
-- [x] Results table present with explicit **`BLOCKED: no console`** (empty metric cells). Reason at merge (`66224e05`, [PR #15](https://github.com/gianlucamazza/xbox-gpu-training/pull/15)): **no Dev Mode kit** in that lane; **GDKX / ID@Xbox not claimed**. No invented tok/s or Series benches.
-- [ ] Real Series S|X Dev Mode benches — **UNVALIDATED**. Table not filled from hardware. Console validation is **not** complete. A Dev Mode kit is **now available** (re-enabled 2026-09-30) for a **follow-up measured PR** only — do not back-fill Fase 6 on `main` with invented numbers.
-- [ ] CPU-only vs console comparison — not filled (both sides not measured on the same kit).
-- Status: **`BLOCKED: no console`** on `main`. Honest checkpoint. Known blockers stay accurate: [docs/platform/blockers-fase6-validation.md](docs/platform/blockers-fase6-validation.md) (UWP memory + debugger mask; no DirectML-as-trainer SoT; public GDK Windows-only; Dev Mode ≠ GDKX). Public SKU specs only: [docs/platform/series-s-vs-x.md](docs/platform/series-s-vs-x.md). Execution: [docs/execution-plan.md](docs/execution-plan.md#fase-6--series-sx-dev-mode-validation). Label: `phase-6`, `benchmark`.
+- [x] Separate E0 x64 UWP Release package built, signed with verified CI payloads,
+  installed and exercised on retail Series S in Dev Mode ([PR #17](https://github.com/gianlucamazza/xbox-gpu-training/pull/17), `aec1a2a`).
+- [x] Independent operation/model parity, identical-input optimizer, exact resume,
+  real suspension and worker reuse validated on the current package.
+- [x] Representative throughput, transfers and non-debug app memory measured.
+  [Evidence](docs/evidence/e0-20261001/notes.md), [console status](docs/console.md).
+- [ ] Full scientific E0 campaign and reserved final test: companion execution pending completion.
+- [ ] Series X, matched CPU comparison and PIX captures: no measurements available.
+- [ ] Historical Win32 host workloads (`hello_compute` / matmul / FLP2 / stream-stress / qat-smoke) on console: **UNMEASURED**.
+- Status: Series S E0 **measured**; remaining Series / quality / PIX cells **UNMEASURED**. Known blockers stay accurate: [docs/platform/blockers-fase6-validation.md](docs/platform/blockers-fase6-validation.md). Execution: [docs/execution-plan.md](docs/execution-plan.md#fase-6--series-sx-dev-mode-validation). Label: `phase-6`, `benchmark`.
 
-## Phase 7 — publish results (paper/blog), public BitNet/peer comparison
+The Phase 0–5 entries above document the original desktop diagnostic lane. They
+do not establish console validation of those separate host workloads. The active
+E0 UWP trainer is governed by ADR 0003/0004; its measured results are listed here.
 
-- [x] Honest [docs/results.md](docs/results.md): Fase 0–6 host measurements sourced; console / tok/s / quality **UNMEASURED** or **`BLOCKED: no console`**.
+## Phase 7 — Publication
+
+- [x] Honest [docs/results.md](docs/results.md): Fase 0–5 host measurements sourced; Series S E0 cited from [PR #17](https://github.com/gianlucamazza/xbox-gpu-training/pull/17); remaining console / quality cells **UNMEASURED**.
 - [x] Figure placeholders only ([docs/figures/README.md](docs/figures/README.md)) — **no fabricated plots**.
 - [x] Companion link to FloppyLM **CPU** path: [gianlucamazza/xllama](https://github.com/gianlucamazza/xllama). xllama / `feat/floppylm-training` **not** modified.
 - [x] Public BitNet/peer table: paper-sourced numbers (Ma et al. [arXiv:2402.17764](https://arxiv.org/abs/2402.17764)) or explicitly **UNMEASURED** on our side. **No ranking.**
 - [x] README status updated (IT + EN).
+- [x] Publish functional E0 evidence, exact package lineage, baseline failures and limits.
 - [ ] Human review of `docs/results.md` before calling the research **public** (Fase 7 checkpoint).
-- [ ] Series / peer charts — still placeholders until a measured follow-up.
-- Status: **Fase 7 draft for human review**. Execution: [docs/execution-plan.md](docs/execution-plan.md#fase-7--publish-results). Does **not** complete console validation. Label: `phase-7`, `research`.
+- [ ] Publish scientific E0 selection, paired statistics, exclusions and costs after the companion campaign passes all gates and the single final test finishes.
+- [ ] Peer/BitNet comparison or paper: requires a preregistered matched comparison; no such result is claimed by the functional acceptance.
+- [ ] Series / peer charts — still placeholders (E0 number is sourced in prose, not drawn).
+- Status: **Fase 7 draft for human review**. Execution: [docs/execution-plan.md](docs/execution-plan.md#fase-7--publish-results). Does **not** complete scientific E0. Label: `phase-7`, `research`.
+
+## Completion sequence (2026-10-01)
+
+1. Merge the reviewed E0 trainer and keep validated source/package binding.
+2. Run the companion's sequential row16/row8log campaign with frozen hashes.
+3. Diagnose any failed native job; explicitly recover bound interrupted trials.
+4. Publish generated scientific results when available; keep unmeasured targets pending.

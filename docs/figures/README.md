@@ -59,11 +59,11 @@ Results prose: [docs/results.md](../results.md).
 ### F6 — Series S|X benches {#f6}
 
 - **Would show:** tok/s / quality / PIX on Dev Mode hardware.
-- **Have now:** [console.md](../console.md) **`BLOCKED: no console`** on `main` @ `66224e05`. Empty metric cells. Kit may reopen this as a **follow-up measured PR**.
-- **Status:** placeholder. **UNMEASURED.**
+- **Have now:** Series S representative synthetic E0 **963.571 token/s** (147456 tokens / 153.030679 s; peak app memory 91418624 bytes) in [console.md](../console.md) / [e0-20261001](../evidence/e0-20261001/notes.md) from [PR #17](https://github.com/gianlucamazza/xbox-gpu-training/pull/17). Historical Win32 host rows, Series X, quality, and PIX remain **UNMEASURED**.
+- **Status:** placeholder. The E0 number is sourced; this is **not** a plot.
 
 ```
-[ F6 PLACEHOLDER — BLOCKED: no console — no fabricated Series chart ]
+[ F6 PLACEHOLDER — sourced E0 number lives in console.md — no fabricated Series chart ]
 ```
 
 ### F7 — BitNet / peer overlay {#f7}

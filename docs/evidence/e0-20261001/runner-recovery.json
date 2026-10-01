@@ -1,0 +1,221 @@
+{
+ "commit": "6a124021d7ae450c5e12056bd70503ed9298f9bd",
+ "completed_retrieval_unchanged": true,
+ "interrupted_recovery_exact": true,
+ "ok": true,
+ "package": "GianlucaMazza.XgpuE0_0.1.0.24_x64__g0p5dcfz4t9z4",
+ "purpose": "functional",
+ "reports": [
+  {
+   "adapter": "SraKmd_arden",
+   "branches": [
+    {
+     "artifact": {
+      "bytes": 316829,
+      "path": "results/recovery-20261001T001016Z-1a7f38-full/branch-8.json",
+      "sha256": "07d23edd0236512852b787fc9d3decaeae1facbf12df81e65ab96301c41ea3eb"
+     },
+     "cooldown_seconds": 0.153933428,
+     "cooldown_start": 7,
+     "cooldown_steps": 1,
+     "end_step": 8,
+     "tokens_seen": 128
+    },
+    {
+     "artifact": {
+      "bytes": 316845,
+      "path": "results/recovery-20261001T001016Z-1a7f38-full/branch-16.json",
+      "sha256": "c5b067d790827cde86e90a3406755365af7cf603b78b20ef3e7b73876298b967"
+     },
+     "cooldown_seconds": 0.14745316,
+     "cooldown_start": 15,
+     "cooldown_steps": 1,
+     "end_step": 16,
+     "tokens_seen": 256
+    },
+    {
+     "artifact": {
+      "bytes": 316435,
+      "path": "results/recovery-20261001T001016Z-1a7f38-full/branch-32.json",
+      "sha256": "96ae208439981620138595bbda531cc09cef840bc505b397186312b1f11571d3"
+     },
+     "cooldown_seconds": 0.432892859,
+     "cooldown_start": 29,
+     "cooldown_steps": 3,
+     "end_step": 32,
+     "tokens_seen": 512
+    }
+   ],
+   "checkpoint": {
+    "bytes": 1010571,
+    "path": "results/recovery-20261001T001016Z-1a7f38-full/checkpoint.json",
+    "sha256": "ae9efc44c135532e8096e7a39c51f3cb154d7bee74ed4cb0177aab7f68da9ef5"
+   },
+   "dispatches": 4148,
+   "gpu_seconds": 0.04265094736842088,
+   "hardware_gpu": true,
+   "job_id": "recovery-20261001T001016Z-1a7f38-full",
+   "job_sha256": "8533755a660e4d725bebd4c1e67ac2ee6e6658359247a3e5c66506533811b0d9",
+   "last_loss": 1.5586926266551018,
+   "peak_memory_bytes": 22085632,
+   "schema": "floppylm.e0.result.v1",
+   "state": "completed",
+   "transfer_bytes": 50115456,
+   "trunk_step": 29,
+   "wall_seconds": 4.96578736
+  },
+  {
+   "adapter": "SraKmd_arden",
+   "branches": [
+    {
+     "artifact": {
+      "bytes": 316829,
+      "path": "results/recovery-20261001T001016Z-1a7f38-interrupted/branch-8.json",
+      "sha256": "07d23edd0236512852b787fc9d3decaeae1facbf12df81e65ab96301c41ea3eb"
+     },
+     "cooldown_seconds": 0.148169297,
+     "cooldown_start": 7,
+     "cooldown_steps": 1,
+     "end_step": 8,
+     "tokens_seen": 128
+    },
+    {
+     "artifact": {
+      "bytes": 316845,
+      "path": "results/recovery-20261001T001016Z-1a7f38-interrupted/branch-16.json",
+      "sha256": "c5b067d790827cde86e90a3406755365af7cf603b78b20ef3e7b73876298b967"
+     },
+     "cooldown_seconds": 0.149402983,
+     "cooldown_start": 15,
+     "cooldown_steps": 1,
+     "end_step": 16,
+     "tokens_seen": 256
+    },
+    {
+     "artifact": {
+      "bytes": 316435,
+      "path": "results/recovery-20261001T001016Z-1a7f38-interrupted/branch-32.json",
+      "sha256": "96ae208439981620138595bbda531cc09cef840bc505b397186312b1f11571d3"
+     },
+     "cooldown_seconds": 0.436028887,
+     "cooldown_start": 29,
+     "cooldown_steps": 3,
+     "end_step": 32,
+     "tokens_seen": 512
+    }
+   ],
+   "checkpoint": {
+    "bytes": 1010578,
+    "path": "results/recovery-20261001T001016Z-1a7f38-interrupted/checkpoint.json",
+    "sha256": "0ec89c8ecb3f38fe33d28ec4540f919f18bd469a5fb4433cafad878cac397d9b"
+   },
+   "dispatches": 4148,
+   "execution_segments": [
+    {
+     "adapter": "SraKmd_arden",
+     "branches": [
+      {
+       "artifact": {
+        "bytes": 316829,
+        "path": "results/recovery-20261001T001016Z-1a7f38-interrupted/branch-8.json",
+        "sha256": "07d23edd0236512852b787fc9d3decaeae1facbf12df81e65ab96301c41ea3eb"
+       },
+       "cooldown_seconds": 0.148169297,
+       "cooldown_start": 7,
+       "cooldown_steps": 1,
+       "end_step": 8,
+       "tokens_seen": 128
+      }
+     ],
+     "checkpoint": {
+      "bytes": 1011784,
+      "path": "results/recovery-20261001T001016Z-1a7f38-interrupted/checkpoint.json",
+      "sha256": "de805de403e0b1bc5d0edf11fc1691d8c8df4fb6e9cf1f55d4e544386b13501f"
+     },
+     "dispatches": 1220,
+     "gpu_seconds": 0.012541072681704256,
+     "hardware_gpu": true,
+     "job_id": "recovery-20261001T001016Z-1a7f38-interrupted",
+     "job_sha256": "064bd3bdf9f273e503d8da5b928a1f093e9d0861d9ce13fb2d9704894bb04866",
+     "last_loss": 3.819479674100876,
+     "peak_memory_bytes": 21553152,
+     "schema": "floppylm.e0.result.v1",
+     "state": "interrupted",
+     "transfer_bytes": 14739840,
+     "trunk_step": 9,
+     "wall_seconds": 1.470694638
+    },
+    {
+     "adapter": "SraKmd_arden",
+     "branches": [
+      {
+       "artifact": {
+        "bytes": 316829,
+        "path": "results/recovery-20261001T001016Z-1a7f38-interrupted/branch-8.json",
+        "sha256": "07d23edd0236512852b787fc9d3decaeae1facbf12df81e65ab96301c41ea3eb"
+       },
+       "cooldown_seconds": 0.148169297,
+       "cooldown_start": 7,
+       "cooldown_steps": 1,
+       "end_step": 8,
+       "tokens_seen": 128
+      },
+      {
+       "artifact": {
+        "bytes": 316845,
+        "path": "results/recovery-20261001T001016Z-1a7f38-interrupted/branch-16.json",
+        "sha256": "c5b067d790827cde86e90a3406755365af7cf603b78b20ef3e7b73876298b967"
+       },
+       "cooldown_seconds": 0.149402983,
+       "cooldown_start": 15,
+       "cooldown_steps": 1,
+       "end_step": 16,
+       "tokens_seen": 256
+      },
+      {
+       "artifact": {
+        "bytes": 316435,
+        "path": "results/recovery-20261001T001016Z-1a7f38-interrupted/branch-32.json",
+        "sha256": "96ae208439981620138595bbda531cc09cef840bc505b397186312b1f11571d3"
+       },
+       "cooldown_seconds": 0.436028887,
+       "cooldown_start": 29,
+       "cooldown_steps": 3,
+       "end_step": 32,
+       "tokens_seen": 512
+      }
+     ],
+     "checkpoint": {
+      "bytes": 1010578,
+      "path": "results/recovery-20261001T001016Z-1a7f38-interrupted/checkpoint.json",
+      "sha256": "0ec89c8ecb3f38fe33d28ec4540f919f18bd469a5fb4433cafad878cac397d9b"
+     },
+     "dispatches": 2928,
+     "gpu_seconds": 0.030094796992481243,
+     "hardware_gpu": true,
+     "job_id": "recovery-20261001T001016Z-1a7f38-interrupted",
+     "job_sha256": "7b919ec41203d17369b23665ca5bcd8bfeb8490f07ceeedea7d79f70b449b795",
+     "last_loss": 1.5586926266551018,
+     "peak_memory_bytes": 21852160,
+     "schema": "floppylm.e0.result.v1",
+     "state": "completed",
+     "transfer_bytes": 35375616,
+     "trunk_step": 29,
+     "wall_seconds": 3.524888823
+    }
+   ],
+   "gpu_seconds": 0.0426358696741855,
+   "hardware_gpu": true,
+   "job_id": "recovery-20261001T001016Z-1a7f38-interrupted",
+   "job_sha256": "7b919ec41203d17369b23665ca5bcd8bfeb8490f07ceeedea7d79f70b449b795",
+   "last_loss": 1.5586926266551018,
+   "peak_memory_bytes": 21852160,
+   "schema": "floppylm.e0.result.v1",
+   "state": "completed",
+   "transfer_bytes": 50115456,
+   "trunk_step": 29,
+   "wall_seconds": 4.995583461
+  }
+ ],
+ "runner_resume_completed_idempotent": true
+}

@@ -228,6 +228,13 @@ dxc -T cs_6_0 -E CSMain -Fo build\matmul.cso src\hlsl\matmul.hlsl
 
 ### Fase 6 — Series S|X Dev Mode validation
 
+Current execution: the separate E0 x64 UWP app has passed Series S functional
+acceptance, representative throughput, exact recovery and real suspension.
+See [console status](console.md) and [current evidence](evidence/e0-20261001/notes.md).
+The commands below document the historical desktop lane; they do not validate
+that lane on console. The next active task is companion scientific E0 completion.
+
+
 **Objective:** Deploy package, run benches on console, PIX capture notes. Speed/quality vs CPU-only only if measured.
 
 **Branch:** `phase-6/dev-mode-validation`

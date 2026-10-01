@@ -53,6 +53,6 @@ GitHub-hosted `windows-latest` has no Xbox Series S|X GPU. Real numbers require:
 
 WARP / Basic Render Driver is a **Windows software** D3D12 device, not Series S|X hardware.
 
-Fase 6 console table: [docs/console.md](../docs/console.md) — **`BLOCKED: no console`** on `main` (`66224e05`). Empty metric cells. Not a tok/s result. Fase 7 write-up: [docs/results.md](../docs/results.md).
+Fase 6 console table: [docs/console.md](../docs/console.md) — Series S E0 measured ([PR #17](https://github.com/gianlucamazza/xbox-gpu-training/pull/17)); historical host rows / Series X / quality remain **UNMEASURED**. This smoke is **not** that E0 trial. Fase 7 write-up: [docs/results.md](../docs/results.md).
 
 Workflow **Benchmark** job name: **`benchmark`**. Artifact: `benchmark-results` (still the smoke JSON; this workflow was not rewritten in Fase 1).
