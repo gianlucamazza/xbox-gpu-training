@@ -29,6 +29,7 @@ from pathlib import Path
 from urllib.parse import urlencode, urlsplit
 
 PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
+APP_IMAGE = "xgpue0.exe"
 FINAL_STATES = ("completed", "interrupted", "failed")
 # Status fields recorded next to each shot: what the dashboard was showing.
 STATUS_KEYS = (
@@ -48,6 +49,15 @@ def png_size(data: bytes) -> tuple[int, int]:
     if len(data) < 24 or not data.startswith(PNG_SIGNATURE) or data[12:16] != b"IHDR":
         raise ValueError("not a PNG image")
     return struct.unpack(">II", data[16:24])
+
+
+def app_running(processes: dict, package: str) -> bool:
+    """Whether the E0 app is in the Device Portal process list."""
+    return any(
+        p.get("PackageFullName") == package
+        or str(p.get("ImageName", "")).lower() == APP_IMAGE
+        for p in processes.get("Processes", [])
+    )
 
 
 def milestone(status: dict, seen: set[str], running_step: int = 0) -> str | None:
@@ -148,6 +158,9 @@ class Portal:
         except FileNotFoundError:
             return None
 
+    def processes(self) -> dict:
+        return json.loads(self.get("/api/resourcemanager/processes"))
+
     def screenshot(self) -> bytes:
         return self.get("/ext/screenshot?download=false&hdr=false")
 
@@ -163,13 +176,21 @@ class Recorder:
             else {"shots": []}
         )
 
-    def capture(self, label: str, status: dict | None = None) -> dict:
+    def capture(self, label: str, status: dict | None = None) -> dict | None:
         device = self.portal.device()
         if device.get("package") != self.portal.package:
             raise SystemExit(
                 f"device.json package {device.get('package')} "
                 f"is not {self.portal.package}"
             )
+        # A suspended or closed app leaves Dev Home on screen: not a dashboard shot.
+        if not app_running(self.portal.processes(), self.portal.package):
+            print(
+                f"{label}: skipped, the E0 app is not running",
+                file=sys.stderr,
+                flush=True,
+            )
+            return None
         data = self.portal.screenshot()
         width, height = png_size(data)
         name = f"{label}.png"
@@ -238,10 +259,10 @@ def main() -> int:
 
     recorder = Recorder(Portal.from_env(args.package), args.out)
     if args.command == "capture":
-        recorder.capture(
+        shot = recorder.capture(
             args.label, recorder.portal.status(args.job) if args.job else None
         )
-        return 0
+        return 0 if shot else 1
     return watch(
         recorder, args.job, args.interval, args.settle, args.timeout, args.running_step
     )

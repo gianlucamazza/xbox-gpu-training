@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from e0_dashboard_shots import PNG_SIGNATURE, milestone, png_size  # noqa: E402
+from e0_dashboard_shots import PNG_SIGNATURE, app_running, milestone, png_size  # noqa: E402
 
 SCHEDULE = {"ends": [879, 1758, 3516], "cooldown_starts": [792, 1583, 3165]}
 
@@ -37,6 +37,20 @@ class Milestones(unittest.TestCase):
     def test_final_states(self):
         for state in ("completed", "interrupted", "failed"):
             self.assertEqual(milestone({"state": state}, {"running"}), state)
+
+
+class App(unittest.TestCase):
+    def test_running_app_by_image_or_package(self):
+        package = "GianlucaMazza.XgpuE0_0.1.0.65_x64__g0p5dcfz4t9z4"
+        self.assertTrue(
+            app_running({"Processes": [{"ImageName": "XgpuE0.exe"}]}, package)
+        )
+        self.assertTrue(
+            app_running({"Processes": [{"PackageFullName": package}]}, package)
+        )
+        self.assertFalse(
+            app_running({"Processes": [{"ImageName": "System Idle Process"}]}, package)
+        )
 
 
 class Png(unittest.TestCase):
