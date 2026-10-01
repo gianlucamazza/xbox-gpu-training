@@ -19,7 +19,7 @@ shaders, fp32 master weights, no CUDA, no DirectML trainer, no GDKX claim.
 | State     | Active; accepted on Series S                                                                     | Historical (Fase 0–5)                                               |
 | Code      | `src/cpp/e0/`, `src/hlsl/e0_tensor.hlsl`, `uwp/`                                                 | `src/cpp/` (`xbox_gpu_host`), other `src/hlsl/` kernels             |
 | Runs on   | Series S UWP App (and CPU reference mode anywhere)                                               | Windows DX12 desktop; CPU paths on Linux                            |
-| Semantics | FloppyLM exactly ([ADR 0003](adr/0003-floppylm-e0.md), [0004](adr/0004-independent-e0-gates.md)) | Own clipped STE / absmean ([ADR 0002](adr/0002-ste-qat-mapping.md)) |
+| Semantics | FloppyLM exactly ([authority](adr/0005-repository-authority.md), [FloppyLM protocol](https://github.com/gianlucamazza/floppylm/blob/main/docs/adr/0008-e0-numeric-protocol.md)) | Own clipped STE / absmean ([ADR 0002](adr/0002-ste-qat-mapping.md)) |
 | Docs      | [e0/](e0/overview.md)                                                                            | [diagnostic/](diagnostic/README.md)                                 |
 
 Results never cross lanes ([claims-policy.md](claims-policy.md)).

@@ -192,17 +192,25 @@ void DashboardView::refresh() {
         job.parent_path() / L"results" / job.stem().stem() / L"status.json";
     if (!std::filesystem::exists(status))
       return;
+    const auto modified = std::filesystem::last_write_time(status);
     const double age = std::chrono::duration<double>(
-                           std::filesystem::file_time_type::clock::now() -
-                           std::filesystem::last_write_time(status))
+                           std::filesystem::file_time_type::clock::now() - modified)
                            .count();
-    show_status(e0::read_json(status), age);
+    if (status_time_ && *status_time_ == modified) {
+      show_freshness(e0ui::Json{{"state", last_state_}}, age);
+      return;
+    }
+    const auto content = e0::read_json(status);
+    show_status(content, age);
+    status_time_ = modified;
   } catch (...) {
     // A status file replaced mid-read is retried on the next tick.
   }
 }
 
 void DashboardView::show_job(const std::filesystem::path &job) {
+  idle_ = false;
+  status_time_.reset();
   history_.clear();
   previous_ = e0ui::Json::object();
   tokens_per_second_ = 0;
@@ -293,10 +301,7 @@ void DashboardView::show_status(const e0ui::Json &status, double age) {
     draw_markers();
   }
   const auto &s = *schedule_;
-  const bool stale = state == "running" && age > kStaleSeconds;
-  fresh_.Text(h((stale ? "no update for " : "updated ") +
-                e0ui::format_duration(age) + (stale ? "" : " ago")));
-  fresh_.Foreground(brush(stale ? kAmber : kMuted));
+  show_freshness(status, age);
   phase_.Text(h(state == "failed" ? status.value("error", std::string("failed"))
                                   : e0ui::phase(status, s)));
   const uint64_t done = e0ui::executed_steps(status, s),
@@ -336,7 +341,24 @@ void DashboardView::show_status(const e0ui::Json &status, double age) {
   draw_chart();
 }
 
+void DashboardView::show_freshness(const e0ui::Json &status, double age) {
+  const bool stale = status.value("state", "") == "running" && age > kStaleSeconds;
+  const auto label = h((stale ? "no update for " : "updated ") +
+                       e0ui::format_duration(age) + (stale ? "" : " ago"));
+  if (fresh_.Text() != label)
+    fresh_.Text(label);
+  if (fresh_stale_ != stale) {
+    fresh_.Foreground(brush(stale ? kAmber : kMuted));
+    fresh_stale_ = stale;
+  }
+}
+
 void DashboardView::show_idle() {
+  // A new brush invalidates XAML rendering even when its colour is unchanged.
+  // The idle poll must not touch the visual tree after this transition.
+  if (idle_)
+    return;
+  idle_ = true;
   current_.clear();
   keep_display(false);
   state_.Text(L"IDLE");
@@ -344,6 +366,7 @@ void DashboardView::show_idle() {
   fresh_.Text(last_state_.empty() ? winrt::hstring()
                                   : h("last job " + last_state_));
   fresh_.Foreground(brush(kMuted));
+  fresh_stale_ = false;
   phase_.Text(L"Waiting for a job from the host. Keep this app open during "
               L"training.");
   progress_.IsIndeterminate(false);

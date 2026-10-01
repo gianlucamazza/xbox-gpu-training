@@ -1,6 +1,7 @@
 # E0 job protocol
 
-Reference for the file protocol between the companion runner and the UWP worker
+Implementation map of the file protocol owned by the [FloppyLM schemas](https://github.com/gianlucamazza/floppylm/tree/main/schemas)
+and vendored at [PIN.json](../../contracts/floppylm/PIN.json). Describes the exchange between the companion runner and the UWP worker
 (`uwp/App.cpp`, `src/cpp/e0/job.cpp`). All paths are under the package
 `LocalState` folder. All JSON is written with `atomic_json` (temporary file, then
 replace; retried on transient Device Portal sharing violations).
@@ -77,4 +78,4 @@ branch artifacts still verify.
 - **Suspension.** On `Suspending` the app writes `<id>.cancel` containing `suspend`
   for the active job and holds the deferral up to 4 s for the job to stop.
 
-Stopping a companion campaign cleanly is described in [runbook.md](runbook.md#stop-a-campaign).
+Stopping a companion campaign cleanly is described in [FloppyLM Xbox runbook](https://github.com/gianlucamazza/floppylm/blob/main/docs/operations/xbox-e0.md#recover).

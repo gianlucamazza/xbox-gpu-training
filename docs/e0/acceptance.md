@@ -1,21 +1,17 @@
 # E0 acceptance
 
 A package trains only after it passes acceptance on the console. Gates come from
-[ADR 0004](../adr/0004-independent-e0-gates.md) and are never relaxed after a failure.
+[FloppyLM ADR 0010](https://github.com/gianlucamazza/floppylm/blob/main/docs/adr/0010-independent-numerical-gates.md) and are never relaxed after a failure.
 How to run them: [runbook.md](runbook.md#4-accept).
 
 ## Gates
 
-| Gate | Requirement | Oracle |
-| --- | --- | --- |
-| Quantization | Exact symbols and canonical serialized scale bytes | FloppyLM Python |
-| Operations | 52 independent cases (forward and every input gradient) within `1e-5 + 1e-4·\|ref\|` per element | Independent PyTorch operations and autograd |
-| Model fixtures | 36 held-out fixtures: logits, loss, gradients within the same bound | FloppyLM Python |
-| Optimizer | AdamW on identical weights, moments, gradients, clipping, LR and step: weights and both moments within the bound | FloppyLM Python |
-| Resume | Interrupted + resumed run equals the uninterrupted run exactly (weights, moments, branches) | Native run |
-| Hardware | `hardware_gpu: true` on the expected adapter, package and commit | `device.json` |
-
-The integrated one-step parameter error is kept as a diagnostic only (ADR 0004).
+Numerical and scientific requirements are authoritative in FloppyLM's
+[independent gates](https://github.com/gianlucamazza/floppylm/blob/main/docs/adr/0010-independent-numerical-gates.md)
+and [Xbox operations](https://github.com/gianlucamazza/floppylm/blob/main/docs/operations/xbox-e0.md).
+Use its acceptance producer and the [pinned contracts](../../contracts/floppylm/PIN.json);
+case counts and outcomes for an installed package live in [status.md](../status.md).
+The backend does not define a second set of acceptance thresholds.
 
 ## Functional proofs
 
