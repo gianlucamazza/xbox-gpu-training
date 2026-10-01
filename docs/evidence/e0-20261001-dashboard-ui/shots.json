@@ -1,0 +1,73 @@
+{
+  "shots": [
+    {
+      "label": "idle-cold",
+      "file": "idle-cold.png",
+      "sha256": "c2feab5d8e6fa4f1dd28148291e8390cb1ad8ae63505b5a2f5f1f176c800be7b",
+      "width": 1920,
+      "height": 1080,
+      "captured_at": "2026-10-01T20:38:04+00:00",
+      "package": "GianlucaMazza.XgpuE0_0.1.0.66_x64__g0p5dcfz4t9z4",
+      "commit": "f8c9f69d4352a37afc7f1596e77a1f02da7ae993",
+      "status": {}
+    },
+    {
+      "label": "cooldown-1",
+      "file": "cooldown-1.png",
+      "sha256": "ae8e2017c8e8745445c2673b385f74ab9b3e8c2d010fbb2bd4485fb172a338cb",
+      "width": 1920,
+      "height": 1080,
+      "captured_at": "2026-10-01T20:48:51+00:00",
+      "package": "GianlucaMazza.XgpuE0_0.1.0.66_x64__g0p5dcfz4t9z4",
+      "commit": "f8c9f69d4352a37afc7f1596e77a1f02da7ae993",
+      "status": {
+        "job_id": "benchmark-20261001T204059Z-150e8c",
+        "state": "running",
+        "phase": "cooldown",
+        "trunk_step": 630,
+        "cooldown_step": 630,
+        "cooldown_end": 700,
+        "last_loss": 0.004457505643812865,
+        "wall_seconds": 464.861637926
+      }
+    },
+    {
+      "label": "running",
+      "file": "running.png",
+      "sha256": "ea482f6903b8a51fce1467f3c1988d27b9ca14f95e8473e9b02fcda1dfa6d4ee",
+      "width": 1920,
+      "height": 1080,
+      "captured_at": "2026-10-01T20:54:31+00:00",
+      "package": "GianlucaMazza.XgpuE0_0.1.0.66_x64__g0p5dcfz4t9z4",
+      "commit": "f8c9f69d4352a37afc7f1596e77a1f02da7ae993",
+      "status": {
+        "job_id": "benchmark-20261001T204059Z-150e8c",
+        "state": "running",
+        "phase": "trunk",
+        "trunk_step": 1024,
+        "last_loss": 0.004061405252285457,
+        "wall_seconds": 807.249985471
+      }
+    },
+    {
+      "label": "cooldown-2",
+      "file": "cooldown-2.png",
+      "sha256": "41a39bff7752020fc15f9fb13f3233334d193ca9e0590ba5b848608f3f3fa02d",
+      "width": 1920,
+      "height": 1080,
+      "captured_at": "2026-10-01T20:57:26+00:00",
+      "package": "GianlucaMazza.XgpuE0_0.1.0.66_x64__g0p5dcfz4t9z4",
+      "commit": "f8c9f69d4352a37afc7f1596e77a1f02da7ae993",
+      "status": {
+        "job_id": "benchmark-20261001T204059Z-150e8c",
+        "state": "running",
+        "phase": "cooldown",
+        "trunk_step": 1260,
+        "cooldown_step": 1260,
+        "cooldown_end": 1400,
+        "last_loss": 0.004236279593144852,
+        "wall_seconds": 981.548621056
+      }
+    }
+  ]
+}

@@ -15,3 +15,5 @@ are described in [../e0/acceptance.md](../e0/acceptance.md#evidence-files).
 All throughput values are `purpose: functional` on a synthetic corpus.
 
 Dashboard package: [e0-20261001-dashboard](e0-20261001-dashboard/notes.md), package `0.1.0.56`, source `53ab3c2`, CI 36885338811. Full acceptance, exact bit identity with 0.1.0.28, pinned deployment and screenshot; idle GPU reduction remains unvalidated. Current state: [status.md](../status.md).
+
+Dashboard UI package: [e0-20261001-dashboard-ui](e0-20261001-dashboard-ui/notes.md), package `0.1.0.66`, source `0965acb` (merge `f8c9f69`), CI 36921727698. Acceptance, bit identity with 0.1.0.56 and dashboard screenshots; worker, recovery and lifecycle not rerun.

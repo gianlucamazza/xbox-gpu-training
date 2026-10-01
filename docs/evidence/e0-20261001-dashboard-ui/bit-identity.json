@@ -1,0 +1,197 @@
+{
+  "schema": "xbox-gpu-training.e0.bit-identity.v1",
+  "purpose": "functional",
+  "reference_package": "GianlucaMazza.XgpuE0_0.1.0.56_x64__g0p5dcfz4t9z4",
+  "candidate_package": "GianlucaMazza.XgpuE0_0.1.0.66_x64__g0p5dcfz4t9z4",
+  "ignored_fields": [
+    "adapter",
+    "dispatches",
+    "gpu_seconds",
+    "peak_memory_bytes",
+    "transfer_bytes",
+    "wall_seconds"
+  ],
+  "shader_cso_sha256_both": "a6e6c2f641b6a1362e69c06d92f4faf2ae86b41baea9a681a86655ac994ca50f",
+  "acceptance_cases": {
+    "compared": 38,
+    "identical": 38,
+    "differences": {}
+  },
+  "acceptance_canonical_payload_sha256": {
+    "kernels": {
+      "reference": "9d68e9d49c1ea271a3201d86e3c2cc43ad143719785ff990a7de6e59a6c26f1d",
+      "candidate": "9d68e9d49c1ea271a3201d86e3c2cc43ad143719785ff990a7de6e59a6c26f1d"
+    },
+    "optimizer": {
+      "reference": "f9c39ca800e8ad123e019b53b940ab738acec6f91e6e0825aef77bb92cd5d418",
+      "candidate": "f9c39ca800e8ad123e019b53b940ab738acec6f91e6e0825aef77bb92cd5d418"
+    },
+    "fixture-00": {
+      "reference": "9e32de110d838f6c99b44b0c17270dc631351b953a2114e4c44e2e6d22a18a65",
+      "candidate": "9e32de110d838f6c99b44b0c17270dc631351b953a2114e4c44e2e6d22a18a65"
+    },
+    "fixture-01": {
+      "reference": "40b0eea4170bcc1f7484e4c6155ea9de7a1816192cb8f74e10b1102ab72065bf",
+      "candidate": "40b0eea4170bcc1f7484e4c6155ea9de7a1816192cb8f74e10b1102ab72065bf"
+    },
+    "fixture-02": {
+      "reference": "f199542a667c35171f7ac63f28774b7418f36aa66247b606b1d944ebc840ab9c",
+      "candidate": "f199542a667c35171f7ac63f28774b7418f36aa66247b606b1d944ebc840ab9c"
+    },
+    "fixture-03": {
+      "reference": "af2413f3b4f6e33b9fe0774938eae3bd1418024fdd3fbb3b4849e32d24578cd4",
+      "candidate": "af2413f3b4f6e33b9fe0774938eae3bd1418024fdd3fbb3b4849e32d24578cd4"
+    },
+    "fixture-04": {
+      "reference": "4e266b414d2e4e6a03af912dbd2e09a7f61329c24977698320fa95edc7670dd1",
+      "candidate": "4e266b414d2e4e6a03af912dbd2e09a7f61329c24977698320fa95edc7670dd1"
+    },
+    "fixture-05": {
+      "reference": "72301fd7adf3b899f828f674753c37e92baebf3ff0cb92c5e06b2c9780bf08ef",
+      "candidate": "72301fd7adf3b899f828f674753c37e92baebf3ff0cb92c5e06b2c9780bf08ef"
+    },
+    "fixture-06": {
+      "reference": "ca64da753bc9e042c8c0a66a0124d5e7f3d5ffd46a5ce681fa53455e7b34519e",
+      "candidate": "ca64da753bc9e042c8c0a66a0124d5e7f3d5ffd46a5ce681fa53455e7b34519e"
+    },
+    "fixture-07": {
+      "reference": "f1cbfea2756bec5ed37b62fab0f237c4d5cacda8a2d2967160214103430dd3d2",
+      "candidate": "f1cbfea2756bec5ed37b62fab0f237c4d5cacda8a2d2967160214103430dd3d2"
+    },
+    "fixture-08": {
+      "reference": "3c44eccb9e7c73268883a6ce0bcb654af33da2d0c64317228fa3f5246e598e0f",
+      "candidate": "3c44eccb9e7c73268883a6ce0bcb654af33da2d0c64317228fa3f5246e598e0f"
+    },
+    "fixture-09": {
+      "reference": "07cae7704b493abe46004d6d07a1597bb0f41499944f363150a80497f97a2b64",
+      "candidate": "07cae7704b493abe46004d6d07a1597bb0f41499944f363150a80497f97a2b64"
+    },
+    "fixture-10": {
+      "reference": "cb0147420763cec37ec76cc40cacc8291acc22b808a72c9a74833c33f2dec350",
+      "candidate": "cb0147420763cec37ec76cc40cacc8291acc22b808a72c9a74833c33f2dec350"
+    },
+    "fixture-11": {
+      "reference": "38ec5b5122d784831029248079772a80134d5771cf7d1482dca257d9cf897fd0",
+      "candidate": "38ec5b5122d784831029248079772a80134d5771cf7d1482dca257d9cf897fd0"
+    },
+    "fixture-12": {
+      "reference": "f4ea8f4fbfca0b17650e758c03e6ff4ff118560b5565218d83cc114684fb6879",
+      "candidate": "f4ea8f4fbfca0b17650e758c03e6ff4ff118560b5565218d83cc114684fb6879"
+    },
+    "fixture-13": {
+      "reference": "de607019b258a3af3acef549bcccff6678dc768f2c611f299bd35cf05436ce36",
+      "candidate": "de607019b258a3af3acef549bcccff6678dc768f2c611f299bd35cf05436ce36"
+    },
+    "fixture-14": {
+      "reference": "a0289e8e3268f8c50a309116d88132e272dcf251de25073d8bf40ff4113b0ae8",
+      "candidate": "a0289e8e3268f8c50a309116d88132e272dcf251de25073d8bf40ff4113b0ae8"
+    },
+    "fixture-15": {
+      "reference": "b0462e92c566bb96ecfcdde7ede6d37820194cdb648c975d5ede1bfc03129592",
+      "candidate": "b0462e92c566bb96ecfcdde7ede6d37820194cdb648c975d5ede1bfc03129592"
+    },
+    "fixture-16": {
+      "reference": "ca6d3f875e656793d44e49ac53e809cd580b579142256a6708af2526bec55bc7",
+      "candidate": "ca6d3f875e656793d44e49ac53e809cd580b579142256a6708af2526bec55bc7"
+    },
+    "fixture-17": {
+      "reference": "a99ebdcfcfc2a7c24711e4d750e9fd6d66f4a52838448c0baa31e60221f2dca6",
+      "candidate": "a99ebdcfcfc2a7c24711e4d750e9fd6d66f4a52838448c0baa31e60221f2dca6"
+    },
+    "fixture-18": {
+      "reference": "60e72f509667e37d0cba0fc597fd59b1786d6b4d8f14cfbca9f2de94a36a01e7",
+      "candidate": "60e72f509667e37d0cba0fc597fd59b1786d6b4d8f14cfbca9f2de94a36a01e7"
+    },
+    "fixture-19": {
+      "reference": "26d8ca97367e9072265f147ef9aeefe7049776f5967bb52a9118deeb30a2406f",
+      "candidate": "26d8ca97367e9072265f147ef9aeefe7049776f5967bb52a9118deeb30a2406f"
+    },
+    "fixture-20": {
+      "reference": "60fed0c8997299e87e513c10f289984e66720ae322d769d3d06ba3f8176608e4",
+      "candidate": "60fed0c8997299e87e513c10f289984e66720ae322d769d3d06ba3f8176608e4"
+    },
+    "fixture-21": {
+      "reference": "9c4e71941728372a3fd1a84776df96e4c5e022ebf1df147129f7d6f22ffc4af6",
+      "candidate": "9c4e71941728372a3fd1a84776df96e4c5e022ebf1df147129f7d6f22ffc4af6"
+    },
+    "fixture-22": {
+      "reference": "55df978187b00fe9bfe4c53b40f49ee247bd8f3254a991a3b214f7b859fe31be",
+      "candidate": "55df978187b00fe9bfe4c53b40f49ee247bd8f3254a991a3b214f7b859fe31be"
+    },
+    "fixture-23": {
+      "reference": "08af3bd42a527da6e09006727ce2708c1602d83471daf5c0fddbe9fe0359316c",
+      "candidate": "08af3bd42a527da6e09006727ce2708c1602d83471daf5c0fddbe9fe0359316c"
+    },
+    "fixture-24": {
+      "reference": "2c5e0132ac49856e4dd81bff4ba9856b88ae2660fe9c8dc141d21816780be6f7",
+      "candidate": "2c5e0132ac49856e4dd81bff4ba9856b88ae2660fe9c8dc141d21816780be6f7"
+    },
+    "fixture-25": {
+      "reference": "9851fef5f520f4acfedce7964c7cbf1cb5ff066792f7276cb058409803c82e83",
+      "candidate": "9851fef5f520f4acfedce7964c7cbf1cb5ff066792f7276cb058409803c82e83"
+    },
+    "fixture-26": {
+      "reference": "a1b1775525f75cec5b8dce8f958e3635524b4d413475231573495e75fbdf1457",
+      "candidate": "a1b1775525f75cec5b8dce8f958e3635524b4d413475231573495e75fbdf1457"
+    },
+    "fixture-27": {
+      "reference": "ab6563a48beae9f541d13e06be9831ff5fba5a4b76371c41314887e8e6f6b4fd",
+      "candidate": "ab6563a48beae9f541d13e06be9831ff5fba5a4b76371c41314887e8e6f6b4fd"
+    },
+    "fixture-28": {
+      "reference": "2d9afb8fe5419656edcf212ddb097e184885d468da6634baca05581e8775bc3e",
+      "candidate": "2d9afb8fe5419656edcf212ddb097e184885d468da6634baca05581e8775bc3e"
+    },
+    "fixture-29": {
+      "reference": "c820108236655b19de5c54a41b16001cafa4f2f2879b824db6b8d5db3187fa74",
+      "candidate": "c820108236655b19de5c54a41b16001cafa4f2f2879b824db6b8d5db3187fa74"
+    },
+    "fixture-30": {
+      "reference": "f57f157de154aa3bc5aed7a876e80231708ab929b10f5b65e8c1a02af0b574cb",
+      "candidate": "f57f157de154aa3bc5aed7a876e80231708ab929b10f5b65e8c1a02af0b574cb"
+    },
+    "fixture-31": {
+      "reference": "f71a77cc0488e729cfa60db9c372b433503b0894837f2b069942305f4e4e0723",
+      "candidate": "f71a77cc0488e729cfa60db9c372b433503b0894837f2b069942305f4e4e0723"
+    },
+    "fixture-32": {
+      "reference": "8287ced073b7af921e8a9482033c029c015de82d1ae60a6d11f379a32a2188af",
+      "candidate": "8287ced073b7af921e8a9482033c029c015de82d1ae60a6d11f379a32a2188af"
+    },
+    "fixture-33": {
+      "reference": "d91da26492d520a9e7b9e906682234ce629a85f03c1a7894fc9ae777e758d6e9",
+      "candidate": "d91da26492d520a9e7b9e906682234ce629a85f03c1a7894fc9ae777e758d6e9"
+    },
+    "fixture-34": {
+      "reference": "fd8b3a10cdda2e5474216b53111099696574afef8e6d11c30f9f8de614e4ae4f",
+      "candidate": "fd8b3a10cdda2e5474216b53111099696574afef8e6d11c30f9f8de614e4ae4f"
+    },
+    "fixture-35": {
+      "reference": "f71de02afb556e2d000c9e63958531e02412ec6cf0f4941d5998a9a1d221268b",
+      "candidate": "f71de02afb556e2d000c9e63958531e02412ec6cf0f4941d5998a9a1d221268b"
+    }
+  },
+  "canonicalization": "sorted JSON after removing declared runtime metadata only; preserves negative zero and numeric types",
+  "acceptance_branch_weights_identical": {
+    "full/branch-16": true,
+    "full/branch-32": true,
+    "full/branch-8": true,
+    "resumed/branch-16": true,
+    "resumed/branch-32": true,
+    "resumed/branch-8": true
+  },
+  "checkpoint_numeric_state_identical": {
+    "full": true,
+    "resumed": true
+  },
+  "benchmark_branch_artifact_sha256_identical": {
+    "4": true,
+    "8": true,
+    "16": true
+  },
+  "benchmark_last_loss": [
+    0.5518537215078254,
+    0.5518537215078254
+  ],
+  "ok": true
+}
