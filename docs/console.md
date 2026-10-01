@@ -100,6 +100,9 @@ and [DirectX compute](platform/dx12-hlsl-compute.md).
 
 ## Next execution
 
+The first scientific campaign (package `0.1.0.24`) was stopped cleanly on 2026-10-01 at trunk step 455 of its first trial: its console job measured 329 GPU seconds in 3848 wall seconds. It is superseded by the GPU-resident E0.1 execution engine, which needs a new acceptance before a new campaign.
+
+
 Follow the companion's accepted ADR 0011 and sequential campaign. Bind the current
 acceptance and benchmark, retain one GPU job at a time, and freeze the final ten
 artifact hashes before the exclusive held-out test reservation. Publish actual

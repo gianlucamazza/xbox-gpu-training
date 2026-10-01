@@ -48,7 +48,13 @@ Playbook Cursor: [docs/execution-plan.md](docs/execution-plan.md). Tabella compl
 
 ### Stato attuale
 
-Fase 7 (bozza): sintesi onesta in [docs/results.md](docs/results.md). Figure: solo placeholder ([docs/figures/README.md](docs/figures/README.md)) — **nessun grafico inventato**. Lane UWP E0 Series S ([PR #17](https://github.com/gianlucamazza/xbox-gpu-training/pull/17), evidenza [`docs/evidence/e0-20261001/`](docs/evidence/e0-20261001/notes.md), pkg `0.1.0.24` / source `6a124021`): [kernel-parity.json](docs/evidence/e0-20261001/kernel-parity.json) 52 ops / 36 fixture, `hardware_gpu`, `purpose: functional`. Throughput sintetico **solo funzionale** — **non** qualità / PPL. **UNMEASURED:** Series X, qualità scientifica / PPL, CPU matched, PIX. Fase 5 `N=16` = smoke di schedule, non QAT di qualità. Peer BitNet = solo cite di letteratura, **nessun ranking**. Win32 Fase 0–3 **separato** da UWP E0. AppContainer ~1 GB / Release non-debug; Dev Mode **≠** GDKX / ID@Xbox; DirectML **≠** trainer. Questa ricerca **non** è “pubblica” finché un umano non rivede `docs/results.md`.
+La backend UWP E0 separata ha superato su **Series S** retail 52 casi operazione
+indipendenti, 36 fixture modello, AdamW a input identici, recovery esatto e
+sospensione reale. Il trial sintetico rappresentativo ha misurato **964 token/s** e
+**87.2 MiB** di picco ([evidenza e lineage](docs/evidence/e0-20261001/notes.md)).
+La prima campagna scientifica è stata fermata il 2026-10-01 (GPU attiva ~8.6% del
+wall time) per passare al motore GPU-resident E0.1, che richiede una nuova
+acceptance. Nessun claim di qualità. Sintesi onesta Fase 0–7: [docs/results.md](docs/results.md).
 
 ### Come contribuire
 
@@ -89,7 +95,10 @@ Cursor playbook: [docs/execution-plan.md](docs/execution-plan.md). Full table: [
 
 ### Current status
 
-Fase 7 (draft): honest write-up in [docs/results.md](docs/results.md). Figures: placeholders only ([docs/figures/README.md](docs/figures/README.md)) — **no fabricated plots**. Series S UWP E0 ([PR #17](https://github.com/gianlucamazza/xbox-gpu-training/pull/17), [`docs/evidence/e0-20261001/`](docs/evidence/e0-20261001/notes.md), pkg `0.1.0.24` / source `6a124021`): [kernel-parity.json](docs/evidence/e0-20261001/kernel-parity.json) 52 ops / 36 fixtures, `hardware_gpu`, `purpose: functional`. Synthetic throughput is **functional only** — **not** quality / PPL. **UNMEASURED:** Series X, scientific quality / PPL, matched CPU, PIX. Fase 5 `N=16` is schedule smoke, not QAT quality. BitNet peers are literature cites only — **no ranking**. Win32 Fase 0–3 stays **separate** from UWP E0. AppContainer ~1 GB / non-debug Release; Dev Mode **≠** GDKX / ID@Xbox; DirectML **≠** trainer. This research is **not** “public” until a human reviews `docs/results.md`.
+The E0 UWP backend has measured Series S functional evidence, including exact
+runner recovery and a real suspension lifecycle ([package, results and limits](docs/evidence/e0-20261001/notes.md)).
+The first scientific campaign (package `0.1.0.24`) was stopped cleanly on 2026-10-01 at trunk step 455 of its first trial: its console job measured 329 GPU seconds in 3848 wall seconds. It is superseded by the GPU-resident E0.1 execution engine, which needs a new acceptance before a new campaign.
+No quality claim. Honest Fase 0–7 write-up: [docs/results.md](docs/results.md).
 
 ### How to contribute
 
@@ -110,7 +119,7 @@ Fase 7 (draft): honest write-up in [docs/results.md](docs/results.md). Figures: 
 | `docs/memory-budget.md` | Fase 4 App ~1 GB / Game ~5 GB streaming contract |
 | `docs/qat-wsd.md` | Fase 5 QAT bit-widths + WSD + isolated cooldowns (N=16) |
 | `docs/console.md` | Fase 6 measured Series S E0 and remaining UNMEASURED targets |
-| `docs/results.md` | Fase 7 honest host + sourced E0 summary (human review before “public”) |
+| `docs/results.md` | Fase 7 honest host + sourced E0 summary |
 | `docs/figures/` | Figure **placeholders** only — no fabricated plots |
 | `docs/evidence/` | Package lineage and Series S E0 acceptance (PR #17) |
 | `docs/`, `docs/adr/` | Architecture + ADRs (`0001`–`0004`) |

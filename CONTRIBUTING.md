@@ -18,7 +18,7 @@ The FloppyLM **CPU** path lives in [gianlucamazza/xllama](https://github.com/gia
 - Do **not** invent tok/s, latency, perplexity, or quality scores.
 - Stubs must say `not implemented` / `status: stub`.
 - CPU ggml is the numerical and timing baseline once Fase 1 exists. ggml is **not vendored**; the portable GEMM in `src/cpp/cpu_matmul.*` is the current interface ([docs/ggml-baseline.md](docs/ggml-baseline.md)).
-- Xbox Series S|X numbers are valid only after Dev Mode measurement (or an explicit `BLOCKED` / **UNMEASURED** note). Measured Series S E0: [docs/console.md](docs/console.md). Other Series cells stay empty until measured. Honest Fase 0–7 summary: [docs/results.md](docs/results.md) (human review before calling research public).
+- Xbox Series S|X numbers are valid only after Dev Mode measurement (or an explicit `BLOCKED` / **UNMEASURED** note). Measured Series S E0: [docs/console.md](docs/console.md). Other Series cells stay empty until measured. Honest Fase 0–7 summary: [docs/results.md](docs/results.md).
 - Architecture changes need a new or updated file under `docs/adr/` and the `adr` label.
 
 ## What this repo is not

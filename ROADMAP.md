@@ -77,7 +77,8 @@ No tok/s or quality numbers until Dev Mode hardware measures them (or the phase 
   real suspension and worker reuse validated on the current package.
 - [x] Representative throughput, transfers and non-debug app memory measured.
   [Evidence](docs/evidence/e0-20261001/notes.md), [console status](docs/console.md).
-- [ ] Full scientific E0 campaign and reserved final test: companion execution pending completion.
+- [ ] Full scientific E0 campaign and reserved final test. The first campaign on `0.1.0.24`
+  was stopped cleanly at trunk step 455 (2026-10-01) for the E0.1 GPU-resident engine.
 - [ ] Series X, matched CPU comparison and PIX captures: no measurements available.
 - [ ] Historical Win32 host workloads (`hello_compute` / matmul / FLP2 / stream-stress / qat-smoke) on console: **UNMEASURED**.
 - Status: Series S E0 **measured**; remaining Series / quality / PIX cells **UNMEASURED**. Known blockers stay accurate: [docs/platform/blockers-fase6-validation.md](docs/platform/blockers-fase6-validation.md). Execution: [docs/execution-plan.md](docs/execution-plan.md#fase-6--series-sx-dev-mode-validation). Label: `phase-6`, `benchmark`.
@@ -94,11 +95,11 @@ E0 UWP trainer is governed by ADR 0003/0004; its measured results are listed her
 - [x] Public BitNet/peer table: paper-sourced numbers (Ma et al. [arXiv:2402.17764](https://arxiv.org/abs/2402.17764)) or explicitly **UNMEASURED** on our side. **No ranking.** Do **not** borrow Series S E0 numbers into peer cells.
 - [x] README status updated (IT + EN).
 - [x] Publish functional E0 evidence, exact package lineage, baseline failures and limits.
-- [ ] Human review of `docs/results.md` before calling the research **public** (Fase 7 checkpoint).
+- [x] Owner review of `docs/results.md` (2026-10-01).
 - [ ] Publish scientific E0 selection, paired statistics, exclusions and costs after the companion campaign passes all gates and the single final test finishes.
 - [ ] Peer/BitNet comparison or paper: requires a preregistered matched comparison; no such result is claimed by the functional acceptance.
 - [ ] Series / peer charts — still placeholders (E0 number is sourced in prose, not drawn).
-- Status: **Fase 7 draft for human review**. Execution: [docs/execution-plan.md](docs/execution-plan.md#fase-7--publish-results). Does **not** complete scientific E0. Label: `phase-7`, `research`.
+- Status: **Fase 7 functional publication reviewed**; scientific E0 pending. Execution: [docs/execution-plan.md](docs/execution-plan.md#fase-7--publish-results). Does **not** complete scientific E0. Label: `phase-7`, `research`.
 
 ## Completion sequence (2026-10-01)
 

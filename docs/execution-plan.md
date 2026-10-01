@@ -291,4 +291,4 @@ python3 scripts/check_glossary.py
 
 **Do NOT:** Fabricate numbers or peer rankings.
 
-**Checkpoint:** Human review of `docs/results.md` before calling the research public.
+**Checkpoint:** Owner review of `docs/results.md` (done 2026-10-01 for functional evidence).
