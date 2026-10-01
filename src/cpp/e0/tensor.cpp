@@ -37,9 +37,8 @@ void Kernel::observe() {
 }
 namespace {
 const Values empty;
-} // namespace
-Values CpuKernel::run(const Command &p, const Values &x, const Values &w,
-                      const Values &z, const Values &y, const Values &dy) {
+Values compute(const Command &p, const Values &x, const Values &w,
+               const Values &z, const Values &y, const Values &dy) {
   Values result(p.count);
   const uint32_t K = p.cols, O = p.out, T = p.seq, H = p.heads,
                  D = H ? K / H : 0;
@@ -232,7 +231,38 @@ Values CpuKernel::run(const Command &p, const Values &x, const Values &w,
   }
   return result;
 }
+const Values &host(const Tensor &t) {
+  if (t && !t->on_host)
+    throw std::runtime_error("CPU reference received a device tensor");
+  return t ? t->host : empty;
+}
+} // namespace
+Tensor Kernel::leaf(Values v) const {
+  auto t = std::make_shared<Storage>();
+  t->count = v.size();
+  t->host = std::move(v);
+  t->on_host = true;
+  return t;
+}
+Values Kernel::run(const Command &p, const Values &x, const Values &w,
+                   const Values &z, const Values &y, const Values &dy) {
+  auto wrap = [&](const Values &v) { return v.empty() ? Tensor{} : leaf(v); };
+  return read(run(p, wrap(x), wrap(w), wrap(z), wrap(y), wrap(dy)));
+}
+Tensor CpuKernel::run(const Command &p, const Tensor &x, const Tensor &w,
+                      const Tensor &z, const Tensor &y, const Tensor &dy) {
+  return leaf(compute(p, host(x), host(w), host(z), host(y), host(dy)));
+}
+std::vector<Values> CpuKernel::read(const std::vector<Tensor> &tensors) {
+  std::vector<Values> out;
+  for (const auto &t : tensors)
+    out.push_back(host(t));
+  return out;
+}
 int Graph::leaf(Values v, bool grad) {
+  return leaf(kernel_.leaf(std::move(v)), grad);
+}
+int Graph::leaf(Tensor v, bool grad) {
   Node node;
   node.value = std::move(v);
   node.needs_grad = grad;
@@ -240,17 +270,18 @@ int Graph::leaf(Values v, bool grad) {
   kernel_.observe();
   return int(nodes_.size() - 1);
 }
-int Graph::identity(int parent, Values v) {
+int Graph::identity(int parent, Tensor v) {
   int i = leaf(std::move(v), nodes_[parent].needs_grad);
   nodes_[i].identity = true;
   nodes_[i].parents = {parent};
   return i;
 }
 int Graph::apply(Command p, std::vector<int> parents) {
-  const Values &a = parents.size() > 0 ? nodes_[parents[0]].value : empty;
-  const Values &b = parents.size() > 1 ? nodes_[parents[1]].value : empty;
-  const Values &c = parents.size() > 2 ? nodes_[parents[2]].value : empty;
-  auto value = kernel_.run(p, a, b, c, empty, empty);
+  const Tensor none;
+  const Tensor &a = parents.size() > 0 ? nodes_[parents[0]].value : none;
+  const Tensor &b = parents.size() > 1 ? nodes_[parents[1]].value : none;
+  const Tensor &c = parents.size() > 2 ? nodes_[parents[2]].value : none;
+  auto value = kernel_.run(p, a, b, c, none, none);
   bool grad = false;
   for (int i : parents)
     grad |= nodes_[i].needs_grad;
@@ -260,35 +291,35 @@ int Graph::apply(Command p, std::vector<int> parents) {
   return i;
 }
 void Graph::backward(int root, float seed) {
-  nodes_[root].grad.assign(nodes_[root].value.size(), seed);
+  const Tensor none;
+  nodes_[root].grad = kernel_.leaf(Values(size(nodes_[root].value), seed));
   for (int i = root; i >= 0; --i) {
     auto &node = nodes_[i];
-    if (node.grad.empty())
+    if (!node.grad)
       continue;
     for (size_t j = 0; j < node.parents.size(); ++j) {
       auto &parent = nodes_[node.parents[j]];
       if (!parent.needs_grad)
         continue;
-      Values gradient;
+      Tensor gradient;
       if (node.identity)
         gradient = node.grad;
       else {
         auto p = node.command;
         p.mode = uint32_t(j + 1);
-        p.count = uint32_t(parent.value.size());
+        p.count = uint32_t(size(parent.value));
         gradient = kernel_.run(
             p, nodes_[node.parents[0]].value,
-            node.parents.size() > 1 ? nodes_[node.parents[1]].value : empty,
-            node.parents.size() > 2 ? nodes_[node.parents[2]].value : empty,
+            node.parents.size() > 1 ? nodes_[node.parents[1]].value : none,
+            node.parents.size() > 2 ? nodes_[node.parents[2]].value : none,
             node.value, node.grad);
       }
-      if (parent.grad.empty())
+      if (!parent.grad)
         parent.grad = std::move(gradient);
       else {
         auto p = Command{Op::Add};
-        p.count = uint32_t(gradient.size());
-        parent.grad =
-            kernel_.run(p, parent.grad, gradient, empty, empty, empty);
+        p.count = uint32_t(size(gradient));
+        parent.grad = kernel_.run(p, parent.grad, gradient, none, none, none);
       }
     }
     kernel_.observe();

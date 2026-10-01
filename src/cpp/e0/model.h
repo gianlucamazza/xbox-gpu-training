@@ -47,8 +47,9 @@ public:
             bool update = true, bool details = false);
 
 private:
-  int forward(Graph &, const Values &, uint32_t batch,
-              std::vector<int> &master_ids);
+  std::vector<Tensor> effective_weights(Kernel &) const;
+  int forward(Graph &, const std::vector<Tensor> &effective, const Values &,
+              uint32_t batch, std::vector<int> &master_ids);
 };
 std::string sha256_file(const std::filesystem::path &);
 void atomic_json(const std::filesystem::path &, const Json &);

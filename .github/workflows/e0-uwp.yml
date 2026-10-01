@@ -2,7 +2,7 @@ name: E0 UWP
 on:
   workflow_dispatch:
   push:
-    branches: [phase-5/e0-backend-contract]
+    branches: [main, phase-6/e0-resident]
   pull_request:
     paths: ['src/cpp/e0/**', 'src/cpp/dx12_device.cpp', 'src/hlsl/e0_tensor.hlsl', 'uwp/**', 'scripts/build-e0-uwp.ps1', '.github/workflows/e0-uwp.yml']
 permissions:

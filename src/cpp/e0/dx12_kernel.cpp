@@ -5,6 +5,7 @@
 #include <array>
 #include <cstring>
 #include <fstream>
+#include <map>
 #include <stdexcept>
 
 namespace e0 {
@@ -14,14 +15,58 @@ void check(HRESULT hr, const char *action) {
   if (FAILED(hr))
     throw std::runtime_error(std::string(action) + ": " + HrHex(hr));
 }
+// Two timestamps per dispatch; a full heap forces an intermediate flush.
+constexpr UINT kQueries = 2 * 8192;
+
+struct GpuBuffer {
+  ComPtr<ID3D12Resource> resource;
+  size_t bytes = 0;
+  bool upload = false;
+  D3D12_RESOURCE_STATES state = D3D12_RESOURCE_STATE_COMMON;
+};
+// Buffers are recycled instead of created per operation. Upload buffers that
+// an unexecuted command list still reads are parked until the next flush;
+// default buffers are reused immediately because every reuse is ordered by a
+// state transition or UAV barrier in the same queue.
+struct Pool {
+  std::multimap<size_t, std::unique_ptr<GpuBuffer>> free_default, free_upload;
+  std::vector<std::unique_ptr<GpuBuffer>> parked;
+  bool recording = false;
+  void release(std::unique_ptr<GpuBuffer> b) {
+    if (b->upload && recording)
+      parked.push_back(std::move(b));
+    else
+      (b->upload ? free_upload : free_default).emplace(b->bytes, std::move(b));
+  }
+  void unpark() {
+    for (auto &b : parked)
+      free_upload.emplace(b->bytes, std::move(b));
+    parked.clear();
+  }
+};
+struct Handle final : DeviceBuffer {
+  std::unique_ptr<GpuBuffer> buffer;
+  std::weak_ptr<Pool> pool;
+  ~Handle() override {
+    if (auto p = pool.lock())
+      p->release(std::move(buffer));
+  }
+};
+
 class GpuKernel final : public Kernel {
   Dx12Device ctx_;
   ComPtr<ID3D12RootSignature> root_;
   ComPtr<ID3D12PipelineState> pipeline_;
   ComPtr<ID3D12QueryHeap> timestamps_;
+  ComPtr<ID3D12Resource> timing_, readback_, dummy_;
+  size_t readback_bytes_ = 0;
   uint64_t frequency_ = 0;
+  UINT queries_ = 0;
+  std::shared_ptr<Pool> pool_ = std::make_shared<Pool>();
 
 public:
+  using Kernel::read;
+  using Kernel::run;
   explicit GpuKernel(const std::string &shader) {
     auto result = CreateDx12Device();
     if (!result.ok)
@@ -34,9 +79,13 @@ public:
             "timestamp frequency");
       D3D12_QUERY_HEAP_DESC query{};
       query.Type = D3D12_QUERY_HEAP_TYPE_TIMESTAMP;
-      query.Count = 2;
+      query.Count = kQueries;
       check(ctx_.device->CreateQueryHeap(&query, IID_PPV_ARGS(&timestamps_)),
             "timestamp heap");
+      timing_ = create(kQueries * sizeof(uint64_t), D3D12_HEAP_TYPE_READBACK,
+                       D3D12_RESOURCE_STATE_COPY_DEST);
+      dummy_ = create(4, D3D12_HEAP_TYPE_UPLOAD,
+                      D3D12_RESOURCE_STATE_GENERIC_READ);
       D3D12_ROOT_PARAMETER parameters[7]{};
       parameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
       parameters[0].Constants = {0, 0, 11};
@@ -73,10 +122,122 @@ public:
       throw;
     }
   }
-  ~GpuKernel() override { DestroyDx12Device(ctx_); }
+  ~GpuKernel() override {
+    try {
+      flush();
+    } catch (...) {
+    }
+    pool_.reset();
+    DestroyDx12Device(ctx_);
+  }
   bool hardware() const override { return true; }
   std::string adapter() const override { return ctx_.adapter_name; }
-  ComPtr<ID3D12Resource> buffer(size_t bytes, D3D12_HEAP_TYPE type,
+
+  Tensor run(const Command &p, const Tensor &x, const Tensor &w,
+             const Tensor &z, const Tensor &y, const Tensor &dy) override {
+    static_assert(sizeof(Command) == 44, "HLSL constant layout");
+    if (!p.count)
+      throw std::runtime_error("empty E0 dispatch");
+    const uint64_t elements = p.op == Op::Softmax ? p.rows : p.count;
+    const uint64_t groups = (elements + 63) / 64;
+    if (!groups || groups > 65535)
+      throw std::runtime_error("E0 tensor exceeds one dispatch dimension");
+    if (queries_ + 2 > kQueries)
+      flush();
+    std::array<const Tensor *, 5> inputs{&x, &w, &z, &y, &dy};
+    std::array<GpuBuffer *, 5> sources{};
+    for (size_t i = 0; i < 5; ++i)
+      sources[i] = *inputs[i] ? resident(**inputs[i]) : nullptr;
+    auto output = acquire(p.count * sizeof(float), false);
+    begin();
+    std::vector<D3D12_RESOURCE_BARRIER> barriers;
+    for (auto *b : sources)
+      if (b && !b->upload)
+        transition(*b, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
+                   barriers);
+    transition(*output->buffer, D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+               barriers);
+    if (!barriers.empty())
+      ctx_.list->ResourceBarrier(UINT(barriers.size()), barriers.data());
+    ctx_.list->SetComputeRootSignature(root_.Get());
+    ctx_.list->SetComputeRoot32BitConstants(0, 11, &p, 0);
+    for (UINT i = 0; i < 5; ++i)
+      ctx_.list->SetComputeRootShaderResourceView(
+          i + 1, (sources[i] ? sources[i]->resource : dummy_)
+                     ->GetGPUVirtualAddress());
+    ctx_.list->SetComputeRootUnorderedAccessView(
+        6, output->buffer->resource->GetGPUVirtualAddress());
+    ctx_.list->EndQuery(timestamps_.Get(), D3D12_QUERY_TYPE_TIMESTAMP,
+                        queries_++);
+    ctx_.list->Dispatch(UINT(groups), 1, 1);
+    D3D12_RESOURCE_BARRIER uav{};
+    uav.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
+    ctx_.list->ResourceBarrier(1, &uav);
+    ctx_.list->EndQuery(timestamps_.Get(), D3D12_QUERY_TYPE_TIMESTAMP,
+                        queries_++);
+    ++dispatches;
+    auto result = std::make_shared<Storage>();
+    result->count = p.count;
+    result->device = std::move(output);
+    return result;
+  }
+
+  std::vector<Values> read(const std::vector<Tensor> &tensors) override {
+    std::vector<Values> out(tensors.size());
+    std::vector<size_t> offsets(tensors.size(), SIZE_MAX);
+    size_t total = 0;
+    for (size_t i = 0; i < tensors.size(); ++i) {
+      const auto &t = tensors[i];
+      if (!t)
+        continue;
+      if (t->on_host)
+        out[i] = t->host;
+      else {
+        offsets[i] = total;
+        total += t->count * sizeof(float);
+      }
+    }
+    if (total) {
+      if (total > readback_bytes_) {
+        readback_ = create(total, D3D12_HEAP_TYPE_READBACK,
+                           D3D12_RESOURCE_STATE_COPY_DEST);
+        readback_bytes_ = total;
+      }
+      begin();
+      for (size_t i = 0; i < tensors.size(); ++i) {
+        if (offsets[i] == SIZE_MAX)
+          continue;
+        auto &b = buffer(*tensors[i]);
+        std::vector<D3D12_RESOURCE_BARRIER> barriers;
+        transition(b, D3D12_RESOURCE_STATE_COPY_SOURCE, barriers);
+        if (!barriers.empty())
+          ctx_.list->ResourceBarrier(UINT(barriers.size()), barriers.data());
+        ctx_.list->CopyBufferRegion(readback_.Get(), offsets[i],
+                                    b.resource.Get(), 0,
+                                    tensors[i]->count * sizeof(float));
+      }
+    }
+    flush();
+    if (total) {
+      void *mapped = nullptr;
+      D3D12_RANGE range{0, total};
+      check(readback_->Map(0, &range, &mapped), "output map");
+      for (size_t i = 0; i < tensors.size(); ++i)
+        if (offsets[i] != SIZE_MAX) {
+          out[i].resize(tensors[i]->count);
+          std::memcpy(out[i].data(),
+                      static_cast<const char *>(mapped) + offsets[i],
+                      out[i].size() * sizeof(float));
+        }
+      D3D12_RANGE no_write{0, 0};
+      readback_->Unmap(0, &no_write);
+      transfer_bytes += total;
+    }
+    return out;
+  }
+
+private:
+  ComPtr<ID3D12Resource> create(size_t bytes, D3D12_HEAP_TYPE type,
                                 D3D12_RESOURCE_STATES state, bool uav = false) {
     D3D12_HEAP_PROPERTIES heap{};
     heap.Type = type;
@@ -97,85 +258,99 @@ public:
           "E0 buffer");
     return resource;
   }
-  Values run(const Command &p, const Values &x, const Values &w,
-             const Values &z, const Values &y, const Values &dy) override {
-    static_assert(sizeof(Command) == 44, "HLSL constant layout");
-    if (!p.count)
-      throw std::runtime_error("empty E0 dispatch");
-    const uint64_t elements = p.op == Op::Softmax ? p.rows : p.count;
-    const uint64_t groups = (elements + 63) / 64;
-    if (!groups || groups > 65535)
-      throw std::runtime_error("E0 tensor exceeds one dispatch dimension");
-    std::array<const Values *, 5> inputs{&x, &w, &z, &y, &dy};
-    std::array<ComPtr<ID3D12Resource>, 5> uploads;
-    for (size_t i = 0; i < 5; ++i) {
-      uploads[i] =
-          buffer(inputs[i]->size() * sizeof(float), D3D12_HEAP_TYPE_UPLOAD,
-                 D3D12_RESOURCE_STATE_GENERIC_READ);
+  std::shared_ptr<Handle> acquire(size_t bytes, bool upload) {
+    bytes = (std::max<size_t>(bytes, 4) + 255) & ~size_t(255);
+    auto &free = upload ? pool_->free_upload : pool_->free_default;
+    auto handle = std::make_shared<Handle>();
+    handle->pool = pool_;
+    auto it = free.find(bytes);
+    if (it != free.end()) {
+      handle->buffer = std::move(it->second);
+      free.erase(it);
+    } else {
+      handle->buffer = std::make_unique<GpuBuffer>();
+      handle->buffer->bytes = bytes;
+      handle->buffer->upload = upload;
+      handle->buffer->state = upload ? D3D12_RESOURCE_STATE_GENERIC_READ
+                                     : D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+      handle->buffer->resource =
+          create(bytes,
+                 upload ? D3D12_HEAP_TYPE_UPLOAD : D3D12_HEAP_TYPE_DEFAULT,
+                 handle->buffer->state, !upload);
+    }
+    return handle;
+  }
+  static GpuBuffer &buffer(const Storage &t) {
+    return *static_cast<Handle &>(*t.device).buffer;
+  }
+  // Uploads host data once; later uses of the same tensor reuse it.
+  GpuBuffer *resident(Storage &t) {
+    if (!t.device) {
+      if (!t.on_host)
+        throw std::runtime_error("E0 tensor has no data");
+      auto handle = acquire(t.count * sizeof(float), true);
       void *mapped = nullptr;
       D3D12_RANGE no_read{0, 0};
-      check(uploads[i]->Map(0, &no_read, &mapped), "input map");
-      if (!inputs[i]->empty())
-        std::memcpy(mapped, inputs[i]->data(),
-                    inputs[i]->size() * sizeof(float));
-      uploads[i]->Unmap(0, nullptr);
+      check(handle->buffer->resource->Map(0, &no_read, &mapped), "input map");
+      if (t.count)
+        std::memcpy(mapped, t.host.data(), t.count * sizeof(float));
+      handle->buffer->resource->Unmap(0, nullptr);
+      transfer_bytes += t.count * sizeof(float);
+      t.device = std::move(handle);
     }
-    auto output = buffer(p.count * sizeof(float), D3D12_HEAP_TYPE_DEFAULT,
-                         D3D12_RESOURCE_STATE_UNORDERED_ACCESS, true);
-    auto readback = buffer(p.count * sizeof(float), D3D12_HEAP_TYPE_READBACK,
-                           D3D12_RESOURCE_STATE_COPY_DEST);
-    auto timing =
-        buffer(16, D3D12_HEAP_TYPE_READBACK, D3D12_RESOURCE_STATE_COPY_DEST);
-    observe();
+    return &buffer(t);
+  }
+  static void transition(GpuBuffer &b, D3D12_RESOURCE_STATES after,
+                         std::vector<D3D12_RESOURCE_BARRIER> &barriers) {
+    if (b.upload || b.state == after)
+      return;
+    D3D12_RESOURCE_BARRIER barrier{};
+    barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+    barrier.Transition.pResource = b.resource.Get();
+    barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+    barrier.Transition.StateBefore = b.state;
+    barrier.Transition.StateAfter = after;
+    barriers.push_back(barrier);
+    b.state = after;
+  }
+  void begin() {
+    if (pool_->recording)
+      return;
     check(ctx_.allocator->Reset(), "allocator reset");
     check(ctx_.list->Reset(ctx_.allocator.Get(), pipeline_.Get()),
           "list reset");
-    ctx_.list->SetComputeRootSignature(root_.Get());
-    ctx_.list->SetComputeRoot32BitConstants(0, 11, &p, 0);
-    for (UINT i = 0; i < 5; ++i)
-      ctx_.list->SetComputeRootShaderResourceView(
-          i + 1, uploads[i]->GetGPUVirtualAddress());
-    ctx_.list->SetComputeRootUnorderedAccessView(
-        6, output->GetGPUVirtualAddress());
-    ctx_.list->EndQuery(timestamps_.Get(), D3D12_QUERY_TYPE_TIMESTAMP, 0);
-    ctx_.list->Dispatch(UINT(groups), 1, 1);
-    ctx_.list->EndQuery(timestamps_.Get(), D3D12_QUERY_TYPE_TIMESTAMP, 1);
-    ctx_.list->ResolveQueryData(timestamps_.Get(), D3D12_QUERY_TYPE_TIMESTAMP,
-                                0, 2, timing.Get(), 0);
-    D3D12_RESOURCE_BARRIER barrier{};
-    barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-    barrier.Transition.pResource = output.Get();
-    barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-    barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
-    barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_SOURCE;
-    ctx_.list->ResourceBarrier(1, &barrier);
-    ctx_.list->CopyResource(readback.Get(), output.Get());
+    pool_->recording = true;
+    queries_ = 0;
+  }
+  // The only synchronisation point: executes recorded work and accumulates
+  // per-dispatch GPU timestamps.
+  void flush() {
+    if (!pool_->recording)
+      return;
+    if (queries_)
+      ctx_.list->ResolveQueryData(timestamps_.Get(),
+                                  D3D12_QUERY_TYPE_TIMESTAMP, 0, queries_,
+                                  timing_.Get(), 0);
+    pool_->recording = false;
     check(ctx_.list->Close(), "list close");
     ID3D12CommandList *lists[] = {ctx_.list.Get()};
     ctx_.queue->ExecuteCommandLists(1, lists);
     std::string error;
     if (!WaitForGpu(ctx_, error))
       throw std::runtime_error(error);
-    void *mapped = nullptr;
-    D3D12_RANGE range{0, p.count * sizeof(float)};
-    check(readback->Map(0, &range, &mapped), "output map");
-    uint64_t *stamps = nullptr;
-    D3D12_RANGE timing_range{0, 16};
-    check(timing->Map(0, &timing_range, reinterpret_cast<void **>(&stamps)),
-          "timestamp readback");
-    gpu_seconds += double(stamps[1] - stamps[0]) / double(frequency_);
-    D3D12_RANGE timing_no_write{0, 0};
-    timing->Unmap(0, &timing_no_write);
-    transfer_bytes += p.count * sizeof(float);
-    for (const auto *input : inputs)
-      transfer_bytes += input->size() * sizeof(float);
+    pool_->unpark();
+    if (queries_) {
+      uint64_t *stamps = nullptr;
+      D3D12_RANGE range{0, queries_ * sizeof(uint64_t)};
+      check(timing_->Map(0, &range, reinterpret_cast<void **>(&stamps)),
+            "timestamp readback");
+      for (UINT i = 0; i + 1 < queries_; i += 2)
+        gpu_seconds += double(stamps[i + 1] - stamps[i]) / double(frequency_);
+      D3D12_RANGE no_write{0, 0};
+      timing_->Unmap(0, &no_write);
+      queries_ = 0;
+    }
     observe();
-    Values result(p.count);
-    std::memcpy(result.data(), mapped, result.size() * sizeof(float));
-    D3D12_RANGE no_write{0, 0};
-    readback->Unmap(0, &no_write);
-    ++dispatches;
-    return result;
   }
 };
 } // namespace
