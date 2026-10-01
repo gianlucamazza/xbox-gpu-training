@@ -1,6 +1,7 @@
 #pragma once
 #include "../gpu_wait.h"
 #include "constants.h"
+#include <array>
 #include <cstdint>
 #include <functional>
 #include <memory>
@@ -33,6 +34,8 @@ struct Command {
   uint32_t rows = 0, cols = 0, out = 0, batch = 0, seq = 0, heads = 0, aux = 0;
   float epsilon = constants::kRmsNormEps;
 };
+void validate_command(const Command &, const std::array<size_t, 5> &);
+
 // Backend-owned device memory; released to the backend when the last tensor
 // referencing it goes away.
 struct DeviceBuffer {

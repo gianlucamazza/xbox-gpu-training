@@ -168,6 +168,7 @@ public:
     const uint64_t groups = (elements + 63) / 64;
     if (!groups || groups > 65535)
       throw std::runtime_error("E0 tensor exceeds one dispatch dimension");
+    validate_command(p, {size(x), size(w), size(z), size(y), size(dy)});
     if (queries_ + 2 > kQueries)
       flush();
     std::array<const Tensor *, 5> inputs{&x, &w, &z, &y, &dy};
