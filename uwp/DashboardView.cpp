@@ -17,6 +17,9 @@ using winrt::Windows::Foundation::IUnknown;
 // Plot box in effective pixels, plus the loss-label column on its left; with
 // the 2x4 metric tiles the page fits 960x540 at 200% scale.
 constexpr float kChartW = 540, kChartH = 280, kAxisW = 44;
+// Marker label rows at the top of the chart, and the clear gap below them
+// before the plotted curve starts.
+constexpr float kLabelTop = 2, kLabelRow = 16, kLabelGap = 8;
 // run_job publishes status every 64 optimizer steps (trunk and cooldowns),
 // well under a minute at measured throughput; ten silent minutes are stale.
 constexpr double kStaleSeconds = 600;
@@ -396,10 +399,10 @@ void DashboardView::draw_markers() {
   unsigned rows = 0;
   for (const auto &slot : slots)
     rows = std::max(rows, slot.row + 1);
-  band_ = 4 + 16.0f * rows;
+  band_ = kLabelTop + kLabelRow * rows + kLabelGap;
   for (size_t i = 0; i < marker_tags_.size(); ++i) {
     C::Canvas::SetLeft(marker_tags_[i], slots[i].left);
-    C::Canvas::SetTop(marker_tags_[i], 2 + 16.0 * slots[i].row);
+    C::Canvas::SetTop(marker_tags_[i], kLabelTop + kLabelRow * slots[i].row);
     chart_.Children().Append(marker_tags_[i]);
   }
   chart_.Children().Append(now_);
