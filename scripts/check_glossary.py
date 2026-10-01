@@ -24,7 +24,7 @@ SKIP_DIRS = {
     "vcpkg_installed",
 }
 
-TEXT_SUFFIXES = {".md", ".yml", ".yaml", ".hlsl", ".cpp", ".h", ".hpp", ".txt", ".py", ".ps1", ".xml", ".idl"}
+TEXT_SUFFIXES = {".md", ".yml", ".yaml", ".hlsl", ".cpp", ".h", ".hpp", ".txt", ".py", ".ps1", ".xml", ".idl", ".json", ".jsonl"}
 
 # Exact claim-shaped phrases. Do not write these strings in the repo.
 FORBIDDEN = [
@@ -32,6 +32,8 @@ FORBIDDEN = [
     (re.compile(r"CUDA training", re.IGNORECASE), "CUDA training (Xbox has no CUDA)"),
     (re.compile(r"we (have|got|hold|possess) (ID@Xbox|GDKX)", re.IGNORECASE), "claimed ID@Xbox/GDKX access"),
     (re.compile(r"using CUDA", re.IGNORECASE), "using CUDA (Xbox has no CUDA)"),
+    (re.compile(r"floppy_4mb"), "floppy_4mb (name the companion as gianlucamazza/floppylm)"),
+    (re.compile(r"/home/[a-z_][\w-]*/"), "machine-specific home path"),
 ]
 
 
