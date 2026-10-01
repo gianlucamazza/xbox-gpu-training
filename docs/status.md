@@ -17,10 +17,8 @@ Last updated: 2026-10-01.
 | Hardware         | Retail Xbox Series S, Dev Mode, adapter `SraKmd_arden`                                                        |
 | Evidence         | [e0-20261001-resident](evidence/e0-20261001-resident/notes.md)                                                |
 
-The package passed the full acceptance ([e0/acceptance.md](e0/acceptance.md)) and is
-bit-identical to the previous package `0.1.0.24` on all 38 acceptance cases, the
-resumed and uninterrupted branch weights, and the benchmark branch artifacts
-([bit-identity.json](evidence/e0-20261001-resident/bit-identity.json)).
+The package passed the full acceptance ([e0/acceptance.md](e0/acceptance.md)); its
+bit identity with the previous package is in the table below.
 
 ## Measured on Series S (Sourced, functional)
 
@@ -34,6 +32,7 @@ resumed and uninterrupted branch weights, and the benchmark branch artifacts
 | Worker probes                                | wrong identity and oversized dispatch rejected; worker reused | [worker.json](evidence/e0-20261001-resident/worker.json)                   |
 | Representative throughput                    | 10224.282 token/s                                             | [throughput.json](evidence/e0-20261001-resident/throughput.json)           |
 | Peak app memory (same run)                   | 110366720 bytes                                               | [throughput.json](evidence/e0-20261001-resident/throughput.json)           |
+| Bit identity with `0.1.0.24` | 38 of 38 acceptance cases; resumed and uninterrupted branch weights and benchmark branch artifacts identical | [bit-identity.json](evidence/e0-20261001-resident/bit-identity.json) |
 | Previous engine, same benchmark (`0.1.0.24`) | 963.571 token/s, 91418624 bytes                               | [throughput.json](evidence/e0-20261001/throughput.json)                    |
 
 Benchmark configuration: d=96, layers=3, heads=6, d_ff=391, ctx=256, batch=32,

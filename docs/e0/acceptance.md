@@ -9,7 +9,7 @@ How to run them: [runbook.md](runbook.md#4-accept).
 | Gate | Requirement | Oracle |
 | --- | --- | --- |
 | Quantization | Exact symbols and canonical serialized scale bytes | FloppyLM Python |
-| Operations | 52 independent cases (forward and every input gradient) within `1e-5 + 1e-4·|ref|` per element | Independent PyTorch operations and autograd |
+| Operations | 52 independent cases (forward and every input gradient) within `1e-5 + 1e-4·\|ref\|` per element | Independent PyTorch operations and autograd |
 | Model fixtures | 36 held-out fixtures: logits, loss, gradients within the same bound | FloppyLM Python |
 | Optimizer | AdamW on identical weights, moments, gradients, clipping, LR and step: weights and both moments within the bound | FloppyLM Python |
 | Resume | Interrupted + resumed run equals the uninterrupted run exactly (weights, moments, branches) | Native run |

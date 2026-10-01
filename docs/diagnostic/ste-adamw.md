@@ -74,7 +74,7 @@ Decoupled AdamW. Constants match ADR 0002: `lr=1e-3`, `β1=0.9`, `β2=0.999`, `�
 | [`src/hlsl/fakequant_ternary.hlsl`](../../src/hlsl/fakequant_ternary.hlsl) | `W_q = s * clip(round(W/s), -1, +1)` (host supplies `s`) |
 | [`src/hlsl/matmul_grad.hlsl`](../../src/hlsl/matmul_grad.hlsl) | `dW[o, i] = Σ_b dy[b, o] * x[b, i]` |
 | [`src/hlsl/relu2_grad.hlsl`](../../src/hlsl/relu2_grad.hlsl) | `dpre = 2 * max(pre, 0) * dh` |
-| [`src/hlsl/ste_backward.hlsl`](../../src/hlsl/ste_backward.hlsl) | `dW = dW_q * 1_{|W/s| ≤ 1}` |
+| [`src/hlsl/ste_backward.hlsl`](../../src/hlsl/ste_backward.hlsl) | `dW = dW_q * 1_{\|W/s\| ≤ 1}` |
 
 AdamW is **not** a compute shader in this phase (`src/cpp/` on master weights).
 

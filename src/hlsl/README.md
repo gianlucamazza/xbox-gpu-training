@@ -12,7 +12,7 @@
 | `fakequant_ternary.hlsl` | Diagnostic (Fase 3) | `s * clip(round(W/s), -1, +1)` (host supplies absmean `s`). |
 | `matmul_grad.hlsl` | Diagnostic (Fase 3) | `dW[o,i] = Σ_b dy[b,o] * x[b,i]`. |
 | `relu2_grad.hlsl` | Diagnostic (Fase 3) | `dpre = 2 * max(pre, 0) * dh`. |
-| `ste_backward.hlsl` | Diagnostic (Fase 3) | `dW = dW_q * 1_{|W/s| ≤ 1}`. |
+| `ste_backward.hlsl` | Diagnostic (Fase 3) | `dW = dW_q * 1_{\|W/s\| ≤ 1}`. |
 
 Hello compute is a real UAV write used to prove the DirectX 12 pipeline. It is **not** a benchmark and **not** a console result.
 

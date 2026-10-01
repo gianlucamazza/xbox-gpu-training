@@ -70,7 +70,7 @@ These papers / trees inform the mapping. Nothing is copied as a CUDA or PyTorch 
 | Alternative | Why not (now) |
 | --- | --- |
 | Train quantized codes as primary state | Breaks ADR 0001 master-fp32 rule; deploy mismatch risk |
-| STE without clip | Allowed by some write-ups; we document the BitLinear-style `|W/s|≤1` bound instead of leaving it implicit |
+| STE without clip | Allowed by some write-ups; we document the BitLinear-style `\|W/s\|≤1` bound instead of leaving it implicit |
 | Novel learned quantizer / extra STE temperature | Would be a new estimator — forbidden without an ADR |
 | DirectML optimizer | DirectML is inference/forward-focused; not the trainer |
 | Finite-diff of discrete `Q(W)` as the gate | Locally zero / jumpy; would fail an honest STE check |
