@@ -66,7 +66,9 @@ and no scientific gate changes. Proof required before switching packages:
    ([bit-identity.json](../evidence/e0-20261001-resident/bit-identity.json)).
 
 Changes that reorder reductions (tiled matmul, fusion, cross-sample batching) are
-a new engine generation and need fresh gates and an ADR.
+a new engine generation and need fresh gates and an ADR. Extra status writes (for
+example the schedule and cooldown phase published for the dashboard) read no training
+state back and keep the rule.
 
 ## Local use
 

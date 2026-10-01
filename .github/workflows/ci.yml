@@ -91,6 +91,9 @@ jobs:
       - name: Build C++ host and hello_compute
         run: cmake --build build --config Release
 
+      - name: Dashboard view-model tests
+        run: ctest --test-dir build -C Release --output-on-failure
+
       - name: Compile HLSL with dxc (skip if missing)
         shell: pwsh
         run: |

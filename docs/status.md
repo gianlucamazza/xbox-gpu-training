@@ -65,5 +65,8 @@ gates and the single reserved final test pass.
 2. Diagnose any failed native job; recover bound interrupted trials explicitly.
 3. Publish selection, paired statistics, costs and exclusions in [results.md](results.md).
 4. Leave every unmeasured cell empty until measured.
+5. After the campaign: build and accept the package with the on-console dashboard
+   ([PR #20](https://github.com/gianlucamazza/xbox-gpu-training/pull/20)), prove bit identity, and
+   record a screenshot as evidence.
 
 Earlier packages and the full chronology: [history.md](history.md), [evidence index](evidence/README.md).

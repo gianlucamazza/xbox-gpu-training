@@ -1,5 +1,6 @@
 #include "App.h"
 #include "../src/cpp/e0/model.h"
+#include "DashboardView.h"
 #include "App.g.cpp"
 #include "pch.h"
 #include <atomic>
@@ -7,6 +8,7 @@
 #include <condition_variable>
 #include <filesystem>
 #include <fstream>
+#include <memory>
 #include <mutex>
 #include <thread>
 
@@ -18,6 +20,7 @@ std::filesystem::path inbox;
 std::mutex active_mutex;
 std::condition_variable active_changed;
 std::filesystem::path active_job;
+std::unique_ptr<xgpu::DashboardView> dashboard;
 void worker() {
   winrt::init_apartment();
   try {
@@ -135,12 +138,13 @@ void App::OnLaunched(
     Windows::ApplicationModel::Activation::LaunchActivatedEventArgs const &) {
   auto window = Windows::UI::Xaml::Window::Current();
   if (!window.Content()) {
-    Windows::UI::Xaml::Controls::TextBlock status;
-    status.Text(L"FloppyLM E0 GPU trainer\nKeep this app open during "
-                L"training.\nJobs and progress are controlled from the host.");
-    status.FontSize(24);
-    status.Margin({40, 40, 40, 40});
-    window.Content(status);
+    auto local = std::filesystem::path(
+        Windows::Storage::ApplicationData::Current().LocalFolder().Path().c_str());
+    dashboard = std::make_unique<xgpu::DashboardView>(local, [] {
+      std::lock_guard<std::mutex> lock(active_mutex);
+      return active_job;
+    });
+    window.Content(dashboard->root());
     std::thread(worker).detach();
   }
   window.Activate();
