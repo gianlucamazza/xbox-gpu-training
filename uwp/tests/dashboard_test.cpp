@@ -158,7 +158,7 @@ int main() {
       {"spec", {{"lr", 0.003}, {"batch", 64}, {"tokens", 28800000}}}};
   check(e0ui::describe_job(job) == "d 256 · 4 layers · 4 heads · ff 1024 · "
                                    "ctx 128 · q4 / swiglu · lr 0.003 · "
-                                   "batch 64 · 28.8 M tokens",
+                                   "batch 64 · T 28.8 M tokens",
         "job summary");
   check(e0ui::describe_job({{"spec", {{"batch", 8}}}}) == "batch 8",
         "missing fields are left out");
@@ -168,6 +168,10 @@ int main() {
   auto first = cool, last = later;
   check(e0ui::rate(first, last, s).valid, "segment average");
 
+  check(e0ui::format_loss(2.82614) == "2.826" &&
+            e0ui::format_loss(0.5519) == "0.5519" &&
+            e0ui::format_loss(0.00381234) == "0.003812",
+        "loss keeps four significant digits");
   check(e0ui::format_compact(950) == "950", "small compact");
   check(e0ui::format_compact(147456) == "147 k", "thousands compact");
   check(e0ui::format_compact(1474560) == "1.47 M", "millions compact");

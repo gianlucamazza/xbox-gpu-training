@@ -16,7 +16,7 @@ using winrt::Windows::Foundation::IUnknown;
 
 // Plot box in effective pixels, plus the loss-label column on its left; with
 // the 2x4 metric tiles the page fits 960x540 at 200% scale.
-constexpr float kChartW = 540, kChartH = 240, kAxisW = 44;
+constexpr float kChartW = 540, kChartH = 280, kAxisW = 44;
 // run_job publishes status every 64 optimizer steps (trunk and cooldowns),
 // well under a minute at measured throughput; ten silent minutes are stale.
 constexpr double kStaleSeconds = 600;
@@ -214,11 +214,10 @@ DashboardView::DashboardView(std::filesystem::path local,
   smooth_.StrokeThickness(3);
   C::Grid x_axis;
   x_axis.Width(kChartW);
-  auto x0 = label(12, kMuted);
-  x0.Text(L"0");
+  x0_ = label(12, kMuted);
   x_end_ = label(12, kMuted);
   x_end_.HorizontalAlignment(X::HorizontalAlignment::Right);
-  x_axis.Children().Append(x0);
+  x_axis.Children().Append(x0_);
   x_axis.Children().Append(x_end_);
   C::Grid::SetRow(x_axis, 1);
   C::Grid::SetColumn(x_axis, 1);
@@ -236,6 +235,7 @@ DashboardView::DashboardView(std::filesystem::path local,
   side.Margin({24, 0, 0, 0});
   section_ = label(12, kMuted);
   section_.Margin({0, 0, 0, 4});
+  section_.Visibility(X::Visibility::Collapsed);
   C::Grid tiles;
   tiles.ColumnDefinitions().Append(column(star()));
   tiles.ColumnDefinitions().Append(column(star()));
@@ -319,6 +319,7 @@ void DashboardView::reset_metrics() {
   for (auto const &b : branch_)
     set_text(b, winrt::hstring());
   set_text(progress_text_, winrt::hstring());
+  set_text(x0_, winrt::hstring());
   set_text(x_end_, winrt::hstring());
 }
 
@@ -342,7 +343,7 @@ void DashboardView::show_job(const std::filesystem::path &job) {
   recolor(state_, paint(kAccent));
   set_text(config_, e0ui::describe_job(content));
   set_text(fresh_, winrt::hstring());
-  set_text(section_, winrt::hstring(L"this job"));
+  section_.Visibility(X::Visibility::Collapsed);
   reset_metrics();
   recolor(progress_, paint(kAccent));
   progress_.IsIndeterminate(true);
@@ -391,6 +392,11 @@ void DashboardView::draw_markers() {
   }
   // Labels of nearby markers stack in rows and stay inside the chart.
   const auto slots = e0ui::place_labels(xs, widths, kChartW);
+  // The curve is plotted below the label rows so it never crosses them.
+  unsigned rows = 0;
+  for (const auto &slot : slots)
+    rows = std::max(rows, slot.row + 1);
+  band_ = 4 + 16.0f * rows;
   for (size_t i = 0; i < marker_tags_.size(); ++i) {
     C::Canvas::SetLeft(marker_tags_[i], slots[i].left);
     C::Canvas::SetTop(marker_tags_[i], 2 + 16.0 * slots[i].row);
@@ -399,6 +405,7 @@ void DashboardView::draw_markers() {
   chart_.Children().Append(now_);
   chart_.Children().Append(raw_);
   chart_.Children().Append(smooth_);
+  set_text(x0_, winrt::hstring(L"0"));
   set_text(x_end_, "step " + e0ui::format_count(schedule_->ends[2]));
 }
 
@@ -457,15 +464,17 @@ void DashboardView::show_status(const e0ui::Json &status, double age) {
                  total = s.total_steps();
   const double fraction = double(std::min(done, total)) / double(total);
   progress_.Value(100.0 * fraction);
-  set_text(progress_text_, "step " + e0ui::format_count(done) + " / " +
-                               e0ui::format_count(total) + " · " +
+  // Optimizer steps count trunk and cooldowns; checkpoints use the trunk step.
+  set_text(progress_text_, e0ui::format_count(done) + " / " +
+                               e0ui::format_count(total) +
+                               " optimizer steps · " +
                                fixed(100.0 * fraction, 0) + " %");
   show_branches(status);
 
   if (status.contains("last_loss") && status.at("last_loss").is_number()) {
     const double loss = status.at("last_loss").get<double>();
     history_.add(status.value("trunk_step", uint64_t(0)), loss);
-    set_text(loss_.value, fixed(loss, 4));
+    set_text(loss_.value, e0ui::format_loss(loss));
   }
   if (previous_.empty() || done != e0ui::executed_steps(previous_, s)) {
     const auto r = e0ui::rate(previous_, status, s);
@@ -506,7 +515,7 @@ void DashboardView::show_status(const e0ui::Json &status, double age) {
            state == "running" ? std::string("estimate") : std::string());
   // run_job rewrites the checkpoint at the current trunk step with each status.
   if (status.contains("checkpoint") && status.at("checkpoint").is_object()) {
-    set_text(checkpoint_.value, "step " + e0ui::format_count(status.value(
+    set_text(checkpoint_.value, "trunk " + e0ui::format_count(status.value(
                                               "trunk_step", uint64_t(0))));
     set_text(checkpoint_.note,
              e0ui::format_megabytes(
@@ -543,8 +552,10 @@ void DashboardView::show_idle() {
   set_text(fresh_, winrt::hstring());
   recolor(fresh_, paint(kMuted));
   fresh_stale_ = false;
-  set_text(section_, last_job_id_.empty() ? winrt::hstring()
-                                          : winrt::hstring(L"last job"));
+  // The tiles keep the last job's values; say so.
+  set_text(section_, winrt::hstring(L"last job"));
+  section_.Visibility(last_job_id_.empty() ? X::Visibility::Collapsed
+                                           : X::Visibility::Visible);
   set_text(phase_, winrt::hstring(L"Idle · waiting for a job from the host. "
                                   L"Keep this app open during training."));
   progress_.IsIndeterminate(false);
@@ -603,11 +614,11 @@ void DashboardView::draw_chart(const e0ui::Json &status) {
   M::PointCollection raw, main;
   if (smoothing)
     for (auto [x, y] :
-         e0ui::plot(points, raw_values, *schedule_, kChartW, kChartH))
-      raw.Append({x, y});
+         e0ui::plot(points, raw_values, *schedule_, kChartW, kChartH - band_))
+      raw.Append({x, y + band_});
   for (auto [x, y] :
-       e0ui::plot(points, main_values, *schedule_, kChartW, kChartH))
-    main.Append({x, y});
+       e0ui::plot(points, main_values, *schedule_, kChartW, kChartH - band_))
+    main.Append({x, y + band_});
   raw_.Points(raw);
   smooth_.Points(main);
   set_text(axis_, smoothing
@@ -642,7 +653,7 @@ void DashboardView::draw_chart(const e0ui::Json &status) {
   grid_.Children().Clear();
   y_labels_.Children().Clear();
   for (double v : ticks.values) {
-    const float y = e0ui::loss_y(range, v, kChartH);
+    const float y = band_ + e0ui::loss_y(range, v, kChartH - band_);
     S::Line line;
     line.X1(0);
     line.X2(kChartW);

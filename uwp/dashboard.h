@@ -127,4 +127,6 @@ std::string format_count(uint64_t value);
 std::string format_megabytes(uint64_t bytes);
 // Three significant digits with a k/M/G suffix: 147 k, 1.47 M, 25.9 M.
 std::string format_compact(double value);
+// Four significant digits, so small losses keep their precision: 2.826, 0.003812.
+std::string format_loss(double loss);
 } // namespace e0ui

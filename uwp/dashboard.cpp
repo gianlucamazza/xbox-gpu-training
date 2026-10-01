@@ -249,7 +249,8 @@ std::string describe_job(const Json &job) {
   if (auto v = number(sp, "batch"))
     add("batch " + std::to_string(*v));
   if (auto v = number(sp, "tokens"))
-    add(format_compact(double(*v)) + " tokens");
+    // spec.tokens is the trunk budget T, not the whole schedule.
+    add("T " + format_compact(double(*v)) + " tokens");
   return out;
 }
 
@@ -312,6 +313,12 @@ std::string format_count(uint64_t value) {
 std::string format_megabytes(uint64_t bytes) {
   char text[32];
   std::snprintf(text, sizeof text, "%.0f MB", double(bytes) / 1e6);
+  return text;
+}
+
+std::string format_loss(double loss) {
+  char text[32];
+  std::snprintf(text, sizeof text, "%.4g", loss);
   return text;
 }
 

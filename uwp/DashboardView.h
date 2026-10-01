@@ -60,7 +60,7 @@ private:
   bool display_held_ = false, device_shown_ = false;
   e0ui::Ticks ticks_;
   e0ui::LossRange range_;
-  float now_x_ = -1;
+  float now_x_ = -1, band_ = 0;
   std::unordered_map<uint32_t, winrt::Windows::UI::Xaml::Media::SolidColorBrush>
       brushes_;
 
@@ -69,7 +69,7 @@ private:
   winrt::Windows::UI::Xaml::Controls::Grid root_{nullptr};
   TextBlock job_{nullptr}, state_{nullptr}, config_{nullptr}, fresh_{nullptr},
       phase_{nullptr}, progress_text_{nullptr}, device_{nullptr},
-      axis_{nullptr}, x_end_{nullptr}, section_{nullptr};
+      axis_{nullptr}, x0_{nullptr}, x_end_{nullptr}, section_{nullptr};
   std::array<TextBlock, 3> branch_{nullptr, nullptr, nullptr};
   std::vector<TextBlock> marker_tags_;
   winrt::Windows::UI::Xaml::Controls::ProgressBar progress_{nullptr};
