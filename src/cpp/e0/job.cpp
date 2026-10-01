@@ -339,7 +339,8 @@ Json run_job(const std::filesystem::path &job_file, Kernel &kernel,
       report["branches"] = previous.at("branches");
       for (const auto &b : report["branches"])
         asset(root, b.at("artifact"));
-    }
+    } else
+      atomic_json(result / "checkpoint.json", model.checkpoint(step, job));
     status("running");
     Values x, y;
     uint64_t executed = 0;

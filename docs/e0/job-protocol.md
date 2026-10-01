@@ -114,6 +114,10 @@ existing status bytes and writes `<id>.rejected.json` with the submitted hash.
 Nothing is automatically enqueued. An explicit resume requires verified interrupted
 state and an unchanged scientific recipe; published branches are not recomputed.
 
+A new job writes the step-0 checkpoint before the first `running` status, so a
+GPU fault before the first 64-step rewrite still has a verifiable restore
+point.
+
 Every submitted GPU fence has a 600-second deadline, polled at 250 ms. Wait results,
 completed fence values and device-removal status are checked before accepting
 completion. A runtime fault records native error details, requested/completed fence

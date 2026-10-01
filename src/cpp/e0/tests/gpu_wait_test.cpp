@@ -178,6 +178,29 @@ int main(int argc, char **argv) {
                    {"lr", 0.001},
                    {"wd", 0.0}}}};
     e0::atomic_json(file, job);
+    {
+      auto fresh_job = job;
+      fresh_job["job_id"] = "fresh";
+      const auto fresh_file = root / "fresh.job.json";
+      e0::atomic_json(fresh_file, fresh_job);
+      FailingKernel first;
+      try {
+        e0::run_job(fresh_file, first);
+      } catch (const std::exception &) {
+      }
+      const auto first_ckpt = root / "results/fresh/checkpoint.json";
+      const auto first_status =
+          e0::read_json(root / "results/fresh/status.json");
+      require(std::filesystem::exists(first_ckpt),
+              "step-0 checkpoint missing after first-step fault");
+      require(first_status.at("state") == "failed" &&
+                  first_status.contains("checkpoint") &&
+                  first_status.at("runtime_fault").at("kind") ==
+                      "gpu_wait_failed" &&
+                  first_status.at("checkpoint").at("sha256") ==
+                      e0::sha256_file(first_ckpt),
+              "fault before first 64-step checkpoint lost recovery state");
+    }
     const auto stopped = e0::run_job(file, kernel, 1);
     const auto ckpt = root / "results/trial/checkpoint.json";
     const auto saved = e0::sha256_file(ckpt);
