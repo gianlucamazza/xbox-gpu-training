@@ -47,7 +47,7 @@ A value without one of these tags is not written.
 ## Repository boundaries
 
 FloppyLM semantics, the FLP2 format and the `floppylm.*.v1` contracts are owned by the
-FloppyLM repository (`Workspace/experiments/floppy_4mb`, its ADR 0012). It is the
+[FloppyLM](https://github.com/gianlucamazza/floppylm) repository (its ADR 0012). It is the
 Python oracle and campaign runner. This repository is its only native training
 backend (E0 on DirectX 12 / UWP) and does not define or duplicate the binary FLP2
 envelope.

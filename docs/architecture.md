@@ -27,7 +27,7 @@ Results never cross lanes ([claims-policy.md](claims-policy.md)).
 ## E0 system
 
 ```
- floppy_4mb (Linux host)                     Series S — XgpuE0 UWP App
+ FloppyLM (Linux host)                       Series S — XgpuE0 UWP App
  ┌──────────────────────────┐               ┌────────────────────────────────────┐
  │ Python oracle, fixtures  │  Device Portal│ worker thread (uwp/App.cpp)        │
  │ corpus + index plan      │──── files ───▶│   LocalState/inbox → run_job       │

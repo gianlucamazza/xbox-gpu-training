@@ -12,7 +12,7 @@ forward/backward written as HLSL compute shaders, AdamW on fp32 master weights, 
 UWP worker that runs jobs on a retail Series S in Dev Mode. Every number is measured
 on hardware and committed as evidence, or it is not claimed ([claims policy](docs/claims-policy.md)).
 
-It is the native training backend of FloppyLM (`floppy_4mb`), which owns the model
+It is the native training backend of [FloppyLM](https://github.com/gianlucamazza/floppylm), which owns the model
 semantics, the FLP2 format, the Python oracle and the experiment campaign.
 
 ## Status

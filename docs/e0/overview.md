@@ -8,7 +8,7 @@ measurements: [status.md](../status.md).
 
 | Concern | Owner |
 | --- | --- |
-| Model, quantization, optimizer semantics, FLP2 packing, evaluation | Companion `floppy_4mb` (Python oracle) |
+| Model, quantization, optimizer semantics, FLP2 packing, evaluation | Companion FloppyLM (Python oracle) |
 | Initial fp32 weights, SHA-256-bound corpus, deterministic batch indices | Companion |
 | Fixtures, acceptance comparison, campaign scheduling, final-test reservation | Companion |
 | Forward/backward on GPU, AdamW, WSD branches, checkpoints | This repo: `src/cpp/e0/`, `src/hlsl/e0_tensor.hlsl` |
