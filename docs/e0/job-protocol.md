@@ -17,6 +17,7 @@ On start the worker writes `LocalState/device.json`:
 | `adapter` | DXGI adapter name (Series S: `SraKmd_arden`) |
 | `package` | installed package full name |
 | `commit` | source commit baked in at build (`XGPU_COMMIT`) |
+| `capabilities` | config values `Config` accepts (`e0::capabilities()`): vocab, embedding and core formats, MLPs, scale policies, delta range; the host refuses other configs before upload |
 
 Acceptance must match `package` and `commit` against the expected build.
 
@@ -60,7 +61,7 @@ Outputs in `results/<id>/`:
 
 | File | Content |
 | --- | --- |
-| `status.json` | `floppylm.e0.result.v1`: `state` (`running`, `interrupted`, `completed`, `failed`), `trunk_step`, `last_loss`, `branches[]`, `dispatches`, `gpu_seconds`, `transfer_bytes`, `peak_memory_bytes`, `wall_seconds`, `checkpoint`, `error` |
+| `status.json` | `floppylm.e0.result.v1`: `state` (`running`, `interrupted`, `completed`, `failed`), `trunk_step`, `last_loss`, `branches[]`, `dispatches`, `gpu_seconds`, `transfer_bytes`, `peak_memory_bytes`, `wall_seconds`, `checkpoint`, `error`, and the executed `schedule` (`T`, `warmup`, `tokens_per_step`, `ends`, `cooldown_starts`) with `phase` (`trunk` or `cooldown`; during a cooldown also `cooldown_end` and `cooldown_step`). Rewritten every 64 steps of the trunk and of each cooldown. |
 | `checkpoint.json` | `floppylm.checkpoint.v1`: tensors, both AdamW moments, step, stream position, bound job fields and initialization hash. Written every 64 trunk steps and on interruption. |
 | `branch-<end>.json` | `floppylm.e0.weights.v1` master weights at the end of each cooldown branch (`end` = T, 2T, 4T) |
 

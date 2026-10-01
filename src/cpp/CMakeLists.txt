@@ -87,3 +87,8 @@ endif()
 add_executable(xgpu_e0_train e0/main.cpp)
 target_link_libraries(xgpu_e0_train PRIVATE xgpu_e0)
 install(TARGETS xgpu_e0_train RUNTIME DESTINATION bin)
+
+# The E0 constants, tensor layout and capabilities against the pinned floppylm contract.
+add_executable(xgpu_e0_constants_test e0/tests/constants_test.cpp)
+target_link_libraries(xgpu_e0_constants_test PRIVATE xgpu_e0)
+add_test(NAME e0_constants COMMAND xgpu_e0_constants_test ${CMAKE_SOURCE_DIR})

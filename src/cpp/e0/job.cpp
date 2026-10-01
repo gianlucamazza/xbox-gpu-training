@@ -1,3 +1,4 @@
+#include "constants.h"
 #include "model.h"
 #include <chrono>
 #include <fstream>
@@ -258,8 +259,9 @@ Json run_job(const std::filesystem::path &job_file, Kernel &kernel,
   const auto &spec = job.at("spec");
   const auto batch = spec.at("batch").get<uint32_t>();
   const auto tokens = spec.at("tokens").get<uint64_t>();
-  if (!batch || !tokens || spec.at("branches") != 3 ||
-      spec.at("warmup_frac") != 0.02 || spec.at("cooldown_frac") != 0.1)
+  if (!batch || !tokens || spec.at("branches") != constants::kBranches ||
+      spec.at("warmup_frac") != constants::kWarmupFrac ||
+      spec.at("cooldown_frac") != constants::kCooldownFrac)
     throw std::runtime_error(
         "E0 requires the declared three-branch WSD protocol");
   float lr = spec.at("lr"), wd = spec.at("wd");
@@ -267,9 +269,16 @@ Json run_job(const std::filesystem::path &job_file, Kernel &kernel,
     throw std::runtime_error("invalid optimizer recipe");
   uint64_t T =
       std::max<uint64_t>(1, tokens / (uint64_t(batch) * model.config.ctx));
-  uint64_t warmup = std::max<uint64_t>(1, uint64_t(0.02 * double(T))), step = 0;
+  uint64_t warmup = std::max<uint64_t>(1, uint64_t(constants::kWarmupFrac * double(T))), step = 0;
   if (job.at("indices").at("bytes").get<uint64_t>() != 4 * T * batch * 8)
     throw std::runtime_error("index plan length mismatch");
+  // Branch b cools down over the last 10% of its T * 2^b steps.
+  uint64_t ends[3], cooldowns[3], starts[3];
+  for (unsigned b = 0; b < 3; ++b) {
+    ends[b] = T * (uint64_t(1) << b);
+    cooldowns[b] = std::max<uint64_t>(1, uint64_t(constants::kCooldownFrac * double(ends[b])));
+    starts[b] = ends[b] - cooldowns[b];
+  }
   const bool resume = job.contains("resume");
   if (!resume && !std::filesystem::create_directory(result))
     throw std::runtime_error(
@@ -280,7 +289,14 @@ Json run_job(const std::filesystem::path &job_file, Kernel &kernel,
                  {"hardware_gpu", kernel.hardware()},
                  {"adapter", kernel.adapter()},
                  {"branches", Json::array()},
-                 {"state", "running"}};
+                 {"state", "running"},
+                 {"schedule",
+                  {{"T", T},
+                   {"warmup", warmup},
+                   {"tokens_per_step", uint64_t(batch) * model.config.ctx},
+                   {"ends", {ends[0], ends[1], ends[2]}},
+                   {"cooldown_starts", {starts[0], starts[1], starts[2]}}}},
+                 {"phase", "trunk"}};
   auto begin = std::chrono::steady_clock::now();
   std::ifstream corpus(corpus_path, std::ios::binary),
       indices(indices_path, std::ios::binary);
@@ -316,9 +332,8 @@ Json run_job(const std::filesystem::path &job_file, Kernel &kernel,
     Values x, y;
     uint64_t executed = 0;
     for (unsigned branch = 0; branch < 3; ++branch) {
-      const uint64_t end = T * (uint64_t(1) << branch),
-                     cd = std::max<uint64_t>(1, uint64_t(0.1 * double(end))),
-                     start = end - cd;
+      const uint64_t end = ends[branch], cd = cooldowns[branch],
+                     start = starts[branch];
       if (step > start)
         continue;
       while (step < start) {
@@ -347,10 +362,18 @@ Json run_job(const std::filesystem::path &job_file, Kernel &kernel,
       atomic_json(result / "checkpoint.json", model.checkpoint(step, job));
       const auto cooldown_begin = std::chrono::steady_clock::now();
       Model copy = model;
+      report["phase"] = "cooldown";
+      report["cooldown_end"] = end;
+      report["cooldown_step"] = start;
+      status("running");
       for (uint64_t s = start; s < end; ++s) {
         if (std::filesystem::exists(root / (id + ".cancel"))) {
           status("interrupted");
           return report;
+        }
+        if (s > start && (s - start) % 64 == 0) {
+          report["cooldown_step"] = s;
+          status("running");
         }
         read_batch(corpus, indices, s, batch, model.config.ctx,
                    job.at("data").at("bytes"), x, y);
@@ -384,6 +407,9 @@ Json run_job(const std::filesystem::path &job_file, Kernel &kernel,
         }
       if (!found)
         bs.push_back(b);
+      report["phase"] = "trunk";
+      report.erase("cooldown_end");
+      report.erase("cooldown_step");
       status("running");
     }
     if (report["branches"].size() != 3)

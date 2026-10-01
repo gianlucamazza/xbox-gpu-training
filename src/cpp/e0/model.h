@@ -2,6 +2,7 @@
 #include "tensor.h"
 #include <filesystem>
 #include <map>
+#include <tuple>
 #include <nlohmann/json.hpp>
 
 namespace e0 {
@@ -35,6 +36,10 @@ class Model {
 public:
   Config config;
   std::vector<Parameter> parameters;
+  // Stored tensors in order: name, rows, cols, norm (floppylm.e0.constants.v1
+  // tensor_layout).
+  using Layout = std::tuple<std::string, uint32_t, uint32_t, bool>;
+  static std::vector<Layout> layout(const Config &config);
   explicit Model(const Json &job);
   Json tensors() const;
   Json optimizer_state() const;
@@ -54,6 +59,9 @@ private:
 std::string sha256_file(const std::filesystem::path &);
 void atomic_json(const std::filesystem::path &, const Json &);
 Json read_json(const std::filesystem::path &);
+// Config values this backend accepts (floppylm.device.v1 capabilities); Config
+// refuses anything else.
+Json capabilities();
 Json fixture_report(const Json &, Kernel &);
 Json optimizer_fixture_report(const Json &);
 Json kernel_fixture_report(const Json &, Kernel &);

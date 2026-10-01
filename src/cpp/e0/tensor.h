@@ -1,4 +1,5 @@
 #pragma once
+#include "constants.h"
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -27,7 +28,7 @@ struct Command {
   uint32_t mode = 0; // 0 forward; 1..3 gradient for that input
   uint32_t count = 0;
   uint32_t rows = 0, cols = 0, out = 0, batch = 0, seq = 0, heads = 0, aux = 0;
-  float epsilon = 1.1920928955078125e-7f;
+  float epsilon = constants::kRmsNormEps;
 };
 // Backend-owned device memory; released to the backend when the last tensor
 // referencing it goes away.

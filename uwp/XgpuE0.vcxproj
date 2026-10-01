@@ -34,6 +34,7 @@
     <Midl Include="app.idl" /><AppxManifest Include="AppxManifest.xml" />
     <None Include="packages.config" />
     <ClCompile Include="App.cpp" /><ClCompile Include="module.cpp" />
+    <ClCompile Include="DashboardView.cpp" /><ClCompile Include="dashboard.cpp" />
     <ClCompile Include="..\src\cpp\e0\tensor.cpp" /><ClCompile Include="..\src\cpp\e0\model.cpp" />
     <ClCompile Include="..\src\cpp\e0\job.cpp" /><ClCompile Include="..\src\cpp\e0\dx12_kernel.cpp" />
     <ClCompile Include="..\src\cpp\dx12_device.cpp" />
