@@ -19,18 +19,14 @@ to Python ([claims-policy.md](../claims-policy.md#repository-boundaries)).
 
 ## Decisions
 
-- [ADR 0003](../adr/0003-floppylm-e0.md): match FloppyLM exactly — ternary retained-entry
-  scales with delta thresholds, fp16 scale/norm round trips, row16/row8log/tensor16
-  policies, identity STE, exact zero rows, floor/midrise even-level grids; AdamW
-  (β1 0.9, β2 0.95, ε 1e-8, decay on quantized matrices only, global norm clip 1);
-  stable-trunk WSD with isolated branches ending at T, 2T, 4T. CPU execution is a
-  reference mode, never a GPU fallback.
-- [ADR 0004](../adr/0004-independent-e0-gates.md): numerical gates — exact symbols and
-  scale bytes; `|actual − reference| ≤ 1e-5 + 1e-4·|reference|` per element; optimizer
-  validated on identical inputs; exact checkpoint/resume equality.
-
-The diagnostic-lane ADR 0002 (clipped STE, absmean, nearest rounding) does **not**
-apply to E0.
+Repository authority is fixed by [ADR 0005](../adr/0005-repository-authority.md).
+The canonical E0 model and numerical requirements live in FloppyLM:
+[protocol](https://github.com/gianlucamazza/floppylm/blob/main/docs/adr/0008-e0-numeric-protocol.md),
+[independent gates](https://github.com/gianlucamazza/floppylm/blob/main/docs/adr/0010-independent-numerical-gates.md),
+[scientific scale selection](https://github.com/gianlucamazza/floppylm/blob/main/docs/adr/0011-e0-row-scale-selection.md),
+and [repository boundaries](https://github.com/gianlucamazza/floppylm/blob/main/docs/adr/0012-repo-boundaries.md).
+Backend ADR 0003/0004 preserve the original implementation decision as history.
+The diagnostic lane keeps its own contract and supplies no E0 acceptance.
 
 ## Data flow
 

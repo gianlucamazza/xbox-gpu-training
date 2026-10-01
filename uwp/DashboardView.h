@@ -23,6 +23,7 @@ private:
   void show_job(const std::filesystem::path &job);
   void show_status(const e0ui::Json &status, double age_seconds);
   void show_idle();
+  void show_freshness(const e0ui::Json &status, double age_seconds);
   void show_device();
   void keep_display(bool on);
   void draw_markers();
@@ -30,7 +31,9 @@ private:
 
   std::filesystem::path local_, current_;
   std::function<std::filesystem::path()> active_job_;
-  bool training_job_ = false;
+  bool training_job_ = false, idle_ = false;
+  std::optional<std::filesystem::file_time_type> status_time_;
+  bool fresh_stale_ = false;
   std::optional<e0ui::Schedule> schedule_;
   e0ui::LossHistory history_;
   e0ui::Json previous_ = e0ui::Json::object();

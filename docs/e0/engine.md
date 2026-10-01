@@ -1,7 +1,7 @@
 # E0 engine
 
-Code-level map of the E0 trainer. Behaviour is fixed by ADR 0003/0004
-([overview.md](overview.md)); this page explains where it lives.
+Code-level map of the E0 trainer. Semantics are owned by FloppyLM under [ADR 0005](../adr/0005-repository-authority.md)
+([overview.md](overview.md)); this page describes their native implementation.
 
 ## Source tree
 

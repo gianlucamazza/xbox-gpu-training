@@ -43,12 +43,17 @@ diff -r ci-layout/ signed-layout/   # only signature/block-map metadata may diff
 Record the unsigned and signed package SHA-256 and every payload hash in
 `package-lineage.json` of the evidence directory ([acceptance.md](acceptance.md)).
 
+The existing development certificate signs the package; the Device Portal TLS
+certificate is a separate trust boundary. Use its existing trusted SHA-256 pin,
+also accepted through `OPENAPPX_DEVICE_PIN`. Do not replace a mismatched pin automatically.
+See the companion runbook for private connection settings.
+
 ## 3. Install and start
 
 ```bash
 export OPENAPPX_DEVICE_PASSWORD=…        # Device Portal password, never on the command line
-openappx deploy --device https://<console-ip>:11443 --user <user> --insecure --package XgpuE0.msix
-openappx deploy --device https://<console-ip>:11443 --user <user> --insecure \
+openappx deploy --device https://<console-ip>:11443 --user <user> --pin-sha256 <device-cert-sha256> --package XgpuE0.msix
+openappx deploy --device https://<console-ip>:11443 --user <user> --pin-sha256 <device-cert-sha256> \
   --start <PackageFullName> --app-id App
 ```
 
@@ -63,50 +68,16 @@ local env file). When several E0 versions are installed, set
 
 ## 4. Accept
 
-A package may train only after its own acceptance. Run in order, binding each to
-the acceptance output:
+Acceptance, benchmark, worker probes, runner recovery, real suspension and campaign
+operations are owned by the companion [Xbox runbook](https://github.com/gianlucamazza/floppylm/blob/main/docs/operations/xbox-e0.md).
+Run that procedure with the exact installed package and commit, only when no scientific
+job owns the GPU queue. Its acceptance scripts take an exclusive **output directory**,
+not a JSON filename. An execution-preserving release also needs the
+[bit-identity proof](engine.md#bit-identity-rule).
 
-```bash
-python experiments/xbox_acceptance.py --out <dir>/acceptance.json
-python experiments/xbox_worker_acceptance.py --out <dir>/worker.json
-python experiments/xbox_recovery_acceptance.py --out <dir>/runner-recovery.json --acceptance <dir>/acceptance.json
-python experiments/xbox_lifecycle_acceptance.py --out <dir>/lifecycle.json --acceptance <dir>/acceptance.json
-python experiments/xbox_benchmark.py --out <dir>/throughput.json --acceptance <dir>/acceptance.json
-```
-
-The lifecycle step needs a real suspension through Dev Home. For an engine change,
-also produce the bit-identity proof ([engine.md](engine.md#bit-identity-rule)).
-Copy the results into `docs/evidence/e0-<date>[-<tag>]/` with a `notes.md`, then
-update [status.md](../status.md).
-
-## 5. Run a campaign
-
-The campaign is owned by the companion (`experiments/e0_campaign.py`, one trial at a
-time via `experiments/e0_v2.py`), following its accepted ADRs. Check progress without
-mutating jobs:
-
-```bash
-python scripts/e0_status.py --campaign <campaign-dir> --xbox
-```
-
-## Stop a campaign
-
-Send `SIGTERM` to the **trial** process (`e0_v2.py`) only. Its handler uploads the
-console `<id>.cancel` marker; the worker checkpoints and reports `interrupted`, and
-the campaign records itself as stopped.
-
-Never signal the campaign process or the process group: `SIGINT` on the group makes
-the trial's subprocess handling kill the child after 0.25 s and orphans the console
-job.
-
-## 6. Recover
-
-- **Interrupted job.** Resume through the companion runner with an explicit `resume`
-  asset (the checkpoint from `status.json`). The worker refuses a silent restart.
-- **Failed job.** `results/<id>/status.json` carries `state: failed` and `error`;
-  diagnose before resubmitting. Thresholds are never relaxed after a failure (ADR 0004).
-- **Worker failure at start.** `device.json` reports `state: failed`; typical causes are
-  a missing shader asset or no hardware adapter.
+Commit package-bound hardware proofs here under `docs/evidence/` and reference them
+from FloppyLM's companion record. Never resume a scientific campaign with a different
+package implicitly. The companion owns source freezing, recovery and final-test reservation.
 
 ## PIX
 

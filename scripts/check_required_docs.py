@@ -30,6 +30,7 @@ REQUIRED = [
     "docs/adr/0002-ste-qat-mapping.md",
     "docs/adr/0003-floppylm-e0.md",
     "docs/adr/0004-independent-e0-gates.md",
+    "docs/adr/0005-repository-authority.md",
     "docs/evidence/README.md",
     "docs/figures/README.md",
     "docs/diagnostic/README.md",
