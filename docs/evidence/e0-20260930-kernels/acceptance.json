@@ -1748,5 +1748,5 @@
     ]
   },
   "schema": "floppylm.xbox.acceptance.v1",
-  "raw_local_directory": "/home/gianluca/Workspace/experiments/floppy_4mb/runs/xbox-acceptance-20260930-ci36751689355"
+  "raw_local_directory": "gianlucamazza/floppylm:runs/xbox-acceptance-20260930-ci36751689355"
 }

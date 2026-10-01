@@ -1,7 +1,8 @@
 # Evidence index
 
-Committed console evidence, one directory per accepted package. Directories are
-immutable records: corrections go in a new directory, never in place. File formats
+Committed console evidence, one directory per accepted package. Measured content is
+immutable: corrections go in a new directory. Only location metadata (pointers to
+raw data in the companion) may be normalised in place. File formats
 are described in [../e0/acceptance.md](../e0/acceptance.md#evidence-files).
 
 | Directory | Date | Package | Source | CI run | Content |

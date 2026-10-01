@@ -1601,6 +1601,6 @@
   ]
  },
  "schema": "floppylm.xbox.acceptance.v1",
- "raw_evidence": "/home/gianluca/Workspace/experiments/floppy_4mb/runs/xbox-acceptance-20260930-ci36746732705",
+ "raw_evidence": "gianlucamazza/floppylm:runs/xbox-acceptance-20260930-ci36746732705",
  "scope": "functional backend acceptance; S9 policy gate is separate"
 }
