@@ -162,6 +162,22 @@
         },
         "additionalProperties": false
       }
+    },
+    "runtime_fault_probe": {
+      "type": "object",
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "gpu_wait_timeout",
+            "gpu_wait_failed",
+            "gpu_device_removed"
+          ]
+        }
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": false

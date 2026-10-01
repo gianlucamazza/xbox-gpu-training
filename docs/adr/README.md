@@ -12,5 +12,7 @@ rewritten; superseding ADRs say what they replace.
 | [0004](0004-independent-e0-gates.md) | Independent E0 numerical gates | Accepted | Historical E0 acceptance decision; current authority follows 0005 |
 | [0005](0005-repository-authority.md) | Repository authority and backend evidence | Accepted | FloppyLM semantics, backend execution and hardware proof ownership |
 
+| [0006](0006-runtime-liveness.md) | Bounded GPU waits and explicit worker recovery | Accepted | Worker ownership, fault quarantine and post-E0 hardware gate |
+
 Companion decisions (FloppyLM ADR 0011 campaign, ADR 0012 repository boundaries)
 live in the [FloppyLM](https://github.com/gianlucamazza/floppylm) repository.

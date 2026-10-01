@@ -1,0 +1,153 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/gianlucamazza/floppylm/schemas/floppylm.worker.v1.json",
+  "title": "floppylm.worker.v1",
+  "type": "object",
+  "required": [
+    "schema",
+    "worker_id",
+    "pid",
+    "package",
+    "commit",
+    "heartbeat_seq",
+    "state",
+    "active_job",
+    "progress",
+    "fault"
+  ],
+  "properties": {
+    "schema": {
+      "const": "floppylm.worker.v1"
+    },
+    "worker_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "pid": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "package": {
+      "type": "string",
+      "minLength": 1
+    },
+    "commit": {
+      "type": "string",
+      "minLength": 1
+    },
+    "heartbeat_seq": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "state": {
+      "enum": [
+        "starting",
+        "ready",
+        "running",
+        "failed"
+      ]
+    },
+    "active_job": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "required": [
+            "job_id",
+            "job_sha256"
+          ],
+          "properties": {
+            "job_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "job_sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "progress": {
+      "type": "object",
+      "required": [
+        "sequence",
+        "phase",
+        "trunk_step",
+        "cooldown_step",
+        "operation",
+        "completed_fence"
+      ],
+      "properties": {
+        "sequence": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "phase": {
+          "type": "string"
+        },
+        "trunk_step": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cooldown_step": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "operation": {
+          "type": "string"
+        },
+        "completed_fence": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "fault": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "error",
+            "requested_fence",
+            "completed_fence",
+            "elapsed_ms"
+          ],
+          "properties": {
+            "kind": {
+              "type": "string",
+              "minLength": 1
+            },
+            "error": {
+              "type": "string",
+              "minLength": 1
+            },
+            "requested_fence": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "completed_fence": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "elapsed_ms": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    }
+  },
+  "additionalProperties": false
+}

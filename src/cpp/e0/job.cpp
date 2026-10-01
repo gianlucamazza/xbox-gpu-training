@@ -18,10 +18,7 @@
 #include <openssl/evp.h>
 #endif
 namespace e0 {
-std::string sha256_file(const std::filesystem::path &path) {
-  std::ifstream input(path, std::ios::binary);
-  if (!input)
-    throw std::runtime_error("cannot hash: " + path_text(path));
+static std::string sha256_stream(std::istream &input) {
   std::vector<char> bytes(1 << 20);
   unsigned char digest[32]{};
 #ifdef _WIN32
@@ -74,6 +71,15 @@ std::string sha256_file(const std::filesystem::path &path) {
   for (auto v : digest)
     out << std::setw(2) << unsigned(v);
   return out.str();
+}
+std::string sha256_bytes(const std::string &bytes) {
+  std::istringstream input(bytes);
+  return sha256_stream(input);
+}
+std::string sha256_file(const std::filesystem::path &path) {
+  std::ifstream input(path, std::ios::binary);
+  if (!input) throw std::runtime_error("cannot hash: " + path_text(path));
+  return sha256_stream(input);
 }
 Json read_json(const std::filesystem::path &path) {
   std::ifstream input(path);
@@ -230,13 +236,19 @@ float learning_rate(uint64_t step, uint64_t warmup, float peak,
   return peak * std::max(0.0f, 1 - float(step - cd_start + 1) / float(cd_len));
 }
 } // namespace
+std::filesystem::path verified_asset(const std::filesystem::path &root, const Json &descriptor) {
+  return asset(root, descriptor);
+}
 Json run_job(const std::filesystem::path &job_file, Kernel &kernel,
              uint64_t stop_after) {
   kernel.dispatches = kernel.transfer_bytes = kernel.peak_memory_bytes = 0;
   kernel.gpu_seconds = 0;
   kernel.observe();
   const auto root = std::filesystem::absolute(job_file).parent_path();
+  kernel.require_healthy();
   Json job = read_json(job_file);
+  if (job.contains("runtime_fault_probe"))
+    throw std::runtime_error("runtime fault probes are forbidden for scientific jobs");
   const std::string id = job.at("job_id");
   if (id.empty() ||
       id.find_first_not_of(
@@ -327,14 +339,19 @@ Json run_job(const std::filesystem::path &job_file, Kernel &kernel,
       report["branches"] = previous.at("branches");
       for (const auto &b : report["branches"])
         asset(root, b.at("artifact"));
-    }
+    } else
+      atomic_json(result / "checkpoint.json", model.checkpoint(step, job));
     status("running");
     Values x, y;
     uint64_t executed = 0;
     for (unsigned branch = 0; branch < 3; ++branch) {
       const uint64_t end = ends[branch], cd = cooldowns[branch],
                      start = starts[branch];
-      if (step > start)
+      bool published = false;
+      for (const auto &prior : report["branches"])
+        if (prior.at("end_step") == end) published = true;
+      // Resumed published branches were verified before entering this loop.
+      if (published || step > start)
         continue;
       while (step < start) {
         if (std::filesystem::exists(root / (id + ".cancel"))) {
@@ -348,6 +365,7 @@ Json run_job(const std::filesystem::path &job_file, Kernel &kernel,
                                  learning_rate(step, warmup, lr), wd, step + 1);
         ++step;
         ++executed;
+        if (kernel.progress_callback) kernel.progress_callback("trunk", step, 0);
         report["last_loss"] = metric.at("loss");
         if (step % 64 == 0) {
           atomic_json(result / "checkpoint.json", model.checkpoint(step, job));
@@ -379,6 +397,7 @@ Json run_job(const std::filesystem::path &job_file, Kernel &kernel,
                    job.at("data").at("bytes"), x, y);
         copy.step(kernel, x, y, batch, learning_rate(s, warmup, lr, start, cd),
                   wd, s + 1);
+        if (kernel.progress_callback) kernel.progress_callback("cooldown", step, s + 1);
       }
       const std::string name = "branch-" + std::to_string(end) + ".json";
       atomic_json(result / name, {{"schema", "floppylm.e0.weights.v1"},
@@ -418,6 +437,14 @@ Json run_job(const std::filesystem::path &job_file, Kernel &kernel,
     return report;
   } catch (const std::exception &error) {
     report["error"] = error.what();
+    if (kernel.poisoned()) {
+      const auto &f = kernel.runtime_fault;
+      report["runtime_fault"] = {{"kind", f.kind}, {"error", f.error},
+        {"requested_fence", f.requested_fence}, {"completed_fence", f.completed_fence},
+        {"elapsed_ms", f.elapsed_ms}};
+      // The last atomically published checkpoint is the only recoverable state.
+      // Never serialize the potentially partial optimizer state after a GPU fault.
+    }
     status("failed");
     throw;
   }

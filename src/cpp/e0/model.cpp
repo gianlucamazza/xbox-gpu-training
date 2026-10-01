@@ -236,6 +236,28 @@ Json fixture_report(const Json &f, Kernel &kernel) {
   return result;
 }
 Json kernel_fixture_report(const Json &fixture, Kernel &kernel) {
+  kernel.require_healthy();
+  struct ProbeReset {
+    Kernel &kernel;
+    bool armed = false;
+    ~ProbeReset() {
+      if (armed && !kernel.poisoned()) {
+        try { kernel.inject_runtime_fault(""); } catch (...) { }
+      }
+    }
+  } probe_reset{kernel};
+  if (fixture.contains("runtime_fault_probe")) {
+    if (fixture.value("schema", "") != "floppylm.e0.kernels.v1")
+      throw std::runtime_error("runtime fault probes require a functional kernel fixture");
+    const auto &probe = fixture.at("runtime_fault_probe");
+    const auto kind = probe.at("kind").get<std::string>();
+    if (probe.size() != 1 || (kind != "gpu_wait_timeout" && kind != "gpu_wait_failed" && kind != "gpu_device_removed"))
+      throw std::runtime_error("invalid runtime fault probe");
+    if (fixture.at("cases").empty())
+      throw std::runtime_error("runtime fault probe requires an executing case");
+    kernel.inject_runtime_fault(kind);
+    probe_reset.armed = true;
+  }
   kernel.dispatches = kernel.transfer_bytes = kernel.peak_memory_bytes = 0;
   kernel.gpu_seconds = 0;
   kernel.observe();

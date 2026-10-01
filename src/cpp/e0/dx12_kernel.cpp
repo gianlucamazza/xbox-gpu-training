@@ -11,10 +11,6 @@
 namespace e0 {
 namespace {
 using Microsoft::WRL::ComPtr;
-void check(HRESULT hr, const char *action) {
-  if (FAILED(hr))
-    throw std::runtime_error(std::string(action) + ": " + HrHex(hr));
-}
 // Two timestamps per dispatch; a full heap forces an intermediate flush.
 constexpr UINT kQueries = 2 * 8192;
 
@@ -31,8 +27,21 @@ struct GpuBuffer {
 struct Pool {
   std::multimap<size_t, std::unique_ptr<GpuBuffer>> free_default, free_upload;
   std::vector<std::unique_ptr<GpuBuffer>> parked;
-  bool recording = false;
+  bool recording = false, poisoned = false;
+  void quarantine() {
+    poisoned = true;
+    for (auto &entry : free_default)
+      entry.second->resource.Detach();
+    for (auto &entry : free_upload)
+      entry.second->resource.Detach();
+    for (auto &entry : parked)
+      entry->resource.Detach();
+  }
   void release(std::unique_ptr<GpuBuffer> b) {
+    if (poisoned) {
+      b->resource.Detach();
+      return;
+    }
     if (b->upload && recording)
       parked.push_back(std::move(b));
     else
@@ -46,10 +55,10 @@ struct Pool {
 };
 struct Handle final : DeviceBuffer {
   std::unique_ptr<GpuBuffer> buffer;
-  std::weak_ptr<Pool> pool;
+  std::shared_ptr<Pool> pool;
   ~Handle() override {
-    if (auto p = pool.lock())
-      p->release(std::move(buffer));
+    if (pool)
+      pool->release(std::move(buffer));
   }
 };
 
@@ -84,8 +93,8 @@ public:
             "timestamp heap");
       timing_ = create(kQueries * sizeof(uint64_t), D3D12_HEAP_TYPE_READBACK,
                        D3D12_RESOURCE_STATE_COPY_DEST);
-      dummy_ = create(4, D3D12_HEAP_TYPE_UPLOAD,
-                      D3D12_RESOURCE_STATE_GENERIC_READ);
+      dummy_ =
+          create(4, D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_GENERIC_READ);
       D3D12_ROOT_PARAMETER parameters[7]{};
       parameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
       parameters[0].Constants = {0, 0, 11};
@@ -123,18 +132,35 @@ public:
     }
   }
   ~GpuKernel() override {
-    try {
-      flush();
-    } catch (...) {
+    if (!poisoned()) {
+      try {
+        flush();
+      } catch (...) {
+      }
+    }
+    if (poisoned()) {
+      pool_->quarantine();
+      root_.Detach();
+      pipeline_.Detach();
+      timestamps_.Detach();
+      timing_.Detach();
+      readback_.Detach();
+      dummy_.Detach();
     }
     pool_.reset();
     DestroyDx12Device(ctx_);
+  }
+  void inject_runtime_fault(const std::string &kind) override {
+    require_healthy();
+    ctx_.fault_probe = kind;
   }
   bool hardware() const override { return true; }
   std::string adapter() const override { return ctx_.adapter_name; }
 
   Tensor run(const Command &p, const Tensor &x, const Tensor &w,
              const Tensor &z, const Tensor &y, const Tensor &dy) override {
+    require_healthy();
+    ctx_.last_operation = "tensor op " + std::to_string(uint32_t(p.op));
     static_assert(sizeof(Command) == 44, "HLSL constant layout");
     if (!p.count)
       throw std::runtime_error("empty E0 dispatch");
@@ -163,8 +189,8 @@ public:
     ctx_.list->SetComputeRoot32BitConstants(0, 11, &p, 0);
     for (UINT i = 0; i < 5; ++i)
       ctx_.list->SetComputeRootShaderResourceView(
-          i + 1, (sources[i] ? sources[i]->resource : dummy_)
-                     ->GetGPUVirtualAddress());
+          i + 1,
+          (sources[i] ? sources[i]->resource : dummy_)->GetGPUVirtualAddress());
     ctx_.list->SetComputeRootUnorderedAccessView(
         6, output->buffer->resource->GetGPUVirtualAddress());
     ctx_.list->EndQuery(timestamps_.Get(), D3D12_QUERY_TYPE_TIMESTAMP,
@@ -183,6 +209,7 @@ public:
   }
 
   std::vector<Values> read(const std::vector<Tensor> &tensors) override {
+    require_healthy();
     std::vector<Values> out(tensors.size());
     std::vector<size_t> offsets(tensors.size(), SIZE_MAX);
     size_t total = 0;
@@ -237,8 +264,24 @@ public:
   }
 
 private:
+  void check(HRESULT hr, const char *action) {
+    if (SUCCEEDED(hr))
+      return;
+    const std::string message = std::string(action) + ": " + HrHex(hr);
+    const auto removed =
+        ctx_.device ? ctx_.device->GetDeviceRemovedReason() : S_OK;
+    if (FAILED(removed)) {
+      ctx_.fault = {"gpu_device_removed",
+                    message + "; removed=" + HrHex(removed), ctx_.fence_value,
+                    completed_fence, 0};
+      runtime_fault = ctx_.fault;
+      pool_->quarantine();
+    }
+    throw std::runtime_error(message);
+  }
   ComPtr<ID3D12Resource> create(size_t bytes, D3D12_HEAP_TYPE type,
                                 D3D12_RESOURCE_STATES state, bool uav = false) {
+    require_healthy();
     D3D12_HEAP_PROPERTIES heap{};
     heap.Type = type;
     D3D12_RESOURCE_DESC desc{};
@@ -259,6 +302,7 @@ private:
     return resource;
   }
   std::shared_ptr<Handle> acquire(size_t bytes, bool upload) {
+    require_healthy();
     bytes = (std::max<size_t>(bytes, 4) + 255) & ~size_t(255);
     auto &free = upload ? pool_->free_upload : pool_->free_default;
     auto handle = std::make_shared<Handle>();
@@ -273,10 +317,9 @@ private:
       handle->buffer->upload = upload;
       handle->buffer->state = upload ? D3D12_RESOURCE_STATE_GENERIC_READ
                                      : D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
-      handle->buffer->resource =
-          create(bytes,
-                 upload ? D3D12_HEAP_TYPE_UPLOAD : D3D12_HEAP_TYPE_DEFAULT,
-                 handle->buffer->state, !upload);
+      handle->buffer->resource = create(
+          bytes, upload ? D3D12_HEAP_TYPE_UPLOAD : D3D12_HEAP_TYPE_DEFAULT,
+          handle->buffer->state, !upload);
     }
     return handle;
   }
@@ -314,6 +357,7 @@ private:
     b.state = after;
   }
   void begin() {
+    require_healthy();
     if (pool_->recording)
       return;
     check(ctx_.allocator->Reset(), "allocator reset");
@@ -325,19 +369,26 @@ private:
   // The only synchronisation point: executes recorded work and accumulates
   // per-dispatch GPU timestamps.
   void flush() {
+    require_healthy();
     if (!pool_->recording)
       return;
     if (queries_)
-      ctx_.list->ResolveQueryData(timestamps_.Get(),
-                                  D3D12_QUERY_TYPE_TIMESTAMP, 0, queries_,
-                                  timing_.Get(), 0);
+      ctx_.list->ResolveQueryData(timestamps_.Get(), D3D12_QUERY_TYPE_TIMESTAMP,
+                                  0, queries_, timing_.Get(), 0);
     pool_->recording = false;
     check(ctx_.list->Close(), "list close");
     ID3D12CommandList *lists[] = {ctx_.list.Get()};
     ctx_.queue->ExecuteCommandLists(1, lists);
     std::string error;
-    if (!WaitForGpu(ctx_, error))
+    if (!WaitForGpu(ctx_, error)) {
+      runtime_fault = ctx_.fault;
+      runtime_fault.error = error;
+      pool_->quarantine();
       throw std::runtime_error(error);
+    }
+    completed_fence = ctx_.fence_value;
+    if (gpu_progress)
+      gpu_progress(completed_fence, ctx_.last_operation);
     pool_->unpark();
     if (queries_) {
       uint64_t *stamps = nullptr;

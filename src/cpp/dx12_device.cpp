@@ -1,5 +1,6 @@
 #include "dx12_device.h"
 
+#include <chrono>
 #include <cstdio>
 #include <utility>
 
@@ -24,8 +25,9 @@ static std::string WideToUtf8(const wchar_t *text) {
   if (n <= 1) {
     return {};
   }
-  std::string out(static_cast<size_t>(n - 1), '\0');
+  std::string out(static_cast<size_t>(n), '\0');
   WideCharToMultiByte(CP_UTF8, 0, text, -1, out.data(), n, nullptr, nullptr);
+  out.pop_back();
   return out;
 }
 
@@ -198,6 +200,18 @@ Dx12CreateResult CreateDx12Device() {
 }
 
 void DestroyDx12Device(Dx12Device &ctx) {
+  if (ctx.fault) {
+    // Intentionally retained until process termination: the GPU may still use
+    // these objects or the event. No destructor flush and no resource
+    // recycling.
+    ctx.list.Detach();
+    ctx.allocator.Detach();
+    ctx.queue.Detach();
+    ctx.fence.Detach();
+    ctx.device.Detach();
+    ctx.fence_event = nullptr;
+    return;
+  }
   if (ctx.fence_event) {
     CloseHandle(ctx.fence_event);
     ctx.fence_event = nullptr;
@@ -210,23 +224,72 @@ void DestroyDx12Device(Dx12Device &ctx) {
 }
 
 bool WaitForGpu(Dx12Device &ctx, std::string &err) {
+  if (ctx.fault) {
+    err = ctx.fault.error;
+    return false;
+  }
   if (!ctx.queue || !ctx.fence || !ctx.fence_event) {
-    err = "WaitForGpu called without a live device";
+    ctx.fault = {"gpu_fence_error", "WaitForGpu without a live device", 0, 0,
+                 0};
+    err = ctx.fault.error;
     return false;
   }
-  const UINT64 value = ++ctx.fence_value;
-  HRESULT hr = ctx.queue->Signal(ctx.fence.Get(), value);
-  if (FAILED(hr)) {
-    err = "ID3D12CommandQueue::Signal failed (" + HrHex(hr) + ")";
-    return false;
-  }
-  if (ctx.fence->GetCompletedValue() < value) {
-    hr = ctx.fence->SetEventOnCompletion(value, ctx.fence_event);
-    if (FAILED(hr)) {
-      err = "ID3D12Fence::SetEventOnCompletion failed (" + HrHex(hr) + ")";
-      return false;
+  const auto probe = std::exchange(ctx.fault_probe, {});
+  uint64_t synthetic_clock = 0;
+  GpuWaitApi api;
+  api.now_ms = [&] {
+    return probe == "gpu_wait_timeout"
+               ? synthetic_clock
+               : static_cast<uint64_t>(
+                     std::chrono::duration_cast<std::chrono::milliseconds>(
+                         std::chrono::steady_clock::now().time_since_epoch())
+                         .count());
+  };
+  api.completed = [&] {
+    return probe.empty() ? ctx.fence->GetCompletedValue() : uint64_t(0);
+  };
+  api.device_error = [&] {
+    if (probe == "gpu_device_removed")
+      return std::string("functional probe: device removed");
+    const auto hr = ctx.device->GetDeviceRemovedReason();
+    return FAILED(hr) ? HrHex(hr) : std::string();
+  };
+  api.signal = [&](uint64_t value) {
+    const auto hr = ctx.queue->Signal(ctx.fence.Get(), value);
+    return FAILED(hr) ? "Signal: " + HrHex(hr) : std::string();
+  };
+  api.arm = [&](uint64_t value) {
+    const auto hr = ctx.fence->SetEventOnCompletion(value, ctx.fence_event);
+    return FAILED(hr) ? "SetEventOnCompletion: " + HrHex(hr) : std::string();
+  };
+  DWORD wait_code = 0, wait_error = 0;
+  api.wait = [&](uint32_t ms) {
+    if (probe == "gpu_wait_timeout") {
+      synthetic_clock += ms;
+      return GpuWaitApi::Result::Timeout;
     }
-    WaitForSingleObjectEx(ctx.fence_event, INFINITE, FALSE);
+    if (probe == "gpu_wait_failed") {
+      wait_error = ERROR_INVALID_HANDLE;
+      return GpuWaitApi::Result::Failed;
+    }
+    wait_code = WaitForSingleObjectEx(ctx.fence_event, ms, FALSE);
+    if (wait_code == WAIT_FAILED) {
+      wait_error = GetLastError();
+      return GpuWaitApi::Result::Failed;
+    }
+    if (wait_code == WAIT_TIMEOUT)
+      return GpuWaitApi::Result::Timeout;
+    return wait_code == WAIT_OBJECT_0 ? GpuWaitApi::Result::Wake
+                                      : GpuWaitApi::Result::Unexpected;
+  };
+  api.wait_error = [&] {
+    return "wait=" + std::to_string(wait_code) +
+           " error=" + std::to_string(wait_error);
+  };
+  if (!BoundedGpuWait(api, ++ctx.fence_value, ctx.fault)) {
+    err = ctx.fault.kind + ": " + ctx.fault.error +
+          "; operation=" + ctx.last_operation;
+    return false;
   }
   return true;
 }

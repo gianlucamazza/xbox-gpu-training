@@ -1,0 +1,18 @@
+{
+ "active_job": null,
+ "commit": "commit",
+ "fault": null,
+ "heartbeat_seq": 2,
+ "package": "package",
+ "pid": 1,
+ "progress": {
+  "completed_fence": 1000,
+  "cooldown_step": 12,
+  "operation": "readback",
+  "phase": "cooldown",
+  "sequence": 1001,
+  "trunk_step": 9
+ },
+ "schema": "floppylm.worker.v1",
+ "state": "starting"
+}

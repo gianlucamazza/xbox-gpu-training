@@ -79,3 +79,62 @@ branch artifacts still verify.
   for the active job and holds the deferral up to 4 s for the job to stop.
 
 Stopping a companion campaign cleanly is described in [FloppyLM Xbox runbook](https://github.com/gianlucamazza/floppylm/blob/main/docs/operations/xbox-e0.md#recover).
+
+## Runtime ownership and explicit recovery
+
+The scientific contract and operational policy remain owned by
+[FloppyLM ADR 0017](https://github.com/gianlucamazza/floppylm/blob/main/docs/adr/0017-runtime-liveness.md).
+The backend imports its worker and claim schemas from the pinned contracts
+copy. Neither runtime faults nor lifecycle reconciliation change weights,
+optimizer formulas, schedules or the final-test reservation.
+
+Before readiness, the worker acquires an exclusive process-lifetime `worker.lock`,
+creates a random instance ID and reconciles abandoned claims. `worker.json` is
+atomically published every five seconds by an independent thread. Heartbeat ticks
+only increment `heartbeat_seq`; completed GPU fences and optimizer steps update
+`progress.sequence`. The snapshot distinguishes trunk/cooldown steps and records
+the last completed operation and fence. A heartbeat therefore proves process
+liveness, not training progress.
+
+After claiming `<id>.ready`, the worker persists the exact submitted payload in
+`<id>.owner.json` and executes `<id>.owned.job.json`, which contains the same bytes.
+An immutable hash-addressed owner archive preserves the previous submission's
+binding across an explicit resume publication. A pending upload cannot rewrite
+that old binding. On startup, reconciliation checks ownership, package/commit,
+submission hash, checkpoint descriptor and model/stream identity, plus all
+published branch hashes. Verified abandoned work becomes `interrupted`; failed
+verification is recorded as an integrity failure. Completed results are untouched.
+Leftover fixture, kernel and optimizer claims that already published
+`<id>.actual.json` are skipped; they never receive a fabricated
+`results/<id>/status.json`. One malformed `.claimed` stem is skipped and does
+not abort the rest of the pass. A leftover `.ready` beside a reconciled claim
+is quarantined; startup never executes a pending replacement automatically.
+Pre-admission rejection preserves
+existing status bytes and writes `<id>.rejected.json` with the submitted hash.
+Nothing is automatically enqueued. An explicit resume requires verified interrupted
+state and an unchanged scientific recipe; published branches are not recomputed.
+
+A new job writes the step-0 checkpoint before the first `running` status, so a
+GPU fault before the first 64-step rewrite still has a verifiable restore
+point.
+
+Every submitted GPU fence has a 600-second deadline, polled at 250 ms. Wait results,
+completed fence values and device-removal status are checked before accepting
+completion. A runtime fault records native error details, requested/completed fence
+values and elapsed time. The last atomically published checkpoint survives; partial
+optimizer state is never checkpointed in a fault handler. The worker and device
+remain permanently failed until the app is explicitly restarted. In-flight GPU
+resources and synchronization objects are deliberately retained until process exit;
+they are not returned to reusable pools or flushed during destruction.
+
+Functional kernel fixtures may request `runtime_fault_probe` with `kind` equal to
+`gpu_wait_timeout`, `gpu_wait_failed` or `gpu_device_removed`. These hooks exercise
+the same fault/quarantine path; simulated timeout does not wait ten minutes.
+Scientific training rejects this field. Hooks are inactive by default and are not
+exposed in the dashboard. Portable tests exercise the synchronization policy and
+checkpoint/claim safety; Windows/UWP compilation and exact-package Xbox fault
+qualification remain separate evidence gates after the active E0 campaign closes.
+
+The wait handling follows Microsoft's contracts for
+[GetCompletedValue](https://learn.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12fence-getcompletedvalue)
+and [WaitForSingleObjectEx](https://learn.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-waitforsingleobjectex).

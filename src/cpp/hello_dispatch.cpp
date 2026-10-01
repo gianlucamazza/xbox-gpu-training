@@ -457,6 +457,8 @@ RunReport RunHelloCompute(const std::filesystem::path& shader_hint) {
   ID3D12CommandList* lists[] = {gpu.list.Get()};
   gpu.queue->ExecuteCommandLists(1, lists);
   if (!WaitForGpu(gpu, err)) {
+    uav.Detach(); upload.Detach(); readback.Detach();
+    heap.Detach(); root_sig.Detach(); pso.Detach();
     report.status = RunStatus::Failed;
     report.line = "FAILED: GPU wait";
     report.detail = err;

@@ -2,8 +2,8 @@
 #include "tensor.h"
 #include <filesystem>
 #include <map>
-#include <tuple>
 #include <nlohmann/json.hpp>
+#include <tuple>
 
 namespace e0 {
 using Json = nlohmann::json;
@@ -56,6 +56,9 @@ private:
   int forward(Graph &, const std::vector<Tensor> &effective, const Values &,
               uint32_t batch, std::vector<int> &master_ids);
 };
+std::string sha256_bytes(const std::string &);
+std::filesystem::path verified_asset(const std::filesystem::path &,
+                                     const Json &);
 std::string sha256_file(const std::filesystem::path &);
 void atomic_json(const std::filesystem::path &, const Json &);
 Json read_json(const std::filesystem::path &);
