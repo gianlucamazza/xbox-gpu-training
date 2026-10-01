@@ -34,6 +34,7 @@ private:
   void show_idle();
   void show_freshness(const e0ui::Json &status, double age_seconds);
   void show_device();
+  void show_worker();
   void show_branches(const e0ui::Json &status);
   void reset_metrics();
   void keep_display(bool on);
@@ -68,8 +69,9 @@ private:
   winrt::Windows::UI::Xaml::DispatcherTimer timer_{nullptr};
   winrt::Windows::UI::Xaml::Controls::Grid root_{nullptr};
   TextBlock job_{nullptr}, state_{nullptr}, config_{nullptr}, fresh_{nullptr},
-      phase_{nullptr}, progress_text_{nullptr}, device_{nullptr},
-      axis_{nullptr}, x0_{nullptr}, x_end_{nullptr}, section_{nullptr};
+      live_{nullptr}, idle_msg_{nullptr}, phase_{nullptr},
+      progress_text_{nullptr}, device_{nullptr}, axis_{nullptr}, x0_{nullptr},
+      x_end_{nullptr}, section_{nullptr};
   std::array<TextBlock, 3> branch_{nullptr, nullptr, nullptr};
   std::vector<TextBlock> marker_tags_;
   winrt::Windows::UI::Xaml::Controls::ProgressBar progress_{nullptr};

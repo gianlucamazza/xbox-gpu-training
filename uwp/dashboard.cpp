@@ -1,5 +1,6 @@
 #include "dashboard.h"
 #include <algorithm>
+#include <cctype>
 #include <cmath>
 #include <cstdio>
 
@@ -271,6 +272,64 @@ std::string phase(const Json &status, const Schedule &schedule) {
     return "warmup";
   return "trunk · next cooldown at step " +
          format_count(schedule.cooldown_starts[done]);
+}
+
+WorkerView worker_from_json(const Json &worker, double age_seconds) {
+  WorkerView v;
+  v.age_seconds = age_seconds;
+  if (!worker.is_object() ||
+      worker.value("schema", "") != "floppylm.worker.v1")
+    return v;
+  v.present = true;
+  v.state = worker.value("state", std::string());
+  v.stale = age_seconds > kHeartbeatStaleSeconds;
+  if (worker.contains("progress") && worker.at("progress").is_object()) {
+    const auto &p = worker.at("progress");
+    v.operation = p.value("operation", std::string());
+    v.completed_fence = value_or(p, "completed_fence");
+  }
+  if (worker.contains("fault") && worker.at("fault").is_object()) {
+    const auto &f = worker.at("fault");
+    v.faulted = true;
+    v.fault_kind = f.value("kind", std::string());
+    v.requested_fence = value_or(f, "requested_fence");
+    v.fault_completed_fence = value_or(f, "completed_fence");
+    v.elapsed_ms = value_or(f, "elapsed_ms");
+  }
+  if (v.state == "failed")
+    v.faulted = true;
+  return v;
+}
+
+std::string worker_line(const WorkerView &v) {
+  if (!v.present)
+    return "WORKER · not published yet";
+  auto upper = [](std::string s) {
+    for (auto &c : s)
+      c = char(std::toupper(static_cast<unsigned char>(c)));
+    return s;
+  };
+  if (v.faulted) {
+    std::string line = "WORKER FAILED";
+    if (!v.fault_kind.empty())
+      line += " · " + v.fault_kind;
+    if (v.requested_fence || v.fault_completed_fence)
+      line += " · requested " + format_count(v.requested_fence) +
+              " completed " + format_count(v.fault_completed_fence);
+    if (v.elapsed_ms)
+      line += " · " + format_duration(double(v.elapsed_ms) / 1000.0);
+    return line;
+  }
+  if (v.stale)
+    return "WORKER UNREACHABLE · no heartbeat for " +
+           format_duration(v.age_seconds);
+  std::string line = "WORKER " + upper(v.state.empty() ? "unknown" : v.state) +
+                     " · heartbeat " + format_duration(v.age_seconds) + " ago";
+  if (v.completed_fence || !v.operation.empty())
+    line += " · fence " + format_count(v.completed_fence);
+  if (!v.operation.empty())
+    line += " · " + v.operation;
+  return line;
 }
 
 double eta_seconds(const Json &status, const Schedule &schedule,

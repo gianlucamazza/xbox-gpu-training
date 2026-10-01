@@ -20,11 +20,14 @@ Build with [`scripts/build-e0-uwp.ps1`](../scripts/build-e0-uwp.ps1) (CI workflo
 
 ## Dashboard
 
-Polls the active job's `job.json` and `results/<id>/status.json` once per second on the
-UI thread and derives nothing about the schedule: phase, progress and markers come from
+Polls `worker.json`, the active job's `job.json` and `results/<id>/status.json` once per
+second on the UI thread and derives nothing about the schedule: phase, progress and markers come from
 the `schedule` and `phase` fields that `run_job` publishes ([job protocol](../docs/e0/job-protocol.md)).
-The header shows job state, the age of the last update (stale after 10 min) and a one-line
-model/optimizer summary from `job.json` (`config`, `spec`; `T … tokens` is the trunk budget). Below it:
+The header shows job state, the age of the last status (stale after 10 min), a one-line
+model/optimizer summary from `job.json` (`config`, `spec`; `T … tokens` is the trunk budget),
+and a worker liveness line from `worker.json` (heartbeat age, last completed fence and
+operation; unreachable after 30 s without a rewrite; a runtime fault is shown in red).
+Below it:
 progress in optimizer steps (trunk and cooldowns) with the published phase, and a strip with the state of the three branches (done with the
 published `cooldown_seconds`, cooling with its percentage, pending). The trunk-loss chart has round
 loss gridlines, step labels, warmup and cooldown markers (green once that branch is done) and a cursor
@@ -34,7 +37,9 @@ trunk loss, tokens/s over the last 64 steps with the run-segment average, tokens
 elapsed time of the run segment, a labelled remaining-time estimate, GPU/wall time, peak memory and the
 trunk step of the last checkpoint; the footer shows `device.json`. While a job runs it holds a `DisplayRequest`. When idle,
 the header names the last job and its final state, the progress bar takes that state's colour and the
-tiles are labelled "last job"; nothing in the visual tree changes after that transition.
+tiles are labelled "last job". The worker line still updates. With no last job the chart shows
+an empty-state caption instead of a blank surface. After that transition the idle layout is
+stable; only `set_text`/`recolor` no-ops change.
 
 Layout follows Microsoft's Xbox/TV guidance: 960×540 effective pixels inside the default
 TV-safe bounds, text ≥ 12 epx (values 24 epx), and an explicit dark palette within RGB 16–235.

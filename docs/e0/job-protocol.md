@@ -94,7 +94,9 @@ atomically published every five seconds by an independent thread. Heartbeat tick
 only increment `heartbeat_seq`; completed GPU fences and optimizer steps update
 `progress.sequence`. The snapshot distinguishes trunk/cooldown steps and records
 the last completed operation and fence. A heartbeat therefore proves process
-liveness, not training progress.
+liveness, not training progress. The on-console dashboard reads `worker.json`
+every second and shows that line; thirty seconds without a rewrite is
+unreachable.
 
 After claiming `<id>.ready`, the worker persists the exact submitted payload in
 `<id>.owner.json` and executes `<id>.owned.job.json`, which contains the same bytes.
