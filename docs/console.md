@@ -11,8 +11,9 @@ Honest Fase 7 write-up: [docs/results.md](results.md).
 The separate x64 UWP Release app in `uwp/` was built by E0 UWP CI run 36792707081,
 repacked and signed using the development certificate, then installed via Device
 Portal on retail Series S. Executable, shader, resource and manifest payloads were
-verified byte for byte against CI. Active package: `0.1.0.24`, source `6a124021`.
-[Complete lineage and acceptance](evidence/e0-20261001/notes.md).
+verified byte for byte against CI. Original package: `0.1.0.24`, source `6a124021`
+([lineage and acceptance](evidence/e0-20261001/notes.md)). Active package: `0.1.0.28`,
+source `25f8bc39`, the GPU-resident E0.1 engine ([evidence](evidence/e0-20261001-resident/notes.md)).
 
 The companion Python runner owns corpus preparation, ordered samples, canonical
 FLP2, validation and final-test reservation. Device Portal credentials remain
@@ -27,7 +28,8 @@ lane. Its results are **not** console AppContainer measurements.
 | Hardware | Workload | token/s | Peak app memory | Status |
 | --- | --- | --- | --- | --- |
 | Series S | 52 operation / 36 model fixtures | — | see acceptance | passed on hardware GPU |
-| Series S | Representative synthetic E0, ctx=256, batch=32 | 963.571 | 91418624 bytes | completed |
+| Series S | Representative synthetic E0, ctx=256, batch=32 (`0.1.0.24`) | 963.571 | 91418624 bytes | completed |
+| Series S | Same benchmark, E0.1 GPU-resident (`0.1.0.28`) | 10224.282 | 110366720 bytes | completed, bit-identical outputs |
 | Series S | Interrupted / resumed / uninterrupted comparison | — | see lifecycle | exact weights, moments and branches |
 | Series S | Real Dev Home suspension and runner recovery | — | see lifecycle | passed |
 | Series S | Scientific E0 selection and final test | — | — | pending completion |
@@ -100,7 +102,7 @@ and [DirectX compute](platform/dx12-hlsl-compute.md).
 
 ## Next execution
 
-The first scientific campaign (package `0.1.0.24`) was stopped cleanly on 2026-10-01 at trunk step 455 of its first trial: its console job measured 329 GPU seconds in 3848 wall seconds. It is superseded by the GPU-resident E0.1 execution engine, which needs a new acceptance before a new campaign.
+On 2026-10-01 the first scientific campaign (package `0.1.0.24`, GPU busy ~8.6% of wall time) was stopped cleanly for the GPU-resident E0.1 engine. Package `0.1.0.28` passed the same acceptance, is bit-identical to `0.1.0.24` on every fixture and trained weight, and measured **10224 token/s** (×10.6) on the representative benchmark ([E0.1 evidence](evidence/e0-20261001-resident/notes.md)). Campaign `e0-20261001T090514Z-4236fd` runs on it.
 
 
 Follow the companion's accepted ADR 0011 and sequential campaign. Bind the current

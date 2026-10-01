@@ -52,9 +52,10 @@ La backend UWP E0 separata ha superato su **Series S** retail 52 casi operazione
 indipendenti, 36 fixture modello, AdamW a input identici, recovery esatto e
 sospensione reale. Il trial sintetico rappresentativo ha misurato **964 token/s** e
 **87.2 MiB** di picco ([evidenza e lineage](docs/evidence/e0-20261001/notes.md)).
-La prima campagna scientifica è stata fermata il 2026-10-01 (GPU attiva ~8.6% del
-wall time) per passare al motore GPU-resident E0.1, che richiede una nuova
-acceptance. Nessun claim di qualità. Sintesi onesta Fase 0–7: [docs/results.md](docs/results.md).
+Il motore GPU-resident E0.1 (pacchetto `0.1.0.28`) ha superato la stessa acceptance,
+è bit-identico a `0.1.0.24` ed è **10.6× più veloce** (10224 token/s,
+[evidenza E0.1](docs/evidence/e0-20261001-resident/notes.md)); la campagna scientifica
+è ripartita su di esso. Nessun claim di qualità. Sintesi onesta Fase 0–7: [docs/results.md](docs/results.md).
 
 ### Come contribuire
 
@@ -97,7 +98,7 @@ Cursor playbook: [docs/execution-plan.md](docs/execution-plan.md). Full table: [
 
 The E0 UWP backend has measured Series S functional evidence, including exact
 runner recovery and a real suspension lifecycle ([package, results and limits](docs/evidence/e0-20261001/notes.md)).
-The first scientific campaign (package `0.1.0.24`) was stopped cleanly on 2026-10-01 at trunk step 455 of its first trial: its console job measured 329 GPU seconds in 3848 wall seconds. It is superseded by the GPU-resident E0.1 execution engine, which needs a new acceptance before a new campaign.
+On 2026-10-01 the first scientific campaign (package `0.1.0.24`, GPU busy ~8.6% of wall time) was stopped cleanly for the GPU-resident E0.1 engine. Package `0.1.0.28` passed the same acceptance, is bit-identical to `0.1.0.24` on every fixture and trained weight, and measured **10224 token/s** (×10.6) on the representative benchmark ([E0.1 evidence](docs/evidence/e0-20261001-resident/notes.md)). Campaign `e0-20261001T090514Z-4236fd` runs on it.
 No quality claim. Honest Fase 0–7 write-up: [docs/results.md](docs/results.md).
 
 ### How to contribute

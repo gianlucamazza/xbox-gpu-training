@@ -1,0 +1,28 @@
+{
+ "checkpoint_interruption": {
+  "adapter": "SraKmd_arden",
+  "branches": [],
+  "checkpoint": {
+   "bytes": 1011113,
+   "path": "results/lifecycle-20261001T090439Z-e40eb5-suspended/checkpoint.json",
+   "sha256": "739f653bed500f6f81738bb99bd47ff7e5a84d4cfe3602687ec883d8612084d8"
+  },
+  "dispatches": 57340,
+  "gpu_seconds": 0.38037156892225654,
+  "hardware_gpu": true,
+  "job_id": "lifecycle-20261001T090439Z-e40eb5-suspended",
+  "job_sha256": "1f1f038bb4b8b922da8cc9f056e67bc6a28e83c0e89588456d2a3587c3f6358b",
+  "last_loss": 0.009544950764393434,
+  "peak_memory_bytes": 87764992,
+  "schema": "floppylm.e0.result.v1",
+  "state": "interrupted",
+  "transfer_bytes": 87292160,
+  "trunk_step": 461,
+  "wall_seconds": 1.118974126
+ },
+ "commit": "25f8bc3966ffae940658be94161d31edd83492c9",
+ "ok": true,
+ "package": "GianlucaMazza.XgpuE0_0.1.0.28_x64__g0p5dcfz4t9z4",
+ "purpose": "functional",
+ "suspend_marker": "suspend"
+}
