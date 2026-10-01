@@ -4,23 +4,41 @@
 [![E0 UWP](https://github.com/gianlucamazza/xbox-gpu-training/actions/workflows/e0-uwp.yml/badge.svg)](https://github.com/gianlucamazza/xbox-gpu-training/actions/workflows/e0-uwp.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**Quantized transformer training on the Xbox Series S GPU with DirectX 12 compute shaders.**
+**Native GPU trainer for FloppyLM, running on a retail Xbox Series S.**
 
-Xbox has no CUDA, DirectML on console is inference-focused, and a UWP app in Dev Mode
-gets about 1 GB of RAM. This repository trains anyway: a full causal transformer
-forward/backward written as HLSL compute shaders, AdamW on fp32 master weights, and a
-UWP worker that runs jobs on a retail Series S in Dev Mode. Every number is measured
-on hardware and committed as evidence, or it is not claimed ([claims policy](docs/claims-policy.md)).
+[FloppyLM](https://github.com/gianlucamazza/floppylm) looks for the best language model that
+fits entirely on a 3.5" floppy disk (1 474 560 bytes for weights, tokenizer and runtime together). Its first
+experiment, **E0**, measures the *scalar frontier*: small byte-level transformers whose cores are
+quantized to ternary or 2-bit weights, trained on TinyStories at miniature budgets. Every later
+FloppyLM design must beat that frontier.
 
-It is the native training backend of [FloppyLM](https://github.com/gianlucamazza/floppylm), which owns the model
-semantics, the FLP2 format, the Python oracle and the experiment campaign.
+This repository is E0's training backend. It runs on a dedicated Series S in Dev Mode, with the
+console's constraints: there is no CUDA, DirectML on console is inference-focused, and a UWP app
+gets about 1 GB of RAM. Every console number is measured on that hardware and committed as evidence,
+or it is not claimed ([claims policy](docs/claims-policy.md)).
+
+## What it trains
+
+- **Models:** byte-level causal transformers (vocabulary 256) at miniature size. The benchmark
+  configuration is in [docs/status.md](docs/status.md). They are not large language models.
+- **Quantization:** quantization-aware training with FloppyLM's own quantizer (ternary or
+  2-bit cores, fp16 scales, identity STE), checked op by op against FloppyLM's Python oracle.
+- **Split of work:** the GPU runs the whole forward and backward pass as HLSL compute shaders.
+  The app's CPU keeps the fp32 master weights and runs AdamW and the WSD schedule with its
+  three cooldown branches.
+- **E0.1** is the current execution engine. It keeps tensors resident on the GPU and is
+  bit-identical to the previous engine ([docs/e0/engine.md](docs/e0/engine.md)).
+
+FloppyLM owns the model semantics, the FLP2 format, the oracle, the fixtures, corpus
+preparation and the campaign runner. Running E0 needs both repositories: FloppyLM drives the
+console through the job protocol described in [docs/e0/job-protocol.md](docs/e0/job-protocol.md).
 
 ## Status
 
 The E0 trainer passes its full hardware acceptance on Series S (52 operation cases,
-36 model fixtures, exact resume, real suspension) and runs the first scientific
-campaign on the GPU-resident E0.1 engine. No language-model quality result is
-published yet. Package, throughput and open items: **[docs/status.md](docs/status.md)**.
+36 model fixtures, exact resume, real suspension). A scientific campaign is in progress,
+and no language-model quality result is published yet. Package, throughput and open items:
+**[docs/status.md](docs/status.md)**.
 
 ## Two lanes
 
