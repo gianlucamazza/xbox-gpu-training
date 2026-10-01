@@ -1,0 +1,30 @@
+{
+ "baseline_broken": true,
+ "commit": "6dbc407c2f9de06f369c7f24bbbcf671246ce579",
+ "fixed": false,
+ "package": "GianlucaMazza.XgpuE0_0.1.0.19_x64__g0p5dcfz4t9z4",
+ "probes": {
+  "identity": {
+   "accepted": true,
+   "result": {
+    "adapter": "SraKmd_arden",
+    "cases": [],
+    "dispatches": 0,
+    "gpu_seconds": 0.0,
+    "hardware_gpu": true,
+    "peak_memory_bytes": 17379328,
+    "schema": "floppylm.e0.kernels.result.v1",
+    "transfer_bytes": 0
+   }
+  },
+  "oversized": {
+   "accepted": false,
+   "error": "Xbox fixture failed: E0 tensor exceeds one dispatch dimension"
+  },
+  "reuse": {
+   "accepted": false,
+   "error": "Xbox fixture failed: allocator reset: 0x80004005"
+  }
+ },
+ "purpose": "functional"
+}

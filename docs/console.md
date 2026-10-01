@@ -1,141 +1,62 @@
 # Fase 6 — Series S|X Dev Mode validation
 
-**Status: `BLOCKED: no console`.**
+Status (2026-10-01): **Series S E0 functional execution measured**. Scientific
+quality, Series X, matched CPU comparison and PIX capture remain unmeasured.
+The original Win32 diagnostics remain a separate lane; their desktop results are
+not copied into the E0 console results.
 
-This lane has **no Xbox Series S|X Dev Mode kit**. This page is the Fase 6 deploy / PIX / results scaffolding. It does **not** invent tok/s, quality scores, PIX captures, or Series S|X kernel benches. It does **not** claim **GDKX** or **ID@Xbox**.
+## Package and deployment
 
-Stopping here for a human with a kit is a successful honest phase ([docs/execution-plan.md](execution-plan.md#fase-6--series-sx-dev-mode-validation)).
+The separate x64 UWP Release app in `uwp/` was built by E0 UWP CI run 36792707081,
+repacked and signed using the development certificate, then installed via Device
+Portal on retail Series S. Executable, shader, resource and manifest payloads were
+verified byte for byte against CI. Active package: `0.1.0.24`, source `6a124021`.
+[Complete lineage and acceptance](evidence/e0-20261001/notes.md).
 
-Platform SoT (do not duplicate; do not soften):
-
-| Pack | Why it gates this page |
-| --- | --- |
-| [platform/blockers-fase6-validation.md](platform/blockers-fase6-validation.md) | Four known Fase 6 blockers |
-| [platform/uwp-resources.md](platform/uwp-resources.md) | App **~1 GB** vs Creators Game **~5 GB**; debugger can mask OOM |
-| [platform/gdk-vs-gdkx.md](platform/gdk-vs-gdkx.md) | Public GDK is **Windows-only**; GDKX / ID@Xbox not claimed |
-| [platform/directml-scope.md](platform/directml-scope.md) | DirectML is **not** the trainer |
-| [platform/dev-mode.md](platform/dev-mode.md) | Dev Mode = UWP develop/test; **≠** GDKX |
-| [platform/series-s-vs-x.md](platform/series-s-vs-x.md) | Public SKU specs only — not our benches |
-| [platform/dx12-hlsl-compute.md](platform/dx12-hlsl-compute.md) | FL 11.0; App Mode is **not** full title GPU |
-
-Windows host install/run stays in [docs/setup.md](setup.md). This file is console validation only.
-
-## What Fase 6 is
-
-| This phase does | This phase does not |
-| --- | --- |
-| Document the public Dev Mode / Device Portal deploy path | Claim a package was deployed |
-| Ship an empty / `BLOCKED` results table | Invent Series S\|X tok/s or quality |
-| Ship a PIX checklist (no `.wpix` attached) | Fake a capture or timing table |
-| Cite the four known blockers | Treat DirectML as the trainer |
-| Stop for a human if there is no kit | Claim GDKX / ID@Xbox / CUDA |
-
-## Verdict
-
-```
-BLOCKED: no console
-reason: no Dev Mode kit in this lane; GDKX / ID@Xbox not claimed
-```
-
-This Cursor / cloud VM is Linux. There is no retail Xbox, no Dev Home pairing, and no Microsoft-provisioned kit. Public GDK does **not** target Series consoles ([gdk-vs-gdkx.md](platform/gdk-vs-gdkx.md)). A Windows DX12 box or GitHub `windows-latest` (including WARP / Basic Render Driver) is **not** Series S|X hardware.
-
-## Four known blockers (must stay accurate)
-
-Copied in meaning from [blockers-fase6-validation.md](platform/blockers-fase6-validation.md). Do not rewrite these as “solved.”
-
-1. **No primary Microsoft claim of on-console LLM / GPU training via DirectML or ORT.** DirectML is a DX12-style inference / ML-primitive API. Xbox public messaging is in-game ML inference. On-console training via DirectML remains **unsupported / unclear**. This research path is **DirectX 12 / HLSL** compute shaders. Detail: [directml-scope.md](platform/directml-scope.md).
-
-2. **UWP memory caps; debugger can mask OOM.** Foreground: UWP **Apps ~1 GB**; Xbox Live **Creators Program games ~5 GB**. Background apps **≤128 MB**. Visual Studio debugger **does not apply** these caps — the **non-debug** package is the real gate. **Do not assume Game designation** for an unpublished research **App** package. Detail: [uwp-resources.md](platform/uwp-resources.md). Fase 4 desktop peak working-set is **not** an AppContainer measurement ([memory-budget.md](memory-budget.md)).
-
-3. **Public GDK is Windows-only; full console is GDKX / ID@Xbox.** Public GDK Purpose excludes Xbox Series console targeting. This repo does **not** claim GDKX APIs, title entitlements, or Microsoft-provisioned devkits. Detail: [gdk-vs-gdkx.md](platform/gdk-vs-gdkx.md).
-
-4. **Dev Mode is UWP develop/test only — not GDKX entitlements.** Dev Mode turns a retail Xbox into a development console to develop and test UWP apps (Dev Home / deploy). Retail store titles generally do not run there. Legal public text still uses an **Xbox One**–titled activation agreement and a **≤3 consoles** cap (confirm Series enforcement in Partner Center). Dev Mode **≠** full console stack and **≠** GDKX hardware access. Detail: [dev-mode.md](platform/dev-mode.md).
-
-## Deploy notes (scaffolding; not executed)
-
-This repository ships a **Win32 desktop** host (`xbox_gpu_host`). It is **not** an Xbox UWP App package. There is **no** in-tree `.appx` / MSIX / Partner Center title for Dev Home or Device Portal.
-
-When a human has a **Dev Mode** kit **and** a real UWP package, the public path is:
-
-1. Activate Developer Mode on the retail console (Dev Mode Activation app + Partner Center). Switch and restart into Dev Mode. Retail store titles generally will not run there. ([Getting started with UWP app development on Xbox](https://learn.microsoft.com/en-us/windows/uwp/xbox-apps/getting-started), [dev-mode.md](platform/dev-mode.md).)
-2. Open **Dev Home**. Under Remote Access, enable **Xbox Device Portal**, set a username/password, and note the HTTPS URL Dev Home shows. ([Device Portal for Xbox](https://learn.microsoft.com/en-us/previous-versions/windows/uwp/xbox-apps/device-portal-xbox).)
-3. From Visual Studio: UWP workload, **x64**, deploy target **Remote Machine**, authentication **Universal (Unencrypted Protocol)**, pair with the PIN from Dev Home. ([Deploying and debugging UWP apps](https://learn.microsoft.com/en-us/windows/uwp/debug-test-perf/deploying-and-debugging-uwp-apps).)
-4. Or side-load a **signed** AppX plus dependencies from the Device Portal Home tab.
-5. Run the **non-debug** package for any memory-budget claim. A debugger session that does not OOM is **not** evidence that the App ~1 GB (or Creators Game ~5 GB) cap holds ([uwp-resources.md](platform/uwp-resources.md)).
-6. Target **x64**. App Mode is **not** full title GPU (FL **11.0**, ~45% GPU share) ([dx12-hlsl-compute.md](platform/dx12-hlsl-compute.md)).
-
-```bat
-REM Device Portal / Dev Mode deploy — exact package command TBD when a UWP
-REM package exists. This phase did not run a deploy.
-REM Do not treat xbox_gpu_host.exe (Win32 desktop) as a console package.
-```
-
-**This phase did not deploy.** No Device Portal session, no pairing PIN, no AppX. `BLOCKED: no console`.
-
-## PIX capture checklist
-
-[PIX on Windows](https://devblogs.microsoft.com/pix/download/) is the public DirectX 12 capture/timing tool documented in [docs/setup.md](setup.md#pix). This repository does **not** include a `.wpix` artifact. Do not invent one.
-
-Xbox-title PIX / partner capture tooling is **not** claimed here (that sits on the GDKX / ID@Xbox path we do not have).
-
-| Step | Done? |
-| --- | --- |
-| PIX on Windows install documented | yes — [setup.md](setup.md#pix) |
-| Windows DX12 capture of one compute dispatch (`hello_compute` / matmul / FLP2) | **no** — not produced this phase |
-| Attach a `.wpix` / timing table | **no** — none exists |
-| Console / Dev Mode PIX capture of one compute shader dispatch | **`BLOCKED: no console`** |
-| Treat WARP / Basic Render Driver as Series S\|X | **never** |
-
-```bat
-REM PIX: capture one compute shader dispatch on console if tooling allows
-REM Not run. No .wpix committed. Not a timing result.
-```
+The companion Python runner owns corpus preparation, ordered samples, canonical
+FLP2, validation and final-test reservation. Device Portal credentials remain
+outside jobs and committed evidence. Set `XGPU_E0_PACKAGE` explicitly when several
+versions are installed. Acceptance must match the active package and source.
 
 ## Results table
 
-Schema intent: `xbox-gpu-training.benchmark.console.v1`. Empty metric cells are required until a **real** Dev Mode run fills them. CPU-only comparison is filled **only** if both sides were measured.
+| Hardware | Workload | token/s | Peak app memory | Status |
+| --- | --- | --- | --- | --- |
+| Series S | 52 operation / 36 model fixtures | — | see acceptance | passed on hardware GPU |
+| Series S | Representative synthetic E0, ctx=256, batch=32 | 963.571 | 91418624 bytes | completed |
+| Series S | Interrupted / resumed / uninterrupted comparison | — | see lifecycle | exact weights, moments and branches |
+| Series S | Real Dev Home suspension and runner recovery | — | see lifecycle | passed |
+| Series S | Scientific E0 selection and final test | — | — | pending completion |
+| Series X | E0 | — | — | no Series X measurement |
+| CPU versus console | Matched throughput comparison | — | — | not measured |
 
-| sku | workload | tok/s | quality | cpu_tok/s | pix | status | note |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| Series S | hello_compute | | | | | `BLOCKED: no console` | no Dev Mode kit; no GDKX |
-| Series S | matmul FP32/FP16 | | | | | `BLOCKED: no console` | no Dev Mode kit; no GDKX |
-| Series S | FLP2 forward fixture | | | | | `BLOCKED: no console` | no Dev Mode kit; no GDKX |
-| Series S | stream-stress App ~1 GB | | | | | `BLOCKED: no console` | AppContainer unvalidated |
-| Series S | qat-smoke N=16 | | | | | `BLOCKED: no console` | no quality curve |
-| Series X | hello_compute | | | | | `BLOCKED: no console` | no Dev Mode kit; no GDKX |
-| Series X | matmul FP32/FP16 | | | | | `BLOCKED: no console` | no Dev Mode kit; no GDKX |
-| Series X | FLP2 forward fixture | | | | | `BLOCKED: no console` | no Dev Mode kit; no GDKX |
-| Series X | stream-stress App ~1 GB | | | | | `BLOCKED: no console` | AppContainer unvalidated |
-| Series X | qat-smoke N=16 | | | | | `BLOCKED: no console` | no quality curve |
-| CPU vs console | any of the above | | | | | not filled | both sides not measured |
+These synthetic-corpus measurements establish functional execution. They do not
+establish language-model quality or performance of all historical workloads.
 
-Public marketing TFLOPS / GDDR6 sizes in [series-s-vs-x.md](platform/series-s-vs-x.md) are **SKU copy**, not rows of this table.
+## PIX capture checklist
 
-Windows Fase 1–5 host numbers (portable GEMM CSV, Linux `VmHWM`, QAT smoke loss pairs) are **not** console results and are **not** copied here as Series benches.
+Windows PIX installation is documented in [setup](setup.md#pix). No `.wpix`
+capture or console partner tooling access is claimed. GPU timers and dispatch
+counters in the actual reports are the measured telemetry available here.
 
-## Memory (repeat, so this page cannot be misread)
+## Platform constraints
 
-- Planning budget for an **App** package: **~1 GB** (1024 MiB).
-- Creators **Game ~5 GB** is the **other** designation. Unpublished research must **not** assume Game class.
-- Debugger can **mask OOM**. Gate = **non-debug** package.
-- Desktop / CI working-set is not AppContainer.
+The research app uses DirectX 12/HLSL. It does not claim a DirectML optimizer,
+CUDA, GDKX entitlements or ID@Xbox partner access. The app-class memory planning
+budget remains about 1 GB; Game classification is not assumed. Console acceptance
+used the non-debug Release package; debugger memory is not the acceptance oracle.
+Real suspension writes a cancel marker and publishes a verified checkpoint.
 
-Detail: [uwp-resources.md](platform/uwp-resources.md), [memory-budget.md](memory-budget.md).
+Primary platform references remain in [resource limits](platform/uwp-resources.md),
+[public GDK versus GDKX](platform/gdk-vs-gdkx.md), [Dev Mode](platform/dev-mode.md)
+and [DirectX compute](platform/dx12-hlsl-compute.md). The factual constraints in
+[platform blockers](platform/blockers-fase6-validation.md) are unchanged by a
+successful small E0 run.
 
-## What a human with a kit should do next
+## Next execution
 
-Do **not** start Fase 7 until this table is either filled from hardware or still explicitly `BLOCKED`.
-
-1. Build a real **x64 UWP** package (does not exist in this repo today).
-2. Deploy via Dev Home / Device Portal as above.
-3. Run the same host workloads **non-debug** under the App ~1 GB plan (or record a measured breach).
-4. Fill **only** measured cells. Leave the rest empty.
-5. Attach a real PIX capture if public tooling allows; otherwise write why it is still blocked.
-6. CPU vs console: fill `cpu_tok/s` only when the same workload was timed on CPU **and** on that console.
-
-## Related
-
-- [ROADMAP.md](../ROADMAP.md) — Fase 6 status
-- [docs/setup.md](setup.md) — Windows toolchain
-- [docs/execution-plan.md](execution-plan.md#fase-6--series-sx-dev-mode-validation)
-- [docs/architecture.md](architecture.md)
+Follow the companion's accepted ADR 0011 and sequential campaign. Bind the current
+acceptance and benchmark, retain one GPU job at a time, and freeze the final ten
+artifact hashes before the exclusive held-out test reservation. Publish actual
+costs and failures with the final result. [Roadmap](../ROADMAP.md),
+[results](results.md), [execution plan](execution-plan.md#fase-6--series-sx-dev-mode-validation).

@@ -48,13 +48,15 @@ Playbook Cursor: [docs/execution-plan.md](docs/execution-plan.md). Tabella compl
 
 ### Stato attuale
 
-The separate E0 UWP backend has passed 52 independent operation cases, 36 model fixtures, identical-input
-AdamW and exact checkpoint resume on a retail **Series S**. The representative
-ctx=256/batch=32 trial measured **959 token/s**, **87 MiB** peak app memory and
-154 seconds wall time. These are synthetic-corpus functional measurements;
-scientific E0 remains gated on the FloppyLM tensor16/S9 decision.
-[Evidence and exact package lineage](docs/evidence/e0-20260930-kernels/notes.md).
-xllama is unchanged; the historical `--qat-smoke` lane remains a separate experiment.
+The separate E0 UWP backend passed 52 independent operation cases, 36 model
+fixtures, identical-input AdamW, exact recovery and real suspension on a retail
+**Series S**. The representative synthetic trial measured **964 token/s**,
+**87.2 MiB** peak app memory and
+153.0 seconds wall time. Wrong identities and oversized
+dispatches are rejected without breaking subsequent GPU work.
+[Current evidence and exact package lineage](docs/evidence/e0-20261001/notes.md).
+The companion accepted row16/row8log scientific E0; the full campaign and final
+test still need to finish. These functional results make no quality claim.
 
 ### Come contribuire
 
@@ -95,10 +97,10 @@ Cursor playbook: [docs/execution-plan.md](docs/execution-plan.md). Full table: [
 
 ### Current status
 
-The E0 UWP backend now has measured Series S functional evidence:
-52 independent operation cases, 36 model fixtures, identical-input AdamW, exact resume and a representative
-throughput trial. [Package, results and limits](docs/evidence/e0-20260930-kernels/notes.md).
-Scientific E0 remains gated on the companion protocol decision.
+The E0 UWP backend has measured Series S functional evidence, including exact
+runner recovery and a real suspension lifecycle. The companion protocol now
+selects row16/row8log for scientific E0. Quality results remain pending campaign
+completion. [Package, results and limits](docs/evidence/e0-20261001/notes.md).
 
 ### How to contribute
 
@@ -118,7 +120,7 @@ Scientific E0 remains gated on the companion protocol decision.
 | `docs/ste-adamw.md` | Fase 3 FakeQuant / STE / AdamW contract + grad-check tolerances |
 | `docs/memory-budget.md` | Fase 4 App ~1 GB / Game ~5 GB streaming contract |
 | `docs/qat-wsd.md` | Fase 5 QAT bit-widths + WSD + isolated cooldowns (N=16) |
-| `docs/console.md` | Fase 6 Dev Mode deploy / PIX / `BLOCKED: no console` table |
+| `docs/console.md` | Fase 6 measured E0 console results and pending targets |
 | `docs/`, `docs/adr/` | Architecture + ADRs (`0001`, `0002`) |
 | `docs/platform/` | Public Xbox / Dev Mode / GDK / UWP fact packs |
 | `docs/execution-plan.md` | Cursor phase playbook |

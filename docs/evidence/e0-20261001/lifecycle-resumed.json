@@ -1,0 +1,139 @@
+{
+ "adapter": "SraKmd_arden",
+ "branches": [
+  {
+   "artifact": {
+    "bytes": 311964,
+    "path": "results/lifecycle-20260930T235038Z-b5beee-suspended/branch-512.json",
+    "sha256": "d7a4754f70f3e82611305ad0d4871ca05cdd3aa16370851b0ed9584814e0067e"
+   },
+   "cooldown_seconds": 7.339397671,
+   "cooldown_start": 461,
+   "cooldown_steps": 51,
+   "end_step": 512,
+   "tokens_seen": 8192
+  },
+  {
+   "artifact": {
+    "bytes": 310825,
+    "path": "results/lifecycle-20260930T235038Z-b5beee-suspended/branch-1024.json",
+    "sha256": "f62d6cbeb46059144c9e49e570de9d8596a904b4667b05c025232481d0a70a0e"
+   },
+   "cooldown_seconds": 14.715402816,
+   "cooldown_start": 922,
+   "cooldown_steps": 102,
+   "end_step": 1024,
+   "tokens_seen": 16384
+  },
+  {
+   "artifact": {
+    "bytes": 310067,
+    "path": "results/lifecycle-20260930T235038Z-b5beee-suspended/branch-2048.json",
+    "sha256": "e6b7785fc5fc72249cf8b5abc2de8d1ab894bc247e57f479cf7ffde974147918"
+   },
+   "cooldown_seconds": 29.580488873,
+   "cooldown_start": 1844,
+   "cooldown_steps": 204,
+   "end_step": 2048,
+   "tokens_seen": 32768
+  }
+ ],
+ "checkpoint": {
+  "bytes": 1010078,
+  "path": "results/lifecycle-20260930T235038Z-b5beee-suspended/checkpoint.json",
+  "sha256": "b07715bba965c534ce3d314e3c2917c6df5c31f071e1af568f793a79dec2d619"
+ },
+ "dispatches": 268522,
+ "execution_segments": [
+  {
+   "adapter": "SraKmd_arden",
+   "branches": [],
+   "checkpoint": {
+    "bytes": 1012223,
+    "path": "results/lifecycle-20260930T235038Z-b5beee-suspended/checkpoint.json",
+    "sha256": "502008b5cb795c700a3e7fd4f288474b82ebdce750d94591bf0335d8497f5895"
+   },
+   "dispatches": 8052,
+   "gpu_seconds": 0.08407651127819582,
+   "hardware_gpu": true,
+   "job_id": "lifecycle-20260930T235038Z-b5beee-suspended",
+   "job_sha256": "c0ca6b669fe58e8c107ff4f282fceed159d6883d7bf16f2fb6cd4734e3b00280",
+   "last_loss": 0.49694656347855926,
+   "peak_memory_bytes": 20873216,
+   "schema": "floppylm.e0.result.v1",
+   "state": "interrupted",
+   "transfer_bytes": 97282944,
+   "trunk_step": 66,
+   "wall_seconds": 9.787892276
+  },
+  {
+   "adapter": "SraKmd_arden",
+   "branches": [
+    {
+     "artifact": {
+      "bytes": 311964,
+      "path": "results/lifecycle-20260930T235038Z-b5beee-suspended/branch-512.json",
+      "sha256": "d7a4754f70f3e82611305ad0d4871ca05cdd3aa16370851b0ed9584814e0067e"
+     },
+     "cooldown_seconds": 7.339397671,
+     "cooldown_start": 461,
+     "cooldown_steps": 51,
+     "end_step": 512,
+     "tokens_seen": 8192
+    },
+    {
+     "artifact": {
+      "bytes": 310825,
+      "path": "results/lifecycle-20260930T235038Z-b5beee-suspended/branch-1024.json",
+      "sha256": "f62d6cbeb46059144c9e49e570de9d8596a904b4667b05c025232481d0a70a0e"
+     },
+     "cooldown_seconds": 14.715402816,
+     "cooldown_start": 922,
+     "cooldown_steps": 102,
+     "end_step": 1024,
+     "tokens_seen": 16384
+    },
+    {
+     "artifact": {
+      "bytes": 310067,
+      "path": "results/lifecycle-20260930T235038Z-b5beee-suspended/branch-2048.json",
+      "sha256": "e6b7785fc5fc72249cf8b5abc2de8d1ab894bc247e57f479cf7ffde974147918"
+     },
+     "cooldown_seconds": 29.580488873,
+     "cooldown_start": 1844,
+     "cooldown_steps": 204,
+     "end_step": 2048,
+     "tokens_seen": 32768
+    }
+   ],
+   "checkpoint": {
+    "bytes": 1010078,
+    "path": "results/lifecycle-20260930T235038Z-b5beee-suspended/checkpoint.json",
+    "sha256": "b07715bba965c534ce3d314e3c2917c6df5c31f071e1af568f793a79dec2d619"
+   },
+   "dispatches": 260470,
+   "gpu_seconds": 2.7000796791983204,
+   "hardware_gpu": true,
+   "job_id": "lifecycle-20260930T235038Z-b5beee-suspended",
+   "job_sha256": "8d4cde410f725cf0d29a2d72d3480b3adc89a39eb0327777bee09662dbb398fe",
+   "last_loss": 0.1232983342811167,
+   "peak_memory_bytes": 24719360,
+   "schema": "floppylm.e0.result.v1",
+   "state": "completed",
+   "transfer_bytes": 3146955840,
+   "trunk_step": 1844,
+   "wall_seconds": 310.350765827
+  }
+ ],
+ "gpu_seconds": 2.784156190476516,
+ "hardware_gpu": true,
+ "job_id": "lifecycle-20260930T235038Z-b5beee-suspended",
+ "job_sha256": "8d4cde410f725cf0d29a2d72d3480b3adc89a39eb0327777bee09662dbb398fe",
+ "last_loss": 0.1232983342811167,
+ "peak_memory_bytes": 24719360,
+ "schema": "floppylm.e0.result.v1",
+ "state": "completed",
+ "transfer_bytes": 3244238784,
+ "trunk_step": 1844,
+ "wall_seconds": 320.13865810299995
+}
