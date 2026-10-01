@@ -15,13 +15,13 @@ The script restores CppWinRT, compiles `e0_tensor.hlsl` with `dxc -Gis`, stamps 
 package identity and version into the manifest (restoring the original afterwards)
 and builds `uwp/XgpuE0.vcxproj` for x64 Release with the source commit baked in.
 
-| Parameter | Environment / CI variable | Default |
-| --- | --- | --- |
-| `-IdentityName` | `XGPU_E0_IDENTITY_NAME` | `GianlucaMazza.XgpuE0` |
-| `-Publisher` | `XGPU_E0_PUBLISHER` | `CN=uwp-crossbuild-dev` (must equal the signing certificate subject) |
-| `-PublisherDisplayName` | `XGPU_E0_PUBLISHER_DISPLAY_NAME` | `Gianluca Mazza` |
-| `-Version` | `XGPU_E0_VERSION` | `0.1.0.<GITHUB_RUN_NUMBER>`, or `0.1.0.0` locally |
-| `-Commit` | `GITHUB_SHA` | `unknown` |
+| Parameter               | Environment / CI variable        | Default                                                              |
+| ----------------------- | -------------------------------- | -------------------------------------------------------------------- |
+| `-IdentityName`         | `XGPU_E0_IDENTITY_NAME`          | `GianlucaMazza.XgpuE0`                                               |
+| `-Publisher`            | `XGPU_E0_PUBLISHER`              | `CN=uwp-crossbuild-dev` (must equal the signing certificate subject) |
+| `-PublisherDisplayName` | `XGPU_E0_PUBLISHER_DISPLAY_NAME` | `Gianluca Mazza`                                                     |
+| `-Version`              | `XGPU_E0_VERSION`                | `0.1.0.<GITHUB_RUN_NUMBER>`, or `0.1.0.0` locally                    |
+| `-Commit`               | `GITHUB_SHA`                     | `unknown`                                                            |
 
 In CI the identity variables come from optional repository variables; unset keeps
 the defaults. Changing the name or publisher installs a **separate app** with an
@@ -78,6 +78,25 @@ not a JSON filename. An execution-preserving release also needs the
 Commit package-bound hardware proofs here under `docs/evidence/` and reference them
 from FloppyLM's companion record. Never resume a scientific campaign with a different
 package implicitly. The companion owns source freezing, recovery and final-test reservation.
+
+## 5. Dashboard screenshots
+
+[`scripts/e0_dashboard_shots.py`](../../scripts/e0_dashboard_shots.py) records package-bound
+screenshots of the on-console dashboard. It only reads from the console (Device Portal
+screenshot, `device.json`, the watched job's `status.json`); it submits nothing. Settings come
+from the environment: `UWP_DEVICE_URL`, `UWP_DEVICE_USER`, `OPENAPPX_DEVICE_PASSWORD`,
+`OPENAPPX_DEVICE_PIN` and `XGPU_E0_PACKAGE`.
+
+```bash
+python3 scripts/e0_dashboard_shots.py --out docs/evidence/<dir> capture --label idle-cold
+python3 scripts/e0_dashboard_shots.py --out docs/evidence/<dir> watch --job <job-id>
+```
+
+`watch` captures `running` (first trunk status at or after `--running-step`, default 1024, so
+the chart shows a smoothed curve), `cooldown-1..3` and the final state of a job submitted by the
+companion. Each PNG is listed in `shots.json` with its SHA-256, size, the installed `package` and
+`commit`, and the status fields it shows. A shot whose `device.json` names another package is refused.
+Screenshots prove what the dashboard renders, nothing about training quality.
 
 ## PIX
 

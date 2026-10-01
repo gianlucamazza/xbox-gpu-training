@@ -121,6 +121,37 @@ std::vector<LabelSlot> place_labels(const std::vector<float> &xs,
   return slots;
 }
 
+LossRange loss_range(const std::vector<Sample> &points) {
+  if (points.empty())
+    return {};
+  double lo = points.front().loss, hi = lo;
+  for (const auto &p : points) {
+    lo = std::min(lo, p.loss);
+    hi = std::max(hi, p.loss);
+  }
+  const double pad = std::max(1e-6, 0.05 * (hi - lo));
+  return {lo - pad, hi + pad};
+}
+
+float loss_y(const LossRange &range, double loss, float h) {
+  const double y = (range.hi - loss) / (range.hi - range.lo);
+  return float(std::clamp(y, 0.0, 1.0) * h);
+}
+
+Ticks nice_ticks(double lo, double hi, unsigned n) {
+  Ticks t;
+  if (!(hi > lo) || !n)
+    return t;
+  const double raw = (hi - lo) / n,
+               magnitude = std::pow(10.0, std::floor(std::log10(raw))),
+               f = raw / magnitude;
+  const double step = (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * magnitude;
+  for (double v = std::ceil(lo / step) * step; v <= hi + 1e-9 * step; v += step)
+    t.values.push_back(std::abs(v) < 1e-9 * step ? 0.0 : v);
+  t.digits = std::max(0, -int(std::floor(std::log10(step) + 1e-9)));
+  return t;
+}
+
 std::vector<std::pair<float, float>> plot(const std::vector<Sample> &points,
                                           const std::vector<double> &values,
                                           const Schedule &schedule, float w,
@@ -128,20 +159,12 @@ std::vector<std::pair<float, float>> plot(const std::vector<Sample> &points,
   std::vector<std::pair<float, float>> out;
   if (points.empty() || values.size() != points.size() || !schedule.ends[2])
     return out;
-  double lo = points.front().loss, hi = lo;
-  for (const auto &p : points) {
-    lo = std::min(lo, p.loss);
-    hi = std::max(hi, p.loss);
-  }
-  const double pad = std::max(1e-6, 0.05 * (hi - lo));
-  lo -= pad;
-  hi += pad;
+  const auto range = loss_range(points);
   out.reserve(points.size());
   for (size_t i = 0; i < points.size(); ++i) {
     const double x = double(points[i].step) / double(schedule.ends[2]);
-    const double y = (hi - values[i]) / (hi - lo);
     out.emplace_back(float(std::clamp(x, 0.0, 1.0) * w),
-                     float(std::clamp(y, 0.0, 1.0) * h));
+                     loss_y(range, values[i], h));
   }
   return out;
 }
@@ -157,6 +180,78 @@ Rate rate(const Json &previous, const Json &current, const Schedule &schedule) {
   if (s1 <= s0 || w1 <= w0)
     return {};
   return {double(s1 - s0) * double(schedule.tokens_per_step) / (w1 - w0), true};
+}
+
+uint64_t chart_step(const Json &status, const Schedule &s) {
+  if (const auto b = cooling(status, s))
+    return value_or(status, "cooldown_step", s.cooldown_starts[*b]);
+  return value_or(status, "trunk_step");
+}
+
+std::array<BranchView, 3> branch_views(const Json &status, const Schedule &s) {
+  std::array<BranchView, 3> out;
+  const size_t done = std::min<size_t>(finished_branches(status), 3);
+  for (size_t b = 0; b < done; ++b) {
+    out[b].state = BranchView::done;
+    out[b].percent = 100;
+    out[b].seconds =
+        real_or(status.at("branches").at(b), "cooldown_seconds", -1);
+  }
+  if (const auto b = cooling(status, s); b && *b >= done && s.cooldown(*b)) {
+    const uint64_t at =
+        value_or(status, "cooldown_step", s.cooldown_starts[*b]);
+    out[*b].state = BranchView::cooling;
+    out[*b].percent =
+        unsigned(100 *
+                 (std::clamp(at, s.cooldown_starts[*b], s.ends[*b]) -
+                  s.cooldown_starts[*b]) /
+                 s.cooldown(*b));
+  }
+  return out;
+}
+
+std::string describe_job(const Json &job) {
+  std::string out;
+  auto add = [&](const std::string &part) {
+    out += (out.empty() ? "" : " · ") + part;
+  };
+  auto number = [](const Json &j, const char *key) -> std::optional<uint64_t> {
+    if (!j.is_object() || !j.contains(key) || !j.at(key).is_number_integer())
+      return std::nullopt;
+    return value_or(j, key);
+  };
+  auto word = [](const Json &j, const char *key) {
+    return j.is_object() && j.contains(key) && j.at(key).is_string()
+               ? j.at(key).get<std::string>()
+               : std::string();
+  };
+  const Json none = Json::object();
+  const auto &c = job.contains("config") ? job.at("config") : none;
+  const auto &sp = job.contains("spec") ? job.at("spec") : none;
+  if (auto v = number(c, "d"))
+    add("d " + std::to_string(*v));
+  if (auto v = number(c, "n_layers"))
+    add(std::to_string(*v) + " layers");
+  if (auto v = number(c, "n_heads"))
+    add(std::to_string(*v) + " heads");
+  if (auto v = number(c, "d_ff"))
+    add("ff " + std::to_string(*v));
+  if (auto v = number(c, "ctx"))
+    add("ctx " + std::to_string(*v));
+  const std::string fmt = word(c, "core_fmt"), mlp = word(c, "mlp");
+  if (!fmt.empty() || !mlp.empty())
+    add(fmt + (fmt.empty() || mlp.empty() ? "" : " / ") + mlp);
+  if (sp.is_object() && sp.contains("lr") && sp.at("lr").is_number()) {
+    char text[32];
+    std::snprintf(text, sizeof text, "lr %g", sp.at("lr").get<double>());
+    add(text);
+  }
+  if (auto v = number(sp, "batch"))
+    add("batch " + std::to_string(*v));
+  if (auto v = number(sp, "tokens"))
+    // spec.tokens is the trunk budget T, not the whole schedule.
+    add("T " + format_compact(double(*v)) + " tokens");
+  return out;
 }
 
 std::string phase(const Json &status, const Schedule &schedule) {
@@ -218,6 +313,27 @@ std::string format_count(uint64_t value) {
 std::string format_megabytes(uint64_t bytes) {
   char text[32];
   std::snprintf(text, sizeof text, "%.0f MB", double(bytes) / 1e6);
+  return text;
+}
+
+std::string format_loss(double loss) {
+  char text[32];
+  std::snprintf(text, sizeof text, "%.4g", loss);
+  return text;
+}
+
+std::string format_compact(double value) {
+  static const char *const units[] = {"", " k", " M", " G"};
+  unsigned u = 0;
+  while (std::abs(value) >= 999.5 && u < 3) {
+    value /= 1000;
+    ++u;
+  }
+  char text[32];
+  const int digits = !u || std::abs(value) >= 99.95 ? 0
+                     : std::abs(value) >= 9.995     ? 1
+                                                    : 2;
+  std::snprintf(text, sizeof text, "%.*f%s", digits, value, units[u]);
   return text;
 }
 } // namespace e0ui

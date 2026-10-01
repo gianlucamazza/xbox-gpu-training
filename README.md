@@ -8,7 +8,7 @@
 
 [FloppyLM](https://github.com/gianlucamazza/floppylm) looks for the best language model that
 fits entirely on a 3.5" floppy disk (1 474 560 bytes for weights, tokenizer and runtime together). Its first
-experiment, **E0**, measures the *scalar frontier*: small byte-level transformers whose cores are
+experiment, **E0**, measures the _scalar frontier_: small byte-level transformers whose cores are
 quantized to ternary or 2-bit weights, trained on TinyStories at miniature budgets. Every later
 FloppyLM design must beat that frontier.
 
@@ -41,11 +41,25 @@ The E0 trainer passes its full hardware acceptance on Series S (52 operation cas
 no language-model quality result is published yet. Package, throughput and open items:
 **[docs/status.md](docs/status.md)**.
 
+## On-console dashboard
+
+The app shows a read-only training dashboard on the TV. These screenshots come from the Device
+Portal during a functional benchmark (T = 700 steps, 3 010 optimizer steps) on a synthetic corpus, package `0.1.0.66`
+([record](docs/evidence/e0-20261001-dashboard-ui/notes.md)). The loss values do not measure model quality.
+
+![Dashboard during trunk training](docs/evidence/e0-20261001-dashboard-ui/running.png)
+
+| First cooldown starting | Idle at startup |
+| --- | --- |
+| ![First branch cooldown](docs/evidence/e0-20261001-dashboard-ui/cooldown-1.png) | ![Idle at startup](docs/evidence/e0-20261001-dashboard-ui/idle-cold.png) |
+
+What it shows and how it is built: [uwp/README.md](uwp/README.md#dashboard).
+
 ## Two lanes
 
 | Lane                                       | Code                                                                                | State                                                      |
 | ------------------------------------------ | ----------------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| **E0 trainer** (active)                    | `src/cpp/e0/`, `src/hlsl/e0_tensor.hlsl`, `uwp/`                                    | Accepted on Series S; scientific state in FloppyLM          |
+| **E0 trainer** (active)                    | `src/cpp/e0/`, `src/hlsl/e0_tensor.hlsl`, `uwp/`                                    | Accepted on Series S; scientific state in FloppyLM         |
 | **Diagnostic host** (historical, Fase 0–5) | `src/cpp/` (`xbox_gpu_host`), other `src/hlsl/` kernels, `examples/`, `benchmarks/` | Desktop bring-up of DX12 compute; certifies nothing for E0 |
 
 ## Start here

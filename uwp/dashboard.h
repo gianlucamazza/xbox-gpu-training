@@ -3,6 +3,7 @@
 // Every value comes from results/<id>/status.json (floppylm.e0.result.v1,
 // including the optional schedule and phase fields published by run_job);
 // nothing about the WSD schedule is re-derived here.
+#include <array>
 #include <cstdint>
 #include <nlohmann/json.hpp>
 #include <optional>
@@ -63,8 +64,27 @@ std::vector<LabelSlot> place_labels(const std::vector<float> &xs,
                                     const std::vector<float> &widths,
                                     float chart_w, float gap = 4);
 
+// Loss axis of the chart: [min, max] of the history with 5% padding.
+struct LossRange {
+  double lo = 0, hi = 1;
+};
+LossRange loss_range(const std::vector<Sample> &points);
+// Vertical position of a loss in a box of height h; top is high loss.
+float loss_y(const LossRange &range, double loss, float h);
+
+// Round gridline values (1, 2 or 5 x 10^k apart) inside [lo, hi], aiming at
+// about n lines, and the decimals that tell them apart.
+struct Ticks {
+  std::vector<double> values;
+  int digits = 0;
+  bool operator==(const Ticks &o) const {
+    return values == o.values && digits == o.digits;
+  }
+};
+Ticks nice_ticks(double lo, double hi, unsigned n = 3);
+
 // Map samples to a w x h box: x = trunk step over the last branch end, y =
-// loss over [min, max] of the history with 5% padding; top is high loss.
+// loss over loss_range(points).
 std::vector<std::pair<float, float>> plot(const std::vector<Sample> &points,
                                           const std::vector<double> &values,
                                           const Schedule &schedule, float w,
@@ -78,6 +98,23 @@ struct Rate {
 // Throughput between two status snapshots of the same job and run segment.
 Rate rate(const Json &previous, const Json &current, const Schedule &schedule);
 
+// Step on the chart's x axis: the cooldown step while a branch cools down,
+// the trunk step otherwise.
+uint64_t chart_step(const Json &status, const Schedule &schedule);
+
+// Progress of each of the three branches, from the published fields.
+struct BranchView {
+  enum State { pending, cooling, done } state = pending;
+  double seconds = -1;  // cooldown duration of a finished branch, if published
+  unsigned percent = 0; // progress of the running cooldown
+};
+std::array<BranchView, 3> branch_views(const Json &status,
+                                       const Schedule &schedule);
+
+// One-line model and optimizer summary from job.json (config and spec);
+// missing fields are left out.
+std::string describe_job(const Json &job);
+
 // Human-readable phase from the published state and phase fields.
 std::string phase(const Json &status, const Schedule &schedule);
 
@@ -88,4 +125,8 @@ double eta_seconds(const Json &status, const Schedule &schedule,
 std::string format_duration(double seconds);
 std::string format_count(uint64_t value);
 std::string format_megabytes(uint64_t bytes);
+// Three significant digits with a k/M/G suffix: 147 k, 1.47 M, 25.9 M.
+std::string format_compact(double value);
+// Four significant digits, so small losses keep their precision: 2.826, 0.003812.
+std::string format_loss(double loss);
 } // namespace e0ui

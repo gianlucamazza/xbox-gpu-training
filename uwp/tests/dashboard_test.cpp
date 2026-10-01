@@ -3,6 +3,7 @@
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
+#include <vector>
 
 namespace {
 int failures = 0;
@@ -113,6 +114,68 @@ int main() {
   for (const auto &s : slots)
     check(s.left >= 0, "labels stay inside the chart");
 
+  const auto range = e0ui::loss_range({{1, 2.0}, {2, 1.0}});
+  check(std::abs(range.lo - 0.95) < 1e-9 && std::abs(range.hi - 2.05) < 1e-9,
+        "loss range pads 5%");
+  check(e0ui::loss_y(range, 2.05, 200) == 0 &&
+            e0ui::loss_y(range, 0.95, 200) == 200,
+        "high loss on top");
+  const auto flat = e0ui::loss_range({{1, 0.5}});
+  check(flat.hi > flat.lo, "a single point still has a range");
+  auto ticks = e0ui::nice_ticks(0.95, 2.05);
+  check(ticks.values == std::vector<double>{1.0, 1.5, 2.0} && ticks.digits == 1,
+        "round ticks inside the range");
+  ticks = e0ui::nice_ticks(0.4134, 0.4161);
+  check(!ticks.values.empty() && ticks.digits == 3, "narrow range digits");
+  for (double v : ticks.values)
+    check(v >= 0.4134 && v <= 0.4161, "ticks stay inside the range");
+  check(e0ui::nice_ticks(1, 1).values.empty(), "no ticks for an empty range");
+
+  check(e0ui::chart_step(trunk, s) == 512, "chart follows the trunk");
+  check(e0ui::chart_step(cool, s) == 856, "chart follows the cooldown");
+  auto views = e0ui::branch_views(cool, s);
+  check(views[0].state == e0ui::BranchView::cooling &&
+            views[0].percent == 64 * 100 / 87 &&
+            views[1].state == e0ui::BranchView::pending,
+        "first branch cooling");
+  auto two = status("trunk", 1583, 2);
+  two["branches"][0]["cooldown_seconds"] = 180.0;
+  views = e0ui::branch_views(two, s);
+  check(views[0].state == e0ui::BranchView::done && views[0].seconds == 180 &&
+            views[1].state == e0ui::BranchView::done && views[1].seconds < 0 &&
+            views[2].state == e0ui::BranchView::pending,
+        "finished branches with and without a duration");
+
+  const e0ui::Json job = {
+      {"config",
+       {{"d", 256},
+        {"n_layers", 4},
+        {"n_heads", 4},
+        {"d_ff", 1024},
+        {"ctx", 128},
+        {"core_fmt", "q4"},
+        {"mlp", "swiglu"}}},
+      {"spec", {{"lr", 0.003}, {"batch", 64}, {"tokens", 28800000}}}};
+  check(e0ui::describe_job(job) == "d 256 · 4 layers · 4 heads · ff 1024 · "
+                                   "ctx 128 · q4 / swiglu · lr 0.003 · "
+                                   "batch 64 · T 28.8 M tokens",
+        "job summary");
+  check(e0ui::describe_job({{"spec", {{"batch", 8}}}}) == "batch 8",
+        "missing fields are left out");
+  check(e0ui::describe_job(e0ui::Json::object()).empty(), "empty job");
+
+  // Segment average: the first status of a segment against the latest one.
+  auto first = cool, last = later;
+  check(e0ui::rate(first, last, s).valid, "segment average");
+
+  check(e0ui::format_loss(2.82614) == "2.826" &&
+            e0ui::format_loss(0.5519) == "0.5519" &&
+            e0ui::format_loss(0.00381234) == "0.003812",
+        "loss keeps four significant digits");
+  check(e0ui::format_compact(950) == "950", "small compact");
+  check(e0ui::format_compact(147456) == "147 k", "thousands compact");
+  check(e0ui::format_compact(1474560) == "1.47 M", "millions compact");
+  check(e0ui::format_compact(25952256) == "26.0 M", "tens of millions");
   check(e0ui::format_count(10224282) == "10 224 282", "thousands separator");
   check(e0ui::format_duration(45) == "45 s", "seconds");
   check(e0ui::format_duration(2460) == "41 min", "minutes");
