@@ -2,6 +2,7 @@
 
 - Status: Accepted
 - Date: 2026-09-30
+- Amended: 2026-10-01 — §3 FLP2 ownership moved to FloppyLM (`floppy_4mb` ADR 0012); xllama holds no FloppyLM documentation.
 - Labels: `adr`, `research`, `phase-0`
 - Milestone: [Fase 0 — Setup ambiente](https://github.com/gianlucamazza/xbox-gpu-training/milestone/1)
 

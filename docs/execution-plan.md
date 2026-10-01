@@ -106,7 +106,7 @@ dxc -T cs_6_0 -E CSMain -Fo build\matmul.cso src\hlsl\matmul.hlsl
 
 ### Fase 2 — Forward FLP2 on GPU
 
-**Objective:** Reconstruct forward from the FLP2 codec (FloppyLM/xllama docs as conceptual reference). GPU decode + forward ops.
+**Objective:** Reconstruct forward from the FLP2 codec (FloppyLM `floppy_4mb` as reference, ADR 0012). GPU decode + forward ops.
 
 **Branch:** `phase-2/flp2-forward`
 
@@ -286,7 +286,7 @@ python3 scripts/check_glossary.py
 **Acceptance criteria:**
 
 - [ ] Docs complete; every metric sourced or marked unmeasured
-- [ ] Companion link to xllama CPU / FloppyLM path
+- [ ] Link to the FloppyLM owner repo (`floppy_4mb`, ADR 0012)
 - [ ] Labels `phase-7`, `research`; milestone Fase 7
 
 **Do NOT:** Fabricate numbers or peer rankings.

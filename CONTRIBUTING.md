@@ -4,7 +4,7 @@ Evidence-first research repository. Read [README.md](README.md), [ROADMAP.md](RO
 
 ## Companion repo
 
-The FloppyLM **CPU** path lives in [gianlucamazza/xllama](https://github.com/gianlucamazza/xllama). **Do not modify xllama from this project.** This repository is the GPU research track only. Do not claim that xllama already trains on the GPU.
+FloppyLM semantics, FLP2 and the `floppylm.*.v1` contracts are owned by the local FloppyLM repo (`Workspace/experiments/floppy_4mb`, ADR 0012); this repository is its only native training backend (E0 DX12/UWP). **Do not modify [xllama](https://github.com/gianlucamazza/xllama) from this project**; it contains no FloppyLM logic (PR #301 closed).
 
 ## Language
 

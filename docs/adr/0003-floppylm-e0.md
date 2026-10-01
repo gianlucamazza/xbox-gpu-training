@@ -5,6 +5,7 @@
 Accepted — 2026-09-30, by the owner requesting implementation of the cross-project plan.
 Supersedes ADR 0002 only for the explicit E0 backend. Historical tiny-network smokes
 keep their original contract.
+Amended 2026-10-01: repository boundaries in `floppy_4mb` ADR 0012 (this repo is the only native FloppyLM backend).
 
 ## Context
 

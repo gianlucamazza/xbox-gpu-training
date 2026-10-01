@@ -1,6 +1,6 @@
 # FLP2 reconstructed forward (Fase 2)
 
-GPU-track reconstruction of the FloppyLM **scalar** decode + a tiny decoder-block forward. Conceptual reference: [gianlucamazza/xllama](https://github.com/gianlucamazza/xllama) `docs/floppylm.md` and the draft FloppyLM ADRs on xllama PR #301. **This repository does not modify xllama.** DirectML is not the trainer.
+GPU-track reconstruction of the FloppyLM **scalar** decode + a tiny decoder-block forward. Reference: FloppyLM `codec.py` / `pack.py` in `Workspace/experiments/floppy_4mb` (owner, ADR 0012). **This repository does not modify xllama.** DirectML is not the trainer.
 
 ## What is specified (implemented)
 
@@ -33,9 +33,9 @@ Relative error is `|actual - ref| / max(|ref|, 1e-8)`.
 
 ## What is **not** reconstructed
 
-The on-disk **FLP2 envelope** (`"FLP2"` magic, canonical header JSON, shared section, per-tensor rANS symbol stream) is **not** implemented here. That byte layout lives on the xllama FloppyLM draft (not on xllama `main`). Guessing rANS tags or header keys would be a false codec claim.
+The on-disk **FLP2 envelope** (`"FLP2"` magic, canonical header JSON, shared section, per-tensor rANS symbol stream) is **not** implemented here. That byte layout is owned by FloppyLM (`pack.py`, `rans.py`). Guessing rANS tags or header keys would be a false codec claim.
 
-Fase 2 fixtures carry **already-unpacked symbols + row16 scales**. A `research` issue tracks envelope byte-parity until xllama publishes a stable on-`main` contract.
+Fase 2 fixtures carry **already-unpacked symbols + row16 scales**. A `research` issue tracks envelope byte-parity against FloppyLM `pack.py` / `rans.py`.
 
 Also not in this phase: GELU / SwiGLU / QK-norm / `row8log` / `tensor16`. AdamW / STE / ternary FakeQuant are Fase 3 ([ste-adamw.md](ste-adamw.md), [adr/0002-ste-qat-mapping.md](adr/0002-ste-qat-mapping.md)). Full QAT + WSD + host 2/4-bit FakeQuant (same midrise lattices) is Fase 5 ([qat-wsd.md](qat-wsd.md)).
 
@@ -59,4 +59,4 @@ Honest first lines:
 - `STATUS: flp2 forward dispatched` — Windows D3D12 ran decode / RMSNorm / RoPE / forward vs CPU. WARP is software, not Series S\|X.
 - `FAILED: …` — load, CPU mismatch, or a device existed and GPU parity failed.
 
-No tok/s. No console numbers. xllama is reference-only.
+No tok/s. No console numbers.
