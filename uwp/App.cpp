@@ -3,6 +3,7 @@
 #include "DashboardView.h"
 #include "App.g.cpp"
 #include "pch.h"
+#include <winrt/Windows.Media.Capture.h>
 #include <atomic>
 #include <chrono>
 #include <condition_variable>
@@ -144,10 +145,25 @@ void App::OnLaunched(
     e0::Json probe = e0::Json::object();
     if (std::filesystem::exists(local / L"idle-probe.json"))
       probe = e0::read_json(local / L"idle-probe.json");
-    if (probe.value("blank", false)) {
+    e0::Json capture = {{"commit", XGPU_COMMIT}};
+    try {
+      auto state = Windows::Media::Capture::AppCapture::GetForCurrentView();
+      capture["available"] = bool(state);
+      if (state) {
+        capture["video"] = state.IsCapturingVideo();
+        capture["audio"] = state.IsCapturingAudio();
+      }
+    } catch (winrt::hresult_error const &error) {
+      capture["error"] = uint32_t(error.code().value);
+    }
+    e0::atomic_json(local / L"idle-capture.json", capture);
+    if (probe.value("no_content", false)) {
+      window.Content(nullptr);
+    } else if (probe.value("blank", false)) {
       Windows::UI::Xaml::Controls::Grid blank;
-      blank.Background(Windows::UI::Xaml::Media::SolidColorBrush(
-          Windows::UI::ColorHelper::FromArgb(255, 28, 28, 32)));
+      if (!probe.value("transparent", false))
+        blank.Background(Windows::UI::Xaml::Media::SolidColorBrush(
+            Windows::UI::ColorHelper::FromArgb(255, 28, 28, 32)));
       window.Content(blank);
     } else {
       dashboard = std::make_unique<xgpu::DashboardView>(local, [] {
