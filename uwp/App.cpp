@@ -141,12 +141,31 @@ void App::OnLaunched(
   if (!window.Content()) {
     auto local = std::filesystem::path(
         Windows::Storage::ApplicationData::Current().LocalFolder().Path().c_str());
-    dashboard = std::make_unique<xgpu::DashboardView>(local, [] {
-      std::lock_guard<std::mutex> lock(active_mutex);
-      return active_job;
-    });
-    window.Content(dashboard->root());
-    std::thread(worker).detach();
+    e0::Json probe = e0::Json::object();
+    if (std::filesystem::exists(local / L"idle-probe.json"))
+      probe = e0::read_json(local / L"idle-probe.json");
+    if (probe.value("blank", false)) {
+      Windows::UI::Xaml::Controls::Grid blank;
+      blank.Background(Windows::UI::Xaml::Media::SolidColorBrush(
+          Windows::UI::ColorHelper::FromArgb(255, 28, 28, 32)));
+      window.Content(blank);
+    } else {
+      dashboard = std::make_unique<xgpu::DashboardView>(local, [] {
+        std::lock_guard<std::mutex> lock(active_mutex);
+        return active_job;
+      });
+      dashboard->diagnostic_controls(probe.value("progress", true), probe.value("timer", true));
+      window.Content(dashboard->root());
+    }
+    if (probe.value("worker", true)) {
+      std::thread(worker).detach();
+    } else {
+      e0::atomic_json(local / L"device.json", {{"state", "diagnostic"},
+          {"hardware_gpu", false}, {"commit", XGPU_COMMIT},
+          {"package", winrt::to_string(Windows::ApplicationModel::Package::Current().Id().FullName())},
+          {"probe", probe}});
+    }
+
   }
   window.Activate();
 }

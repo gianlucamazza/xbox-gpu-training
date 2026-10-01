@@ -18,6 +18,10 @@ public:
                 std::function<std::filesystem::path()> active_job);
   winrt::Windows::UI::Xaml::UIElement root() const { return root_; }
 
+  void diagnostic_controls(bool progress, bool timer) {
+    if (!progress) progress_.Visibility(winrt::Windows::UI::Xaml::Visibility::Collapsed);
+    if (!timer) timer_.Stop();
+  }
 private:
   void refresh();
   void show_job(const std::filesystem::path &job);
