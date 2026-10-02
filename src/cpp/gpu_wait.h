@@ -69,3 +69,37 @@ inline bool BoundedGpuWait(GpuWaitApi &api, uint64_t requested,
       return true;
   }
 }
+
+// Published-fence deadline. This does not call into D3D. The GPU thread can
+// block inside GetCompletedValue or ExecuteCommandLists and never return to
+// BoundedGpuWait; the heartbeat thread samples the fence it already published.
+struct PublishedFenceSample {
+  bool job_active = false;
+  uint64_t completed_fence = 0;
+  uint64_t now_ms = 0;
+};
+struct PublishedFenceWatch {
+  bool tracking = false;
+  uint64_t fence = 0;
+  uint64_t since_ms = 0;
+  bool observe(const PublishedFenceSample &sample, uint64_t deadline_ms,
+               GpuRuntimeFault &fault) {
+    if (!sample.job_active) {
+      tracking = false;
+      return false;
+    }
+    if (!tracking || sample.completed_fence != fence ||
+        sample.now_ms < since_ms) {
+      tracking = true;
+      fence = sample.completed_fence;
+      since_ms = sample.now_ms;
+      return false;
+    }
+    const auto elapsed = sample.now_ms - since_ms;
+    if (elapsed < deadline_ms)
+      return false;
+    fault = {"gpu_wait_timeout", "published GPU fence frozen", 0, fence,
+             elapsed};
+    return true;
+  }
+};

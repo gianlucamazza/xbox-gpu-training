@@ -79,11 +79,19 @@ void RuntimeLifecycle::start() {
   publish();
   heartbeat_ = std::thread([this] {
     std::unique_lock<std::mutex> lock(mutex_);
-    while (!changed_.wait_for(lock, std::chrono::seconds(5),
+    int quiet = 0;
+    while (!changed_.wait_for(lock, std::chrono::seconds(1),
                               [this] { return stop_; })) {
       lock.unlock();
       try {
-        publish();
+        const auto now = static_cast<uint64_t>(
+            std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::steady_clock::now().time_since_epoch())
+                .count());
+        if (!observe_published_fence(now) && ++quiet >= 5) {
+          quiet = 0;
+          publish();
+        }
       } catch (const std::exception &error) {
         fail({{"kind", "heartbeat_publish_failed"},
               {"error", error.what()},
@@ -154,6 +162,40 @@ void RuntimeLifecycle::set_extended_execution(std::string status) {
     return;
   state_["extended_execution"] = std::move(status);
 }
+void RuntimeLifecycle::on_published_fence_frozen(
+    std::function<void(const GpuRuntimeFault &)> handler) {
+  std::lock_guard<std::mutex> guard(mutex_);
+  on_frozen_ = std::move(handler);
+}
+bool RuntimeLifecycle::observe_published_fence(uint64_t now_ms,
+                                               uint64_t deadline_ms) {
+  PublishedFenceSample sample;
+  std::function<void(const GpuRuntimeFault &)> handler;
+  std::string job_id;
+  {
+    std::lock_guard<std::mutex> guard(mutex_);
+    sample.job_active = state_["state"] == "running";
+    sample.completed_fence =
+        state_["progress"].value("completed_fence", uint64_t(0));
+    sample.now_ms = now_ms;
+    handler = on_frozen_;
+    if (sample.job_active && state_["active_job"].is_object())
+      job_id = state_["active_job"].value("job_id", "");
+  }
+  GpuRuntimeFault fault;
+  if (!fence_watch_.observe(sample, deadline_ms, fault))
+    return false;
+  interrupt_if_checkpoint(job_id, fault);
+  fail({{"kind", fault.kind},
+        {"error", fault.error},
+        {"requested_fence", fault.requested_fence},
+        {"completed_fence", fault.completed_fence},
+        {"elapsed_ms", fault.elapsed_ms}});
+  publish();
+  if (handler)
+    handler(fault);
+  return true;
+}
 void RuntimeLifecycle::fail(const Json &fault) {
   std::lock_guard<std::mutex> guard(mutex_);
   // The first fault is causal evidence; a later failed heartbeat write must
@@ -161,6 +203,37 @@ void RuntimeLifecycle::fail(const Json &fault) {
   if (state_["fault"].is_null())
     state_["fault"] = fault;
   state_["state"] = "failed";
+}
+void RuntimeLifecycle::interrupt_if_checkpoint(const std::string &job_id,
+                                               const GpuRuntimeFault &fault) {
+  try {
+    if (job_id.empty() ||
+        job_id.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRS"
+                                 "TUVWXYZ0123456789-_") != std::string::npos)
+      return;
+    const auto result = local_ / "inbox" / "results" / job_id;
+    const auto status_path = result / "status.json";
+    const auto checkpoint_path = result / "checkpoint.json";
+    if (!std::filesystem::exists(status_path) ||
+        !std::filesystem::exists(checkpoint_path))
+      return;
+    auto status = read_json(status_path);
+    if (status.value("state", "") != "running")
+      return;
+    status["state"] = "interrupted";
+    status["runtime_fault"] = {{"kind", fault.kind},
+                               {"error", fault.error},
+                               {"requested_fence", fault.requested_fence},
+                               {"completed_fence", fault.completed_fence},
+                               {"elapsed_ms", fault.elapsed_ms}};
+    status["checkpoint"] = {
+        {"path", "results/" + job_id + "/checkpoint.json"},
+        {"bytes", std::filesystem::file_size(checkpoint_path)},
+        {"sha256", sha256_file(checkpoint_path)}};
+    atomic_json(status_path, status);
+  } catch (...) {
+    // The process still exits. The next launch reconciles a running report.
+  }
 }
 namespace {
 void valid_id(const std::string &id) {

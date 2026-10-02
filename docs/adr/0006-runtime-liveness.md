@@ -32,6 +32,18 @@ Windows/native tests and hardware fault/lifecycle evidence are separate gates.
 Generic scientific failures are not silently retried. Resource quarantine is
 bounded to one failed worker lifetime and released by explicit process restart.
 
+## Amendment (2026-10-02)
+
+The 600 s bound in `BoundedGpuWait` runs on the thread that calls into D3D.
+On package 0.1.0.93 a frozen GPU left that thread inside `GetCompletedValue`
+or before `WaitForGpu`, so `fault` stayed null past 11 minutes while the
+heartbeat advanced. The heartbeat thread now samples the published
+`completed_fence`. If a running job's published fence is unchanged for 600 s,
+it records `gpu_wait_timeout`, marks `status.json` interrupted when
+`checkpoint.json` exists, publishes `worker.json`, and the UWP worker exits.
+It does not call `GetCompletedValue` and it does not resubmit the job.
+Explicit recovery still starts the next process.
+
 ## Alternatives
 
 Infinite waits, automatic restart/retraining, and treating stored running status

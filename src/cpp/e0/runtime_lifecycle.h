@@ -1,6 +1,7 @@
 #pragma once
 #include "model.h"
 #include <condition_variable>
+#include <functional>
 #include <mutex>
 #include <thread>
 
@@ -34,8 +35,17 @@ public:
   void gpu_progress(uint64_t fence, const std::string &operation);
   void fail(const Json &fault);
   void set_extended_execution(std::string status);
+  // The UWP worker exits the process from this handler. Tests observe it.
+  void on_published_fence_frozen(
+      std::function<void(const GpuRuntimeFault &)> handler);
+  // Samples the published fence. Never calls GetCompletedValue.
+  bool observe_published_fence(uint64_t now_ms, uint64_t deadline_ms = 600000);
 
 private:
+  void interrupt_if_checkpoint(const std::string &job_id,
+                               const GpuRuntimeFault &fault);
+  PublishedFenceWatch fence_watch_;
+  std::function<void(const GpuRuntimeFault &)> on_frozen_;
   std::filesystem::path local_;
   mutable std::mutex mutex_;
   std::mutex publish_mutex_;
