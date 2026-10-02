@@ -283,6 +283,8 @@ DashboardView::DashboardView(std::filesystem::path local,
   timer_.Interval(std::chrono::seconds(1));
   timer_.Tick([this](auto &&, auto &&) { refresh(); });
   timer_.Start();
+  // Idle used to release this; Xbox then suspended during job gaps.
+  keep_display(true);
 }
 
 void DashboardView::refresh() {
@@ -353,7 +355,6 @@ void DashboardView::show_job(const std::filesystem::path &job) {
   ticks_ = {};
   now_x_ = -1;
   last_state_.clear();
-  keep_display(true);
   const auto content = e0::read_json(job);
   current_ = job;
   last_job_id_ = content.value("job_id", e0::path_text(job.stem().stem()));
@@ -462,7 +463,6 @@ void DashboardView::show_status(const e0ui::Json &status, double age) {
   set_text(state_, upper);
   recolor(state_, paint(state_color(state)));
   recolor(progress_, paint(state_color(state)));
-  keep_display(state == "running");
   if (!schedule_) {
     schedule_ = e0ui::schedule_from_status(status);
     progress_.IsIndeterminate(false);
@@ -560,7 +560,6 @@ void DashboardView::show_idle() {
     return;
   idle_ = true;
   current_.clear();
-  keep_display(false);
   set_text(job_, winrt::hstring(L"FloppyLM E0"));
   set_text(state_, winrt::hstring(L"IDLE"));
   recolor(state_, paint(kMuted));
@@ -632,7 +631,8 @@ void DashboardView::show_device() {
 }
 
 void DashboardView::keep_display(bool on) {
-  // Keep the TV awake while a job trains; release it when idle.
+  // Hold for the process lifetime. Idle gaps used to release this and Xbox
+  // then suspended the UWP app; OS steal-focus still suspends.
   if (on == display_held_)
     return;
   if (!display_)

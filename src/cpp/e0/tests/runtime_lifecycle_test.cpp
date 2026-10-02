@@ -70,6 +70,15 @@ int main(int argc, char **argv) {
     live.progress("cooldown", 9, 12);
     check(live.snapshot().at("progress").at("cooldown_step") == 12,
           "cooldown progress tracked");
+    live.set_extended_execution("allowed");
+    const auto with_ee = live.snapshot();
+    check(with_ee.contains("extended_execution") &&
+              with_ee.at("extended_execution") == "allowed",
+          "extended_execution appears in snapshot");
+    live.publish();
+    check(e0::read_json(root / "worker.json").at("extended_execution") ==
+              "allowed",
+          "extended_execution is an extra published key");
     const auto inbox = root / "inbox";
     fs::create_directory(inbox);
     const auto result = inbox / "results" / "trial";

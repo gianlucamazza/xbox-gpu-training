@@ -77,6 +77,14 @@ branch artifacts still verify.
   stops without a new checkpoint (the trunk checkpoint before the branch stands).
 - **Suspension.** On `Suspending` the app writes `<id>.cancel` containing `suspend`
   for the active job and holds the deferral up to 4 s for the job to stop.
+- **Stay-alive (best effort).** The dashboard holds a `DisplayRequest` for the
+  process lifetime so idle gaps do not drop the TV stay-awake request
+  ([ADR 0007](../adr/0007-uwp-stay-alive.md)). At worker start the app requests
+  an `ExtendedExecutionSession` (reason `Unspecified`). Grant, denial, revocation
+  and API absence are published on optional `worker.json` field
+  `extended_execution` (`requested` / `allowed` / `denied` / `revoked` /
+  `unsupported`). Neither request refuses OS `Suspending`; cooperative suspend
+  remains the lifecycle contract. The host ignores unknown worker keys.
 
 Stopping a companion campaign cleanly is described in [FloppyLM Xbox runbook](https://github.com/gianlucamazza/floppylm/blob/main/docs/operations/xbox-e0.md#recover).
 

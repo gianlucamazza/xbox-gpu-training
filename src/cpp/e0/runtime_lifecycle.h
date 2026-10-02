@@ -33,6 +33,7 @@ public:
   void progress(const std::string &phase, uint64_t trunk, uint64_t cooldown);
   void gpu_progress(uint64_t fence, const std::string &operation);
   void fail(const Json &fault);
+  void set_extended_execution(std::string status);
 
 private:
   std::filesystem::path local_;
