@@ -134,6 +134,7 @@ DashboardView::DashboardView(std::filesystem::path local,
   header.ColumnDefinitions().Append(column(X::GridLengthHelper::Auto()));
   header.RowDefinitions().Append(row(X::GridLengthHelper::Auto()));
   header.RowDefinitions().Append(row(X::GridLengthHelper::Auto()));
+  header.RowDefinitions().Append(row(X::GridLengthHelper::Auto()));
   job_ = label(24, kText);
   job_.Text(L"FloppyLM E0");
   state_ = label(24, kMuted);
@@ -146,7 +147,11 @@ DashboardView::DashboardView(std::filesystem::path local,
   fresh_.Margin({16, 0, 0, 0});
   C::Grid::SetRow(fresh_, 1);
   C::Grid::SetColumn(fresh_, 1);
-  for (auto const &t : {job_, state_, config_, fresh_})
+  live_ = label(15, kMuted);
+  live_.Margin({0, 6, 0, 0});
+  C::Grid::SetRow(live_, 2);
+  C::Grid::SetColumnSpan(live_, 2);
+  for (auto const &t : {job_, state_, config_, fresh_, live_})
     header.Children().Append(t);
   root_.Children().Append(header);
 
@@ -201,6 +206,13 @@ DashboardView::DashboardView(std::filesystem::path local,
   chart_.Height(kChartH);
   chart_.Background(paint(kSurface));
   C::Grid::SetColumn(chart_, 1);
+  idle_msg_ = label(16, kMuted);
+  idle_msg_.Text(L"No job yet · waiting for a job from the host");
+  idle_msg_.TextAlignment(X::TextAlignment::Center);
+  idle_msg_.HorizontalAlignment(X::HorizontalAlignment::Center);
+  idle_msg_.VerticalAlignment(X::VerticalAlignment::Center);
+  idle_msg_.Width(kChartW);
+  C::Grid::SetColumn(idle_msg_, 1);
   grid_ = C::Canvas();
   now_ = S::Line();
   now_.Y1(0);
@@ -230,6 +242,7 @@ DashboardView::DashboardView(std::filesystem::path local,
   C::Grid::SetColumn(axis_, 1);
   plot.Children().Append(y_labels_);
   plot.Children().Append(chart_);
+  plot.Children().Append(idle_msg_);
   plot.Children().Append(x_axis);
   plot.Children().Append(axis_);
   body.Children().Append(plot);
@@ -265,6 +278,7 @@ DashboardView::DashboardView(std::filesystem::path local,
   root_.Children().Append(device_);
 
   show_idle();
+  show_worker();
   timer_ = X::DispatcherTimer();
   timer_.Interval(std::chrono::seconds(1));
   timer_.Tick([this](auto &&, auto &&) { refresh(); });
@@ -275,6 +289,7 @@ void DashboardView::refresh() {
   try {
     if (!device_shown_)
       show_device();
+    show_worker();
     const auto job = active_job_();
     if (job.empty()) {
       if (!current_.empty() && training_job_) {
@@ -328,6 +343,7 @@ void DashboardView::reset_metrics() {
 
 void DashboardView::show_job(const std::filesystem::path &job) {
   idle_ = false;
+  idle_msg_.Visibility(X::Visibility::Collapsed);
   status_time_.reset();
   history_.clear();
   previous_ = e0ui::Json::object();
@@ -539,7 +555,7 @@ void DashboardView::show_freshness(const e0ui::Json &status, double age) {
 }
 
 void DashboardView::show_idle() {
-  // The idle poll must not touch the visual tree after this transition.
+  // Layout changes once; worker.json still updates through show_worker.
   if (idle_)
     return;
   idle_ = true;
@@ -566,6 +582,32 @@ void DashboardView::show_idle() {
     progress_.Value(0);
   recolor(progress_, paint(state_color(last_state_)));
   now_.Visibility(X::Visibility::Collapsed);
+  idle_msg_.Visibility(last_job_id_.empty() ? X::Visibility::Visible
+                                            : X::Visibility::Collapsed);
+}
+
+void DashboardView::show_worker() {
+  const auto path = local_ / L"worker.json";
+  e0ui::WorkerView view;
+  try {
+    if (std::filesystem::exists(path)) {
+      const double age =
+          std::chrono::duration<double>(
+              std::filesystem::file_time_type::clock::now() -
+              std::filesystem::last_write_time(path))
+              .count();
+      view = e0ui::worker_from_json(e0::read_json(path), age);
+    }
+  } catch (...) {
+  }
+  set_text(live_, e0ui::worker_line(view));
+  const uint32_t color = !view.present     ? kMuted
+                         : view.faulted    ? kRed
+                         : view.stale      ? kAmber
+                         : view.state == "running" ? kAccent
+                         : view.state == "ready"   ? kGreen
+                                                   : kMuted;
+  recolor(live_, paint(color));
 }
 
 void DashboardView::show_device() {

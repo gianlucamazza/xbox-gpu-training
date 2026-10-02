@@ -182,6 +182,64 @@ int main() {
   check(e0ui::format_duration(7500) == "2 h 05 min", "hours");
   check(e0ui::format_megabytes(114245632) == "114 MB", "megabytes");
 
+  const auto ready = e0ui::Json{
+      {"schema", "floppylm.worker.v1"},
+      {"worker_id", "w"},
+      {"pid", 1},
+      {"package", "p"},
+      {"commit", "c"},
+      {"heartbeat_seq", 3},
+      {"state", "ready"},
+      {"active_job", nullptr},
+      {"fault", nullptr},
+      {"progress",
+       {{"sequence", 1},
+        {"phase", "idle"},
+        {"trunk_step", 0},
+        {"cooldown_step", 0},
+        {"operation", ""},
+        {"completed_fence", 0}}}};
+  auto live = e0ui::worker_from_json(ready, 2);
+  check(live.present && live.state == "ready" && !live.stale && !live.faulted,
+        "ready worker");
+  check(e0ui::worker_line(live) == "WORKER READY · heartbeat 2 s ago",
+        "ready line");
+  live = e0ui::worker_from_json(ready, 31);
+  check(live.stale && e0ui::worker_line(live) ==
+                          "WORKER UNREACHABLE · no heartbeat for 31 s",
+        "stale heartbeat");
+  auto running = ready;
+  running["state"] = "running";
+  running["progress"]["completed_fence"] = 12;
+  running["progress"]["operation"] = "rmsnorm";
+  live = e0ui::worker_from_json(running, 1);
+  check(e0ui::worker_line(live) ==
+            "WORKER RUNNING · heartbeat 1 s ago · fence 12 · rmsnorm",
+        "running fence line");
+  auto failed = ready;
+  failed["state"] = "failed";
+  failed["fault"] = {{"kind", "gpu_wait_timeout"},
+                     {"error", "wait timed out"},
+                     {"requested_fence", 7},
+                     {"completed_fence", 6},
+                     {"elapsed_ms", 600000}};
+  live = e0ui::worker_from_json(failed, 4);
+  check(live.faulted &&
+            e0ui::worker_line(live) ==
+                "WORKER FAILED · gpu_wait_timeout · requested 7 completed 6 · "
+                "10 min · heartbeat 4 s ago",
+        "fault line");
+  live = e0ui::worker_from_json(failed, 31);
+  check(live.stale &&
+            e0ui::worker_line(live) ==
+                "WORKER FAILED · gpu_wait_timeout · requested 7 completed 6 · "
+                "10 min · no heartbeat for 31 s",
+        "stale fault line");
+  check(!e0ui::worker_from_json(e0ui::Json::object(), 0).present,
+        "missing schema is absent");
+  check(e0ui::worker_line({}) == "WORKER · not published yet",
+        "unpublished worker");
+
   if (failures)
     return EXIT_FAILURE;
   std::puts("dashboard tests passed");

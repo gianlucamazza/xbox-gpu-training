@@ -122,6 +122,26 @@ std::string phase(const Json &status, const Schedule &schedule);
 double eta_seconds(const Json &status, const Schedule &schedule,
                    double tokens_per_second);
 
+// worker.json (floppylm.worker.v1). Heartbeat age is the file mtime; 30 s
+// without a rewrite is unavailable liveness (FloppyLM ADR 0017).
+inline constexpr double kHeartbeatStaleSeconds = 30;
+struct WorkerView {
+  bool present = false;
+  bool stale = false;
+  bool faulted = false;
+  std::string state;
+  std::string operation;
+  std::string fault_kind;
+  uint64_t completed_fence = 0;
+  uint64_t requested_fence = 0;
+  uint64_t fault_completed_fence = 0;
+  uint64_t elapsed_ms = 0;
+  double age_seconds = -1;
+};
+WorkerView worker_from_json(const Json &worker, double age_seconds);
+// One 10-foot line: WORKER READY · heartbeat 2s ago · fence 12 · rmsnorm
+std::string worker_line(const WorkerView &);
+
 std::string format_duration(double seconds);
 std::string format_count(uint64_t value);
 std::string format_megabytes(uint64_t bytes);
