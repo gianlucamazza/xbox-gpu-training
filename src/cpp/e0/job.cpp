@@ -1,6 +1,7 @@
 #include "constants.h"
 #include "model.h"
 #include <chrono>
+#include <cmath>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -245,6 +246,61 @@ float learning_rate(uint64_t step, uint64_t warmup, float peak,
     return peak;
   return peak * std::max(0.0f, 1 - float(step - cd_start + 1) / float(cd_len));
 }
+
+uint64_t json_u64(const Json &j, const char *key, uint64_t fallback = 0) {
+  if (!j.contains(key) || !j.at(key).is_number_integer())
+    return fallback;
+  const auto &v = j.at(key);
+  if (v.is_number_unsigned())
+    return v.get<uint64_t>();
+  return v.get<int64_t>() >= 0 ? uint64_t(v.get<int64_t>()) : fallback;
+}
+
+// Same rule as e0ui::LossHistory: one point per distinct trunk step, halved
+// when full. Display-only; never invent samples for unrecorded steps.
+constexpr size_t kLossSeriesCapacity = 512;
+struct LossSeries {
+  std::vector<std::pair<uint64_t, double>> points;
+  void add(uint64_t step, double loss) {
+    if (!std::isfinite(loss))
+      return;
+    if (!points.empty() && step <= points.back().first) {
+      if (step == points.back().first)
+        points.back().second = loss;
+      return;
+    }
+    points.push_back({step, loss});
+    if (points.size() > kLossSeriesCapacity) {
+      std::vector<std::pair<uint64_t, double>> kept;
+      kept.reserve(points.size() / 2 + 1);
+      for (size_t i = 0; i < points.size(); i += 2)
+        kept.push_back(points[i]);
+      if (kept.back().first != points.back().first)
+        kept.push_back(points.back());
+      points.swap(kept);
+    }
+  }
+  void load(const Json &previous) {
+    if (previous.contains("loss_series") && previous.at("loss_series").is_array()) {
+      for (const auto &item : previous.at("loss_series")) {
+        if (!item.is_object() || !item.contains("step") || !item.contains("loss"))
+          continue;
+        if (!item.at("loss").is_number())
+          continue;
+        add(json_u64(item, "step"), item.at("loss").get<double>());
+      }
+    }
+    if (points.empty() && previous.contains("last_loss") &&
+        previous.at("last_loss").is_number())
+      add(json_u64(previous, "trunk_step"), previous.at("last_loss").get<double>());
+  }
+  Json json() const {
+    Json out = Json::array();
+    for (const auto &[step, loss] : points)
+      out.push_back({{"step", step}, {"loss", loss}});
+    return out;
+  }
+};
 } // namespace
 std::filesystem::path verified_asset(const std::filesystem::path &root, const Json &descriptor) {
   return asset(root, descriptor);
@@ -323,6 +379,7 @@ Json run_job(const std::filesystem::path &job_file, Kernel &kernel,
   std::ifstream corpus(corpus_path, std::ios::binary),
       indices(indices_path, std::ios::binary);
   bool publication_started = false;
+  LossSeries series;
   auto status = [&](const std::string &state) {
     report["state"] = state;
     report["trunk_step"] = step;
@@ -338,6 +395,10 @@ Json run_job(const std::filesystem::path &job_file, Kernel &kernel,
           {"path", "results/" + id + "/checkpoint.json"},
           {"bytes", std::filesystem::file_size(result / "checkpoint.json")},
           {"sha256", sha256_file(result / "checkpoint.json")}};
+    if (!series.points.empty())
+      report["loss_series"] = series.json();
+    else
+      report.erase("loss_series");
     atomic_json(result / "status.json", report);
     publication_started = true;
   };
@@ -349,6 +410,9 @@ Json run_job(const std::filesystem::path &job_file, Kernel &kernel,
       if (previous.at("job_id") != job.at("job_id"))
         throw std::runtime_error("resume status job mismatch");
       report["branches"] = previous.at("branches");
+      if (previous.contains("last_loss") && previous.at("last_loss").is_number())
+        report["last_loss"] = previous.at("last_loss");
+      series.load(previous);
       for (const auto &b : report["branches"])
         asset(root, b.at("artifact"));
     } else
@@ -379,6 +443,7 @@ Json run_job(const std::filesystem::path &job_file, Kernel &kernel,
         ++executed;
         if (kernel.progress_callback) kernel.progress_callback("trunk", step, 0);
         report["last_loss"] = metric.at("loss");
+        series.add(step, metric.at("loss").get<double>());
         if (step % 64 == 0) {
           atomic_json(result / "checkpoint.json", model.checkpoint(step, job));
           status("running");

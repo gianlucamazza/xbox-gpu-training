@@ -11,6 +11,7 @@ IGNORED = {
     "peak_memory_bytes",
     "adapter",
     "wall_seconds",
+    "loss_series",
 }
 
 

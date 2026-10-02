@@ -32,7 +32,10 @@ progress in optimizer steps (trunk and cooldowns) with the published phase, and 
 published `cooldown_seconds`, cooling with its percentage, pending). The trunk-loss chart has round
 loss gridlines, step labels, warmup and cooldown markers (green once that branch is done) and a cursor
 on the current step, the curve kept below the marker labels (the EMA appears from 16 points on; before that the raw curve is the main line, since
-a short EMA lags far behind the data; marker labels stack and stay inside the chart). Eight tiles show
+a short EMA lags far behind the data; marker labels stack and stay inside the chart). The curve is a
+view of published `loss_series` when present: each poll replaces RAM history from that field, so
+interrupt and resume reconstruct the trail instead of starting empty at the resume step. Status
+without the field (older packages) still plots `last_loss` at `trunk_step`. Eight tiles show
 trunk loss, tokens/s over the last 64 steps with the run-segment average, tokens processed of the total,
 elapsed time of the run segment, a labelled remaining-time estimate, GPU/wall time, peak memory and the
 trunk step of the last checkpoint; the footer shows `device.json`. It holds a `DisplayRequest` for the process lifetime so idle gaps do not release the TV stay-awake request; OS steal-focus still suspends ([ADR 0007](../docs/adr/0007-uwp-stay-alive.md), [ADR 0008](../docs/adr/0008-drop-extended-execution.md)). When idle,

@@ -39,6 +39,22 @@
       },
       "additionalProperties": false
     },
+    "loss_sample": {
+      "type": "object",
+      "required": [
+        "step",
+        "loss"
+      ],
+      "properties": {
+        "step": {
+          "$ref": "floppylm.e0.common.v1.json#/$defs/count"
+        },
+        "loss": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
     "early_failure": {
       "type": "object",
       "required": [
@@ -163,6 +179,14 @@
         },
         "last_loss": {
           "type": "number"
+        },
+        "loss_series": {
+          "description": "Bounded trunk-loss samples for the on-console chart. One point per distinct trunk step, halved when full (capacity 512). Display-only; omitted when empty.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/loss_sample"
+          },
+          "maxItems": 512
         },
         "error": {
           "type": "string"

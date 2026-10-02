@@ -11,7 +11,7 @@ Code-level map of the E0 trainer. Semantics are owned by FloppyLM under [ADR 000
 | `src/cpp/e0/dx12_kernel.cpp` | `GpuKernel` (`make_gpu`): DX12 device, root signature, buffer `Pool`, timestamps, `run`/`read`/`flush`. Rejects WARP. |
 | `src/cpp/e0/constants.h` | Semantic constants (codec, RoPE, RMSNorm, AdamW, clip, WSD fractions). Their values are floppylm's `floppylm.e0.constants.v1`; ctest `e0_constants` checks them, the shader RoPE literal and the tensor layout against the pinned copy in `contracts/floppylm/`. |
 | `src/cpp/e0/model.h`, `model.cpp` | `Config` and `capabilities()`, `quantize` (row16 / row8log / tensor16), `Model` layout/forward/step/AdamW/checkpoint/restore, fixture reports. |
-| `src/cpp/e0/job.cpp` | SHA-256, `atomic_json`, asset verification and chunk assembly, batch reader, WSD learning rate, `run_job`. |
+| `src/cpp/e0/job.cpp` | SHA-256, `atomic_json`, asset verification and chunk assembly, batch reader, WSD learning rate, `run_job`, optional `loss_series` trail. |
 | `src/cpp/e0/main.cpp` | `xgpu_e0_train` CLI (Windows/Linux, reference or GPU). |
 | `src/hlsl/e0_tensor.hlsl` | One `CSMain` multi-op compute shader; `op`/`mode` select the primitive and its forward (0) or input-gradient (1..3) variant. Compiled with `dxc -T cs_6_0 -E CSMain -Gis`. |
 | `uwp/App.cpp` | Console worker: inbox polling, schema dispatch, suspension handling ([job-protocol.md](job-protocol.md)). |
@@ -68,8 +68,9 @@ and no scientific gate changes. Proof required before switching packages:
 
 Changes that reorder reductions (tiled matmul, fusion, cross-sample batching) are
 a new engine generation and need fresh gates and an ADR. Extra status writes (for
-example the schedule and cooldown phase published for the dashboard) read no training
-state back and keep the rule.
+example the schedule, cooldown phase and `loss_series` published for the dashboard)
+read no training state back and keep the rule. `loss_series` is dropped from
+bit-identity canonicalization.
 
 ## Local use
 

@@ -62,7 +62,7 @@ Outputs in `results/<id>/`:
 
 | File | Content |
 | --- | --- |
-| `status.json` | `floppylm.e0.result.v1`: `state` (`running`, `interrupted`, `completed`, `failed`), `trunk_step`, `last_loss`, `branches[]`, `dispatches`, `gpu_seconds`, `transfer_bytes`, `peak_memory_bytes`, `wall_seconds`, `checkpoint`, `error`, and the executed `schedule` (`T`, `warmup`, `tokens_per_step`, `ends`, `cooldown_starts`) with `phase` (`trunk` or `cooldown`; during a cooldown also `cooldown_end` and `cooldown_step`). Rewritten every 64 steps of the trunk and of each cooldown. |
+| `status.json` | `floppylm.e0.result.v1`: `state` (`running`, `interrupted`, `completed`, `failed`), `trunk_step`, `last_loss`, optional `loss_series` (bounded trunk `{step, loss}` samples, capacity 512, halved when full; display-only), `branches[]`, `dispatches`, `gpu_seconds`, `transfer_bytes`, `peak_memory_bytes`, `wall_seconds`, `checkpoint`, `error`, and the executed `schedule` (`T`, `warmup`, `tokens_per_step`, `ends`, `cooldown_starts`) with `phase` (`trunk` or `cooldown`; during a cooldown also `cooldown_end` and `cooldown_step`). Rewritten every 64 steps of the trunk and of each cooldown. On resume the trainer loads the previous series, or seeds one point from `last_loss` when the field is missing. |
 | `checkpoint.json` | `floppylm.checkpoint.v1`: tensors, both AdamW moments, step, stream position, bound job fields and initialization hash. Written every 64 trunk steps and on interruption. |
 | `branch-<end>.json` | `floppylm.e0.weights.v1` master weights at the end of each cooldown branch (`end` = T, 2T, 4T) |
 
