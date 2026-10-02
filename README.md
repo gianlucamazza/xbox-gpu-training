@@ -1,5 +1,7 @@
 # xbox-gpu-training
 
+![xbox-gpu-training. Dashboard figures on the banner are illustrative, not measurements.](docs/cover.jpg)
+
 [![CI](https://github.com/gianlucamazza/xbox-gpu-training/actions/workflows/ci.yml/badge.svg)](https://github.com/gianlucamazza/xbox-gpu-training/actions/workflows/ci.yml)
 [![E0 UWP](https://github.com/gianlucamazza/xbox-gpu-training/actions/workflows/e0-uwp.yml/badge.svg)](https://github.com/gianlucamazza/xbox-gpu-training/actions/workflows/e0-uwp.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
