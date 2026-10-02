@@ -285,7 +285,7 @@ struct LossSeries {
       for (const auto &item : previous.at("loss_series")) {
         if (!item.is_object() || !item.contains("step") || !item.contains("loss"))
           continue;
-        if (!item.at("loss").is_number())
+        if (!item.at("loss").is_number() || !item.at("step").is_number_integer())
           continue;
         add(json_u64(item, "step"), item.at("loss").get<double>());
       }

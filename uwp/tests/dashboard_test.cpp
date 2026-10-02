@@ -128,6 +128,19 @@ int main() {
   check(replay.points().empty(), "empty series clears");
   replay.assign(e0ui::Json::object());
   check(replay.points().empty(), "non-array series is ignored");
+  e0ui::Json junk = e0ui::Json::array();
+  junk.push_back({{"loss", 1.0}});
+  junk.push_back({{"step", 1.5}, {"loss", 1.0}});
+  replay.assign(junk);
+  check(replay.points().empty(), "unusable series leaves history empty");
+  replay.add(1115, 1.08);
+  check(replay.points().size() == 1 && replay.points().front().step == 1115,
+        "last_loss fallback after unusable series");
+  replay.assign(recovered);
+  replay.add(1115, 1.07);
+  check(replay.points().size() == 2 && replay.points().back().step == 1115 &&
+            replay.points().back().loss == 1.07,
+        "last_loss updates the current point after a usable series");
   const auto xy = e0ui::plot(h.points(), e0ui::ema(h.points()), s, 600, 200);
   check(xy.size() == h.points().size(), "one plot point per sample");
   for (auto [x, y] : xy)

@@ -181,12 +181,13 @@
           "type": "number"
         },
         "loss_series": {
-          "description": "Bounded trunk-loss samples for the on-console chart. One point per distinct trunk step, halved when full (capacity 512). Display-only; omitted when empty.",
+          "description": "Bounded trunk-loss samples for the on-console chart. One point per distinct trunk step, halved when full (capacity 512). Display-only; omitted when empty. Steps strictly increase; tests/test_contracts.py rejects duplicate steps (JSON Schema cannot unique-by-property).",
           "type": "array",
+          "minItems": 1,
+          "maxItems": 512,
           "items": {
             "$ref": "#/$defs/loss_sample"
-          },
-          "maxItems": 512
+          }
         },
         "error": {
           "type": "string"

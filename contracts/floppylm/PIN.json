@@ -1,5 +1,5 @@
 {
- "commit": "32351c199c88e1c3b80592c0007776c64828baee",
+ "commit": "3e5ab3c08ee526a0050a99d50ec622e1e9be9f6c",
  "files": {
   "fixtures/invalid/floppylm.checkpoint.v1--negative-second-moment.json": "3b958f78af328d9996f4b737031c3cb7545d0acc11673199f9e1fbe9600c31fe",
   "fixtures/invalid/floppylm.checkpoint.v1--stream-not-integer.json": "817cc54c6262a2b36c6028b40947dbac5bb405f4d5a6badd9d183ee3815d7e85",
@@ -23,6 +23,7 @@
   "fixtures/invalid/floppylm.e0.result.v1--completed-two-branches.json": "58db4750b8b89aaa9a654a5fd2e2e411ae25c01e00207e26baee3f7cacaf3a5d",
   "fixtures/invalid/floppylm.e0.result.v1--cooldown-without-step.json": "3ecc9febcb059766ec01196fb2b742b95adc37e66dfd8812efe9782c22cefab0",
   "fixtures/invalid/floppylm.e0.result.v1--failed-without-error.json": "abedd792c6f3f9c8b40b9aed69c97ead18c6e0c7205deb7d5d93636c3f3d662a",
+  "fixtures/invalid/floppylm.e0.result.v1--loss-series-empty.json": "0e88d1ceb945084297909fb17472512a7a61d0e8b0a0cdd169a2d653aa40fb79",
   "fixtures/invalid/floppylm.e0.result.v1--loss-series-missing-step.json": "c9754afc818354fcd46f5d765b9a62903bdd422ce80de1bc0b5b427d21400fe0",
   "fixtures/invalid/floppylm.e0.result.v1--short-schedule.json": "ed0994190fb47a4ed371287dc9dad2e4279403d7123a8dd78f5545c2d916c19e",
   "fixtures/invalid/floppylm.e0.result.v1--trunk-with-cooldown-end.json": "96df73605f464d1d24a67fb685f1db3d0ce3e56fd1cbd3d1eee75ad5829ac3dc",
@@ -73,7 +74,7 @@
   "schemas/floppylm.e0.kernels.v1.json": "cdd4b71800a538ebe6b05a6ba45c152fe52b836b29f24bfaa0e8b7dbe426e0a5",
   "schemas/floppylm.e0.optimizer.report.v1.json": "8031f57bee94053c7de7a2057ef3ade843ab4c3578061f091c67cffb401a3bc3",
   "schemas/floppylm.e0.optimizer.v1.json": "5a51056d14b7d9dc184fc4ddc72365c5a9bd1d60fac3c2d6adcafd995f68644d",
-  "schemas/floppylm.e0.result.v1.json": "cf06bdde9e1e80286534fb4a2c47328e3c5dc422f6efc3fccce96cbe50a84ca5",
+  "schemas/floppylm.e0.result.v1.json": "053bd82ed1eeb75cb61082dc08a4dfed5f39e4534dadc0e332fc61922bce2c69",
   "schemas/floppylm.e0.weights.v1.json": "65f757e2fc23f286156bec04a57d52c49213e5d8c208afbe4746e580ef87945b",
   "schemas/floppylm.worker.v1.json": "cca4a2b8a48ae915009fcac126cfb790e70a2e0e4f99cc4017ee54e66f43060b",
   "schemas/floppylm.xbox.acceptance.v1.json": "f459eca142a3f161b9626156b850a84cbab1a2241a94512d7ba828aa6b9b5d4b",

@@ -93,7 +93,7 @@ void LossHistory::assign(const Json &series) {
   for (const auto &item : series) {
     if (!item.is_object() || !item.contains("step") || !item.contains("loss"))
       continue;
-    if (!item.at("loss").is_number())
+    if (!item.at("loss").is_number() || !item.at("step").is_number_integer())
       continue;
     add(value_or(item, "step"), item.at("loss").get<double>());
   }
