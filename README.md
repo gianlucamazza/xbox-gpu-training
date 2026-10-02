@@ -53,6 +53,10 @@ Portal during a functional benchmark (T = 700 steps, 3 010 optimizer steps) on a
 | --- | --- |
 | ![First branch cooldown](docs/evidence/e0-20261001-dashboard-ui/cooldown-1.png) | ![Idle at startup](docs/evidence/e0-20261001-dashboard-ui/idle-cold.png) |
 
+Keep XgpuE0 in the foreground while a job runs. The trunk-loss curve is a view of published
+`loss_series` when present, so interrupt and resume reconstruct persisted samples. Older
+packages plot the single `last_loss` at `trunk_step`.
+
 What it shows and how it is built: [uwp/README.md](uwp/README.md#dashboard).
 
 ## Two lanes
