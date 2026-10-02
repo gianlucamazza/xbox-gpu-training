@@ -146,6 +146,14 @@ void RuntimeLifecycle::gpu_progress(uint64_t fence,
   p["completed_fence"] = fence;
   p["operation"] = operation;
 }
+void RuntimeLifecycle::set_extended_execution(std::string status) {
+  std::lock_guard<std::mutex> guard(mutex_);
+  // Revoked can fire before RequestExtensionAsync returns Allowed.
+  if (status == "allowed" && state_.contains("extended_execution") &&
+      state_.at("extended_execution") == "revoked")
+    return;
+  state_["extended_execution"] = std::move(status);
+}
 void RuntimeLifecycle::fail(const Json &fault) {
   std::lock_guard<std::mutex> guard(mutex_);
   // The first fault is causal evidence; a later failed heartbeat write must

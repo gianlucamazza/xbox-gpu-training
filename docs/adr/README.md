@@ -13,6 +13,7 @@ rewritten; superseding ADRs say what they replace.
 | [0005](0005-repository-authority.md) | Repository authority and backend evidence | Accepted | FloppyLM semantics, backend execution and hardware proof ownership |
 
 | [0006](0006-runtime-liveness.md) | Bounded GPU waits and explicit worker recovery | Accepted | Worker ownership, fault quarantine and post-E0 hardware gate |
+| [0007](0007-uwp-stay-alive.md) | UWP stay-alive during idle gaps | Accepted | Always-on DisplayRequest and best-effort Extended Execution; cooperative suspend stays the lifecycle contract |
 
 Companion decisions (FloppyLM ADR 0011 campaign, ADR 0012 repository boundaries)
 live in the [FloppyLM](https://github.com/gianlucamazza/floppylm) repository.

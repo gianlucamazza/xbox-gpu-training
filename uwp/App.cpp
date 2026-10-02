@@ -25,6 +25,42 @@ std::mutex active_mutex;
 std::condition_variable active_changed;
 std::filesystem::path active_job;
 std::unique_ptr<xgpu::DashboardView> dashboard;
+winrt::Windows::ApplicationModel::ExtendedExecution::ExtendedExecutionSession
+    extended_execution{nullptr};
+void request_extended_execution(e0::RuntimeLifecycle &lifecycle) {
+  using winrt::Windows::ApplicationModel::ExtendedExecution::
+      ExtendedExecutionReason;
+  using winrt::Windows::ApplicationModel::ExtendedExecution::
+      ExtendedExecutionResult;
+  using winrt::Windows::ApplicationModel::ExtendedExecution::
+      ExtendedExecutionRevokedEventArgs;
+  using winrt::Windows::ApplicationModel::ExtendedExecution::
+      ExtendedExecutionSession;
+  try {
+    auto session = ExtendedExecutionSession();
+    session.Reason(ExtendedExecutionReason::Unspecified);
+    session.Description(L"FloppyLM E0 GPU trainer");
+    session.Revoked([&lifecycle](auto &&,
+                                 ExtendedExecutionRevokedEventArgs const &) {
+      lifecycle.set_extended_execution("revoked");
+      try {
+        lifecycle.publish();
+      } catch (...) {
+      }
+    });
+    lifecycle.set_extended_execution("requested");
+    const auto result = session.RequestExtensionAsync().get();
+    if (result == ExtendedExecutionResult::Allowed) {
+      extended_execution = std::move(session);
+      lifecycle.set_extended_execution("allowed");
+    } else {
+      lifecycle.set_extended_execution("denied");
+    }
+  } catch (...) {
+    extended_execution = nullptr;
+    lifecycle.set_extended_execution("unsupported");
+  }
+}
 std::string worker_uuid() {
   unsigned char uuid[16];
   if (BCryptGenRandom(nullptr, uuid, sizeof(uuid),
@@ -61,6 +97,8 @@ void worker() {
                              .FullName()),
         XGPU_COMMIT);
     lifecycle->start();
+    request_extended_execution(*lifecycle);
+    lifecycle->publish();
     e0::reconcile_claims(inbox, lifecycle->snapshot());
     auto shader = std::filesystem::path(
                       winrt::Windows::ApplicationModel::Package::Current()

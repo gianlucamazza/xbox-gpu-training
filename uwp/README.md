@@ -35,7 +35,7 @@ on the current step, the curve kept below the marker labels (the EMA appears fro
 a short EMA lags far behind the data; marker labels stack and stay inside the chart). Eight tiles show
 trunk loss, tokens/s over the last 64 steps with the run-segment average, tokens processed of the total,
 elapsed time of the run segment, a labelled remaining-time estimate, GPU/wall time, peak memory and the
-trunk step of the last checkpoint; the footer shows `device.json`. While a job runs it holds a `DisplayRequest`. When idle,
+trunk step of the last checkpoint; the footer shows `device.json`. It holds a `DisplayRequest` for the process lifetime so idle gaps do not release the TV stay-awake request; OS steal-focus still suspends ([ADR 0007](../docs/adr/0007-uwp-stay-alive.md)). When idle,
 the header names the last job and its final state, the progress bar takes that state's colour and the
 tiles are labelled "last job". The worker line still updates. With no last job the chart shows
 an empty-state caption instead of a blank surface. After that transition the idle layout is
