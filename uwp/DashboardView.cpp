@@ -490,8 +490,12 @@ void DashboardView::show_status(const e0ui::Json &status, double age) {
                                fixed(100.0 * fraction, 0) + " %");
   show_branches(status);
 
+  if (status.contains("loss_series") && status.at("loss_series").is_array())
+    history_.assign(status.at("loss_series"));
   if (status.contains("last_loss") && status.at("last_loss").is_number()) {
     const double loss = status.at("last_loss").get<double>();
+    // Always append last_loss so a series with no usable samples, or one that
+    // lags the current trunk step, still plots the published point.
     history_.add(status.value("trunk_step", uint64_t(0)), loss);
     set_text(loss_.value, e0ui::format_loss(loss));
   }

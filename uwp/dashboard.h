@@ -1,8 +1,8 @@
 #pragma once
 // Read-only E0 job view model for the on-console dashboard.
 // Every value comes from results/<id>/status.json (floppylm.e0.result.v1,
-// including the optional schedule and phase fields published by run_job);
-// nothing about the WSD schedule is re-derived here.
+// including the optional schedule, phase and loss_series fields published by
+// run_job); nothing about the WSD schedule is re-derived here.
 #include <array>
 #include <cstdint>
 #include <nlohmann/json.hpp>
@@ -37,6 +37,8 @@ class LossHistory {
 public:
   explicit LossHistory(size_t capacity = 512) : capacity_(capacity) {}
   void add(uint64_t step, double loss);
+  // Replace the trail with a published loss_series (resume / relaunch).
+  void assign(const Json &series);
   void clear() { points_.clear(); }
   const std::vector<Sample> &points() const { return points_; }
 

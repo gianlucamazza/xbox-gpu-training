@@ -86,6 +86,19 @@ void LossHistory::add(uint64_t step, double loss) {
   }
 }
 
+void LossHistory::assign(const Json &series) {
+  points_.clear();
+  if (!series.is_array())
+    return;
+  for (const auto &item : series) {
+    if (!item.is_object() || !item.contains("step") || !item.contains("loss"))
+      continue;
+    if (!item.at("loss").is_number() || !item.at("step").is_number_integer())
+      continue;
+    add(value_or(item, "step"), item.at("loss").get<double>());
+  }
+}
+
 std::vector<double> ema(const std::vector<Sample> &points, double alpha) {
   std::vector<double> out;
   out.reserve(points.size());

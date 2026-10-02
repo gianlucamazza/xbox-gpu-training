@@ -39,6 +39,22 @@
       },
       "additionalProperties": false
     },
+    "loss_sample": {
+      "type": "object",
+      "required": [
+        "step",
+        "loss"
+      ],
+      "properties": {
+        "step": {
+          "$ref": "floppylm.e0.common.v1.json#/$defs/count"
+        },
+        "loss": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
     "early_failure": {
       "type": "object",
       "required": [
@@ -163,6 +179,15 @@
         },
         "last_loss": {
           "type": "number"
+        },
+        "loss_series": {
+          "description": "Bounded trunk-loss samples for the on-console chart. One point per distinct trunk step, halved when full (capacity 512). Display-only; omitted when empty. Steps strictly increase; tests/test_contracts.py rejects duplicate steps (JSON Schema cannot unique-by-property).",
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 512,
+          "items": {
+            "$ref": "#/$defs/loss_sample"
+          }
         },
         "error": {
           "type": "string"

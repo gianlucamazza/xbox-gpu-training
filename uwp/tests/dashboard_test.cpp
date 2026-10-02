@@ -97,6 +97,50 @@ int main() {
   check(h.points().back().step == 320, "newest point survives decimation");
   for (size_t i = 1; i < h.points().size(); ++i)
     check(h.points()[i].step > h.points()[i - 1].step, "steps strictly grow");
+
+  e0ui::LossHistory replay(8);
+  e0ui::Json series = e0ui::Json::array();
+  series.push_back({{"step", 64}, {"loss", 2.0}});
+  series.push_back({{"step", 128}, {"loss", 1.5}});
+  series.push_back({{"step", 192}, {"loss", 1.2}});
+  replay.assign(series);
+  check(replay.points().size() == 3 && replay.points().front().step == 64 &&
+            replay.points().back().step == 192,
+        "assign loads published series");
+  replay.add(256, 1.1);
+  check(replay.points().size() == 4 && replay.points().back().step == 256,
+        "later add continues after assign");
+  replay.clear();
+  e0ui::Json recovered = e0ui::Json::array();
+  recovered.push_back({{"step", 64}, {"loss", 2.0}});
+  recovered.push_back({{"step", 1115}, {"loss", 1.08}});
+  replay.assign(recovered);
+  check(replay.points().size() == 2 && replay.points().front().step == 64 &&
+            replay.points().back().step == 1115,
+        "resume reconstructs from published series after clear");
+  for (size_t i = 1; i < replay.points().size(); ++i)
+    check(replay.points()[i].step > replay.points()[i - 1].step,
+          "assigned steps strictly grow");
+  replay.assign(e0ui::Json::array({e0ui::Json{{"step", 64}, {"loss", 2.0}}}));
+  check(replay.points().size() == 1 && replay.points().front().step == 64,
+        "assign replaces the trail");
+  replay.assign(e0ui::Json::array());
+  check(replay.points().empty(), "empty series clears");
+  replay.assign(e0ui::Json::object());
+  check(replay.points().empty(), "non-array series is ignored");
+  e0ui::Json junk = e0ui::Json::array();
+  junk.push_back({{"loss", 1.0}});
+  junk.push_back({{"step", 1.5}, {"loss", 1.0}});
+  replay.assign(junk);
+  check(replay.points().empty(), "unusable series leaves history empty");
+  replay.add(1115, 1.08);
+  check(replay.points().size() == 1 && replay.points().front().step == 1115,
+        "last_loss fallback after unusable series");
+  replay.assign(recovered);
+  replay.add(1115, 1.07);
+  check(replay.points().size() == 2 && replay.points().back().step == 1115 &&
+            replay.points().back().loss == 1.07,
+        "last_loss updates the current point after a usable series");
   const auto xy = e0ui::plot(h.points(), e0ui::ema(h.points()), s, 600, 200);
   check(xy.size() == h.points().size(), "one plot point per sample");
   for (auto [x, y] : xy)
