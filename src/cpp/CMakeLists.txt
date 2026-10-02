@@ -101,3 +101,6 @@ add_test(NAME e0_runtime_lifecycle COMMAND xgpu_e0_runtime_lifecycle_test ${CMAK
 add_executable(xgpu_e0_gpu_wait_test e0/tests/gpu_wait_test.cpp)
 target_link_libraries(xgpu_e0_gpu_wait_test PRIVATE xgpu_e0)
 add_test(NAME e0_gpu_wait COMMAND xgpu_e0_gpu_wait_test ${CMAKE_SOURCE_DIR})
+add_executable(xgpu_e0_guards_test e0/tests/guards_test.cpp)
+target_link_libraries(xgpu_e0_guards_test PRIVATE xgpu_e0)
+add_test(NAME e0_guards COMMAND xgpu_e0_guards_test ${CMAKE_BINARY_DIR}/guard-fixtures)

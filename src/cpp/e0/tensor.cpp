@@ -14,6 +14,108 @@
 #endif
 
 namespace e0 {
+void validate_command(const Command &p, const std::array<size_t, 5> &sizes) {
+  const uint64_t R = p.rows, K = p.cols, O = p.out, T = p.seq;
+  auto require = [](bool condition) {
+    if (!condition)
+      throw std::runtime_error("invalid E0 command dimensions/buffers");
+  };
+  auto buffer = [&](unsigned i, uint64_t count) {
+    require(count && count <= UINT32_MAX && sizes[i] >= count);
+  };
+  auto output = [&](uint64_t count) { require(count && count == p.count); };
+  require(p.count && uint32_t(p.op) <= uint32_t(Op::Weighted));
+  switch (p.op) {
+  case Op::Add:
+  case Op::Multiply:
+    require(p.mode <= 2);
+    if (!p.mode) { buffer(0, p.count); buffer(1, p.count); }
+    else {
+      buffer(4, p.count);
+      if (p.op == Op::Multiply) buffer(p.mode == 1 ? 1 : 0, p.count);
+    }
+    break;
+  case Op::Linear:
+    require(R && K && O && p.mode <= 2);
+    output(p.mode == 0 ? R * O : p.mode == 1 ? R * K : O * K);
+    if (p.mode != 1) buffer(0, R * K);
+    if (p.mode != 2) buffer(1, O * K);
+    if (p.mode) buffer(4, R * O);
+    break;
+  case Op::Norm:
+    require(R && K && p.mode <= 2 && std::isfinite(p.epsilon) && p.epsilon > 0);
+    output(p.mode == 2 ? K : R * K);
+    buffer(0, R * K);
+    if (p.mode != 2) buffer(1, K);
+    if (p.mode) buffer(4, R * K);
+    break;
+  case Op::Rope:
+    require(K && T && K % 2 == 0 && p.mode <= 1 && p.count % (K * T) == 0);
+    buffer(p.mode ? 4 : 0, p.count);
+    break;
+  case Op::Activation:
+    require(p.mode <= 1 && p.aux <= 2);
+    buffer(0, p.count);
+    if (p.mode) buffer(4, p.count);
+    break;
+  case Op::Heads:
+  case Op::Unheads: {
+    require(K && T && p.heads && p.batch && K % p.heads == 0 && p.mode <= 1);
+    // Check the product before multiplying by batch to avoid uint64 overflow.
+    require(K * T <= UINT32_MAX && p.batch <= UINT32_MAX / (K * T));
+    const uint64_t count = K * T * p.batch;
+    if (p.op == Op::Heads) {
+      require(p.aux < 3 && count <= UINT32_MAX / 3);
+      output(p.mode ? count * 3 : count);
+      buffer(p.mode ? 4 : 0, p.mode ? count : count * 3);
+    } else {
+      output(count);
+      buffer(p.mode ? 4 : 0, count);
+    }
+    break;
+  }
+  case Op::Embed:
+    require(R && K && (p.mode == 0 || p.mode == 2));
+    require(sizes[1] && sizes[1] % K == 0);
+    output(p.mode ? sizes[1] : R * K);
+    buffer(0, R);
+    if (p.mode) buffer(4, R * K);
+    break;
+  case Op::Slice:
+    require(R && K && O && p.mode <= 1 && uint64_t(p.aux) * O + O <= K);
+    output(R * (p.mode ? K : O));
+    buffer(p.mode ? 4 : 0, R * (p.mode ? O : K));
+    break;
+  case Op::Scores:
+  case Op::Weighted:
+    require(R && K && T && R % T == 0 && p.mode <= 2);
+    if (p.op == Op::Scores) {
+      output(R * (p.mode ? K : T));
+      if (p.mode != 1) buffer(0, R * K);
+      if (p.mode != 2) buffer(1, R * K);
+      if (p.mode) buffer(4, R * T);
+    } else {
+      output(R * (p.mode == 1 ? T : K));
+      if (p.mode != 1) buffer(0, R * T);
+      if (p.mode != 2) buffer(1, R * K);
+      if (p.mode) buffer(4, R * K);
+    }
+    break;
+  case Op::Softmax:
+    require(R && T && K == T && R % T == 0 && p.mode <= 1);
+    output(R * T);
+    if (!p.mode) buffer(0, R * T);
+    else { buffer(3, R * T); buffer(4, R * T); }
+    break;
+  case Op::CrossEntropy:
+    require(R && K && p.mode <= 1);
+    output(p.mode ? R * K : R);
+    buffer(0, R * K); buffer(1, R);
+    if (p.mode) buffer(4, R);
+    break;
+  }
+}
+
 void Kernel::observe() {
   uint64_t memory = 0;
 #ifdef XGPU_UWP
@@ -252,6 +354,7 @@ Values Kernel::run(const Command &p, const Values &x, const Values &w,
 }
 Tensor CpuKernel::run(const Command &p, const Tensor &x, const Tensor &w,
                       const Tensor &z, const Tensor &y, const Tensor &dy) {
+  validate_command(p, {size(x), size(w), size(z), size(y), size(dy)});
   return leaf(compute(p, host(x), host(w), host(z), host(y), host(dy)));
 }
 std::vector<Values> CpuKernel::read(const std::vector<Tensor> &tensors) {

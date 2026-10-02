@@ -286,6 +286,16 @@ Json kernel_fixture_report(const Json &fixture, Kernel &kernel) {
     std::vector<Values> buffers;
     for (const auto &input : inputs)
       buffers.push_back(input.get<Values>());
+    validate_command(command, {buffers[0].size(), buffers[1].size(), buffers[2].size(),
+                                buffers[3].size(), buffers[4].size()});
+    if (command.op == Op::Embed || command.op == Op::CrossEntropy) {
+      const auto &indices = buffers[command.op == Op::Embed ? 0 : 1];
+      const size_t limit = command.op == Op::Embed ? buffers[1].size() / command.cols
+                                                  : command.cols;
+      for (float index : indices)
+        if (!std::isfinite(index) || index < 0 || index >= limit || index != std::floor(index))
+          throw std::runtime_error("invalid E0 fixture token index");
+    }
     const auto before = kernel.dispatches;
     auto values = kernel.run(command, buffers[0], buffers[1], buffers[2],
                              buffers[3], buffers[4]);

@@ -60,6 +60,7 @@ std::string sha256_bytes(const std::string &);
 std::filesystem::path verified_asset(const std::filesystem::path &,
                                      const Json &);
 std::string sha256_file(const std::filesystem::path &);
+void record_failure(const std::filesystem::path &job_file, const std::string &error);
 void atomic_json(const std::filesystem::path &, const Json &);
 Json read_json(const std::filesystem::path &);
 // Config values this backend accepts (floppylm.device.v1 capabilities); Config

@@ -129,6 +129,16 @@ void atomic_json(const std::filesystem::path &path, const Json &value) {
   std::filesystem::rename(temporary, path);
 #endif
 }
+void record_failure(const std::filesystem::path &job_file, const std::string &error) {
+  const auto root = job_file.parent_path();
+  const auto id = job_file.stem().stem();
+  const auto result = root / "results" / id;
+  std::filesystem::create_directories(result);
+  const auto destination = std::filesystem::exists(result / "status.json")
+                               ? root / (path_text(id) + ".rejected.json")
+                               : result / "status.json";
+  atomic_json(destination, {{"state", "failed"}, {"error", error}, {"job_id", path_text(id)}});
+}
 namespace {
 std::filesystem::path asset(const std::filesystem::path &root,
                             const Json &descriptor) {
@@ -312,6 +322,7 @@ Json run_job(const std::filesystem::path &job_file, Kernel &kernel,
   auto begin = std::chrono::steady_clock::now();
   std::ifstream corpus(corpus_path, std::ios::binary),
       indices(indices_path, std::ios::binary);
+  bool publication_started = false;
   auto status = [&](const std::string &state) {
     report["state"] = state;
     report["trunk_step"] = step;
@@ -328,6 +339,7 @@ Json run_job(const std::filesystem::path &job_file, Kernel &kernel,
           {"bytes", std::filesystem::file_size(result / "checkpoint.json")},
           {"sha256", sha256_file(result / "checkpoint.json")}};
     atomic_json(result / "status.json", report);
+    publication_started = true;
   };
   try {
     if (resume) {
@@ -400,9 +412,10 @@ Json run_job(const std::filesystem::path &job_file, Kernel &kernel,
         if (kernel.progress_callback) kernel.progress_callback("cooldown", step, s + 1);
       }
       const std::string name = "branch-" + std::to_string(end) + ".json";
-      atomic_json(result / name, {{"schema", "floppylm.e0.weights.v1"},
-                                  {"config", job.at("config")},
-                                  {"tensors", copy.tensors()}});
+      const auto candidate = result / (name + ".candidate");
+      atomic_json(candidate, {{"schema", "floppylm.e0.weights.v1"},
+                               {"config", job.at("config")},
+                               {"tensors", copy.tensors()}});
       Json b = {{"end_step", end},
                 {"tokens_seen", end * batch * model.config.ctx},
                 {"cooldown_start", start},
@@ -413,8 +426,8 @@ Json run_job(const std::filesystem::path &job_file, Kernel &kernel,
                      .count()},
                 {"artifact",
                  {{"path", "results/" + id + "/" + name},
-                  {"bytes", std::filesystem::file_size(result / name)},
-                  {"sha256", sha256_file(result / name)}}}};
+                  {"bytes", std::filesystem::file_size(candidate)},
+                  {"sha256", sha256_file(candidate)}}}};
       auto &bs = report["branches"];
       bool found = false;
       for (auto &old : bs)
@@ -424,8 +437,15 @@ Json run_job(const std::filesystem::path &job_file, Kernel &kernel,
                 "resumed branch differs from previous artifact");
           found = true;
         }
-      if (!found)
+      if (!found) {
+        if (std::filesystem::exists(result / name))
+          throw std::runtime_error("unreported branch artifact already exists");
+        std::filesystem::rename(candidate, result / name);
         bs.push_back(b);
+      } else {
+        // Preserve both the trusted original and any divergent candidate.
+        std::filesystem::remove(candidate);
+      }
       report["phase"] = "trunk";
       report.erase("cooldown_end");
       report.erase("cooldown_step");
@@ -436,16 +456,20 @@ Json run_job(const std::filesystem::path &job_file, Kernel &kernel,
     status("completed");
     return report;
   } catch (const std::exception &error) {
-    report["error"] = error.what();
-    if (kernel.poisoned()) {
-      const auto &f = kernel.runtime_fault;
-      report["runtime_fault"] = {{"kind", f.kind}, {"error", f.error},
-        {"requested_fence", f.requested_fence}, {"completed_fence", f.completed_fence},
-        {"elapsed_ms", f.elapsed_ms}};
-      // The last atomically published checkpoint is the only recoverable state.
-      // Never serialize the potentially partial optimizer state after a GPU fault.
+    if (publication_started) {
+      report["error"] = error.what();
+      if (kernel.poisoned()) {
+        const auto &f = kernel.runtime_fault;
+        report["runtime_fault"] = {{"kind", f.kind}, {"error", f.error},
+          {"requested_fence", f.requested_fence}, {"completed_fence", f.completed_fence},
+          {"elapsed_ms", f.elapsed_ms}};
+        // The last atomically published checkpoint is the only recoverable state.
+        // Never serialize the potentially partial optimizer state after a GPU fault.
+      }
+      status("failed");
+    } else {
+      record_failure(job_file, error.what());
     }
-    status("failed");
     throw;
   }
 }
