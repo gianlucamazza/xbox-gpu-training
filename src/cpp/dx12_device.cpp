@@ -1,5 +1,6 @@
 #include "dx12_device.h"
 
+#include <algorithm>
 #include <chrono>
 #include <cstdio>
 #include <utility>
@@ -262,7 +263,7 @@ bool WaitForGpu(Dx12Device &ctx, std::string &err) {
     const auto hr = ctx.fence->SetEventOnCompletion(value, ctx.fence_event);
     return FAILED(hr) ? "SetEventOnCompletion: " + HrHex(hr) : std::string();
   };
-  DWORD wait_code = 0, wait_error = 0;
+  DWORD wait_error = 0;
   api.wait = [&](uint32_t ms) {
     if (probe == "gpu_wait_timeout") {
       synthetic_clock += ms;
@@ -272,19 +273,21 @@ bool WaitForGpu(Dx12Device &ctx, std::string &err) {
       wait_error = ERROR_INVALID_HANDLE;
       return GpuWaitApi::Result::Failed;
     }
-    wait_code = WaitForSingleObjectEx(ctx.fence_event, ms, FALSE);
-    if (wait_code == WAIT_FAILED) {
-      wait_error = GetLastError();
-      return GpuWaitApi::Result::Failed;
+    // Xbox D3D12 fence events can ignore WaitForSingleObjectEx timeouts, so
+    // BoundedGpuWait would never reach its deadline. Poll GetCompletedValue.
+    const auto end = api.now_ms() + ms;
+    for (;;) {
+      if (ctx.fence->GetCompletedValue() >= ctx.fence_value)
+        return GpuWaitApi::Result::Wake;
+      const auto now = api.now_ms();
+      if (now >= end)
+        return GpuWaitApi::Result::Timeout;
+      const auto slice = std::min<uint64_t>(10, end - now);
+      Sleep(static_cast<DWORD>(slice));
     }
-    if (wait_code == WAIT_TIMEOUT)
-      return GpuWaitApi::Result::Timeout;
-    return wait_code == WAIT_OBJECT_0 ? GpuWaitApi::Result::Wake
-                                      : GpuWaitApi::Result::Unexpected;
   };
   api.wait_error = [&] {
-    return "wait=" + std::to_string(wait_code) +
-           " error=" + std::to_string(wait_error);
+    return "error=" + std::to_string(wait_error);
   };
   if (!BoundedGpuWait(api, ++ctx.fence_value, ctx.fault)) {
     err = ctx.fault.kind + ": " + ctx.fault.error +

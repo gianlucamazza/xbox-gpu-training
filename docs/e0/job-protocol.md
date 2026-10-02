@@ -143,6 +143,8 @@ exposed in the dashboard. Portable tests exercise the synchronization policy and
 checkpoint/claim safety; Windows/UWP compilation and exact-package Xbox fault
 qualification remain separate evidence gates after the active E0 campaign closes.
 
-The wait handling follows Microsoft's contracts for
+The wait handling polls
 [GetCompletedValue](https://learn.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12fence-getcompletedvalue)
-and [WaitForSingleObjectEx](https://learn.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-waitforsingleobjectex).
+and sleeps in bounded chunks. It does not wait on the D3D12 fence event:
+`WaitForSingleObjectEx` on that handle can ignore its timeout on Xbox, so the
+600 s deadline would never run.
