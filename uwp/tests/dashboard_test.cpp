@@ -227,8 +227,14 @@ int main() {
   check(live.faulted &&
             e0ui::worker_line(live) ==
                 "WORKER FAILED · gpu_wait_timeout · requested 7 completed 6 · "
-                "10 min",
+                "10 min · heartbeat 4 s ago",
         "fault line");
+  live = e0ui::worker_from_json(failed, 31);
+  check(live.stale &&
+            e0ui::worker_line(live) ==
+                "WORKER FAILED · gpu_wait_timeout · requested 7 completed 6 · "
+                "10 min · no heartbeat for 31 s",
+        "stale fault line");
   check(!e0ui::worker_from_json(e0ui::Json::object(), 0).present,
         "missing schema is absent");
   check(e0ui::worker_line({}) == "WORKER · not published yet",

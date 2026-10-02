@@ -318,6 +318,10 @@ std::string worker_line(const WorkerView &v) {
               " completed " + format_count(v.fault_completed_fence);
     if (v.elapsed_ms)
       line += " · " + format_duration(double(v.elapsed_ms) / 1000.0);
+    if (v.stale)
+      line += " · no heartbeat for " + format_duration(v.age_seconds);
+    else
+      line += " · heartbeat " + format_duration(v.age_seconds) + " ago";
     return line;
   }
   if (v.stale)

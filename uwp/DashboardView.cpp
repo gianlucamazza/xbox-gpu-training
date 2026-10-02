@@ -589,16 +589,16 @@ void DashboardView::show_idle() {
 void DashboardView::show_worker() {
   const auto path = local_ / L"worker.json";
   e0ui::WorkerView view;
-  if (std::filesystem::exists(path)) {
-    const double age =
-        std::chrono::duration<double>(
-            std::filesystem::file_time_type::clock::now() -
-            std::filesystem::last_write_time(path))
-            .count();
-    try {
+  try {
+    if (std::filesystem::exists(path)) {
+      const double age =
+          std::chrono::duration<double>(
+              std::filesystem::file_time_type::clock::now() -
+              std::filesystem::last_write_time(path))
+              .count();
       view = e0ui::worker_from_json(e0::read_json(path), age);
-    } catch (...) {
     }
+  } catch (...) {
   }
   set_text(live_, e0ui::worker_line(view));
   const uint32_t color = !view.present     ? kMuted
