@@ -67,6 +67,45 @@ int main(int argc, char **argv) {
     observer.join();
     check(live.snapshot().at("progress").at("sequence") == 1000,
           "completed GPU work counted safely");
+    {
+      const auto watched = root / "fence-watch";
+      fs::create_directories(watched / "inbox" / "results" / "trial");
+      e0::atomic_json(watched / "inbox" / "results" / "trial" / "checkpoint.json",
+                      Json{{"schema", "checkpoint"}});
+      e0::atomic_json(watched / "inbox" / "results" / "trial" / "status.json",
+                      Json{{"state", "running"}, {"job_id", "trial"}});
+      e0::RuntimeLifecycle stalled(watched, "watch-worker", 2, "package",
+                                   "commit");
+      int fired = 0;
+      stalled.on_published_fence_frozen(
+          [&](const GpuRuntimeFault &fault) {
+            check(fault.kind == "gpu_wait_timeout", "handler sees the fault");
+            ++fired;
+          });
+      stalled.running(Json{{"job_id", "trial"}, {"job_sha256", "abc"}});
+      stalled.gpu_progress(40, "tensor op 0");
+      check(!stalled.observe_published_fence(1000), "fresh fence does not fire");
+      check(!stalled.observe_published_fence(1000 + 599999),
+            "inside the published-fence deadline");
+      check(stalled.observe_published_fence(1000 + 600000),
+            "frozen published fence fires");
+      check(fired == 1, "handler runs once");
+      const auto status = e0::read_json(watched / "inbox" / "results" / "trial" /
+                                        "status.json");
+      check(status.at("state") == "interrupted",
+            "running status becomes interrupted");
+      check(status.at("runtime_fault").at("kind") == "gpu_wait_timeout",
+            "status records gpu_wait_timeout");
+      check(status.at("checkpoint").at("sha256") ==
+                e0::sha256_file(watched / "inbox" / "results" / "trial" /
+                                "checkpoint.json"),
+            "checkpoint descriptor matches the file on disk");
+      check(stalled.snapshot().at("fault").at("kind") == "gpu_wait_timeout",
+            "worker fault is the published-fence timeout");
+      check(!stalled.observe_published_fence(1000 + 1200000),
+            "a failed worker does not fire again");
+      check(fired == 1, "handler does not repeat");
+    }
     live.progress("cooldown", 9, 12);
     check(live.snapshot().at("progress").at("cooldown_step") == 12,
           "cooldown progress tracked");

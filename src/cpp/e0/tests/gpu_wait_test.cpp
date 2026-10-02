@@ -51,10 +51,29 @@ struct FailingKernel : e0::Kernel {
     return cpu.read(t);
   }
 };
+void published_fence_does_not_touch_a_device() {
+  PublishedFenceWatch watch;
+  GpuRuntimeFault fault;
+  require(!watch.observe({false, 10, 0}, 600000, fault), "idle stays quiet");
+  require(!watch.observe({true, 10, 0}, 600000, fault), "first sample arms");
+  require(!watch.observe({true, 11, 1000}, 600000, fault), "moving fence resets");
+  require(!watch.observe({true, 11, 600999}, 600000, fault), "just inside deadline");
+  require(watch.observe({true, 11, 601000}, 600000, fault) &&
+              fault.kind == "gpu_wait_timeout" && fault.completed_fence == 11 &&
+              fault.elapsed_ms == 600000,
+          "frozen published fence faults without a device");
+  require(!watch.observe({false, 11, 700000}, 600000, fault), "idle clears");
+  PublishedFenceWatch again;
+  require(!again.observe({true, 0, 5}, 600000, fault), "zero fence arms");
+  require(again.observe({true, 0, 600005}, 600000, fault) &&
+              fault.completed_fence == 0,
+          "a fence that never advanced still faults");
+}
 int main(int argc, char **argv) {
   if (argc != 2)
     return 2;
   try {
+    published_fence_does_not_touch_a_device();
     {
       Fake f;
       auto api = f.api();

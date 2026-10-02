@@ -60,6 +60,8 @@ void worker() {
                              .Id()
                              .FullName()),
         XGPU_COMMIT);
+    lifecycle->on_published_fence_frozen(
+        [](const GpuRuntimeFault &) { ExitProcess(1); });
     lifecycle->start();
     e0::reconcile_claims(inbox, lifecycle->snapshot());
     auto shader = std::filesystem::path(
