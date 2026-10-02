@@ -79,15 +79,10 @@ branch artifacts still verify.
   for the active job and holds the deferral up to 4 s for the job to stop.
 - **Stay-alive (best effort).** The dashboard holds a `DisplayRequest` for the
   process lifetime so idle gaps do not drop the TV stay-awake request
-  ([ADR 0007](../adr/0007-uwp-stay-alive.md)). At worker start the app requests
-  an `ExtendedExecutionSession` (reason `Unspecified`). Grant, denial, revocation
-  and API absence are published on optional `worker.json` field
-  `extended_execution` (`requested` / `allowed` / `denied` / `revoked` /
-  `unsupported`). The `Suspending` handler remains unchanged. An active
-  `ExtendedExecutionSession` grant can delay OS `Suspending` while the app is
-  minimized. Cooperative suspend remains the lifecycle contract, and the
-  package must pass the lifecycle acceptance gate. The host ignores unknown
-  worker keys.
+  ([ADR 0007](../adr/0007-uwp-stay-alive.md), [ADR 0008](../adr/0008-drop-extended-execution.md)).
+  The app does not request `ExtendedExecutionSession`: a grant on 0.1.0.84
+  let a lifecycle job run to completion under Dev Home with no `.cancel`.
+  Cooperative `Suspending` remains the lifecycle contract.
 
 Stopping a companion campaign cleanly is described in [FloppyLM Xbox runbook](https://github.com/gianlucamazza/floppylm/blob/main/docs/operations/xbox-e0.md#recover).
 
