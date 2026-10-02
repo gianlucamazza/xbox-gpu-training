@@ -83,8 +83,11 @@ branch artifacts still verify.
   an `ExtendedExecutionSession` (reason `Unspecified`). Grant, denial, revocation
   and API absence are published on optional `worker.json` field
   `extended_execution` (`requested` / `allowed` / `denied` / `revoked` /
-  `unsupported`). Neither request refuses OS `Suspending`; cooperative suspend
-  remains the lifecycle contract. The host ignores unknown worker keys.
+  `unsupported`). The `Suspending` handler remains unchanged. An active
+  `ExtendedExecutionSession` grant can delay OS `Suspending` while the app is
+  minimized. Cooperative suspend remains the lifecycle contract, and the
+  package must pass the lifecycle acceptance gate. The host ignores unknown
+  worker keys.
 
 Stopping a companion campaign cleanly is described in [FloppyLM Xbox runbook](https://github.com/gianlucamazza/floppylm/blob/main/docs/operations/xbox-e0.md#recover).
 

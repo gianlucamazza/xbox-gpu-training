@@ -44,7 +44,9 @@ could opt into suspend — that host change is out of this decision.
 
 ## Consequences
 
-Idle gaps no longer drop the TV stay-awake request. OS steal-focus still
+Idle gaps no longer drop the TV stay-awake request. An active
+`ExtendedExecutionSession` grant can delay OS `Suspending` while the app is
+minimized; the `Suspending` handler itself is unchanged. OS steal-focus still
 suspends; the existing interrupt/resume path remains the recovery. Xbox may
 deny or revoke extended execution; `worker.json` records that without changing
 training. A package that actually blocks Dev Home suspend fails the lifecycle
