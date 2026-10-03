@@ -321,11 +321,18 @@ Json run_job(const std::filesystem::path &job_file, Kernel &kernel,
     if (!probe.is_object() || probe.size() != 2 ||
         probe.value("kind", "") != "published_fence_stall" ||
         !probe.contains("after_checkpoint_step") ||
-        !probe.at("after_checkpoint_step").is_number_integer() ||
+        !probe.at("after_checkpoint_step").is_number() ||
         probe.at("after_checkpoint_step") <= 0 ||
         job.contains("resume") || job.contains("stop_after") || stop_after)
       throw std::runtime_error("invalid functional runtime fault probe");
-    probe_step = probe.at("after_checkpoint_step").get<uint64_t>();
+    const auto &requested_step = probe.at("after_checkpoint_step");
+    if (requested_step.is_number_float()) {
+      const auto value = requested_step.get<double>();
+      if (!std::isfinite(value) || std::floor(value) != value ||
+          value >= std::ldexp(1.0, 64))
+        throw std::runtime_error("invalid functional runtime fault probe step");
+    }
+    probe_step = requested_step.get<uint64_t>();
     if (!kernel.published_fence_stall)
       throw std::runtime_error("published-fence probe requires an independent watchdog worker");
   }

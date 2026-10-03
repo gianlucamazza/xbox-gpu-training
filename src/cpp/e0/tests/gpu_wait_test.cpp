@@ -1,5 +1,6 @@
 #include "model.h"
 #include <chrono>
+#include <cmath>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
@@ -202,7 +203,7 @@ int main(int argc, char **argv) {
       probe_job["job_id"] = "watchdog-probe";
       probe_job["purpose"] = "functional";
       probe_job["runtime_fault_probe"] = {
-          {"kind", "published_fence_stall"}, {"after_checkpoint_step", 1}};
+          {"kind", "published_fence_stall"}, {"after_checkpoint_step", 1.0}};
       e0::CpuKernel probe_kernel;
       bool entered = false;
       probe_kernel.published_fence_stall = [&] {
@@ -225,7 +226,8 @@ int main(int argc, char **argv) {
       }
       require(entered, "functional training probe did not execute");
       for (const auto &kind : {"scientific", "missing-purpose", "resume",
-                              "unreachable", "zero", "stop-after", "no-watchdog"}) {
+                              "unreachable", "zero", "fraction", "overflow",
+                              "stop-after", "no-watchdog"}) {
         auto bad = probe_job;
         bad["job_id"] = std::string("bad-") + kind;
         if (std::string(kind) == "scientific") bad["purpose"] = "scientific";
@@ -235,6 +237,10 @@ int main(int argc, char **argv) {
           bad["runtime_fault_probe"]["after_checkpoint_step"] = 10000;
         if (std::string(kind) == "zero")
           bad["runtime_fault_probe"]["after_checkpoint_step"] = 0;
+        if (std::string(kind) == "fraction")
+          bad["runtime_fault_probe"]["after_checkpoint_step"] = 1.5;
+        if (std::string(kind) == "overflow")
+          bad["runtime_fault_probe"]["after_checkpoint_step"] = std::ldexp(1.0, 64);
         if (std::string(kind) == "stop-after") bad["stop_after"] = 1;
         e0::CpuKernel rejected;
         if (std::string(kind) != "no-watchdog")
