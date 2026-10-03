@@ -3,8 +3,12 @@
 ## Status
 
 Accepted — 2026-10-03, owner-approved host-and-Xbox implementation plan.
-Defines the functional qualification plan for ADR 0006 without changing its
-timeout or explicit-recovery boundary. Companion semantics are owned by FloppyLM ADR 0018.
+Completes ADR 0006 hardware qualification without changing its timeout or
+explicit-recovery boundary. Companion semantics are owned by FloppyLM ADR 0018.
+
+Clarification — 2026-10-03: "Completes" above describes the specification of the
+remaining qualification plan, not completion of its execution. Hardware results
+are established only by package-bound evidence; this ADR alone certifies none.
 
 ## Context
 

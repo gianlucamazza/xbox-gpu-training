@@ -356,9 +356,10 @@ std::filesystem::path persist_claim(const std::filesystem::path &inbox,
         Json::parse(previous_owner.at("job_payload").get<std::string>());
     auto submitted = job;
     original.erase("resume");
-    // The host removes a functional stop limit for the continued segment.
-    // A resumed submission may not introduce another stop limit.
+    // The host removes functional interruption controls for the continued segment.
+    // Only the original is normalized: resume cannot retain or introduce a probe.
     original.erase("stop_after");
+    original.erase("runtime_fault_probe");
     submitted.erase("resume");
     if (original != submitted || job.at("resume") != previous.at("checkpoint"))
       throw std::runtime_error("claim_resume_binding_mismatch");
