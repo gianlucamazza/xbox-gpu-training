@@ -1,0 +1,29 @@
+{
+ "batch": 32,
+ "commit": "cc134fe4458ffa51c73331ee6dd6af4a6ae8b0d7",
+ "config": {
+  "core_fmt": "ternary",
+  "ctx": 256,
+  "d": 96,
+  "d_ff": 391,
+  "delta": 0.5,
+  "emb_fmt": "4bit",
+  "mlp": "gelu",
+  "n_heads": 6,
+  "n_layers": 3,
+  "qk_norm": false,
+  "scale_policy": "row16",
+  "vocab": 256
+ },
+ "dispatches": 92736,
+ "estimate_excludes": "corpus upload and Python serialization/evaluation; short-run extrapolation",
+ "estimated_scientific_run_seconds": 3174.9527374465556,
+ "gpu_seconds": 11.839362807017817,
+ "package": "GianlucaMazza.XgpuE0_0.1.0.98_x64__g0p5dcfz4t9z4",
+ "peak_memory_bytes": 127991808,
+ "purpose": "functional",
+ "tokens": 147456,
+ "tokens_per_second": 9747.980067536668,
+ "transfer_bytes": 860228352,
+ "wall_seconds": 15.126826171
+}

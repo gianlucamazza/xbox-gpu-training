@@ -1,0 +1,47 @@
+{
+  "control": {
+    "branches": [
+      {
+        "bytes": 316829,
+        "path": "results/watchdog-20261003T091923Z-9c6818-control/branch-8.json",
+        "sha256": "07d23edd0236512852b787fc9d3decaeae1facbf12df81e65ab96301c41ea3eb"
+      },
+      {
+        "bytes": 316845,
+        "path": "results/watchdog-20261003T091923Z-9c6818-control/branch-16.json",
+        "sha256": "c5b067d790827cde86e90a3406755365af7cf603b78b20ef3e7b73876298b967"
+      },
+      {
+        "bytes": 316435,
+        "path": "results/watchdog-20261003T091923Z-9c6818-control/branch-32.json",
+        "sha256": "96ae208439981620138595bbda531cc09cef840bc505b397186312b1f11571d3"
+      }
+    ],
+    "checkpoint_numeric_sha256": "7267a59631eae89ffd461857cd8eb5e96e68c5ec0e947e661643f033154b57c6"
+  },
+  "probe": {
+    "branches": [
+      {
+        "bytes": 316829,
+        "path": "results/watchdog-20261003T091923Z-9c6818-probe/branch-8.json",
+        "sha256": "07d23edd0236512852b787fc9d3decaeae1facbf12df81e65ab96301c41ea3eb"
+      },
+      {
+        "bytes": 316845,
+        "path": "results/watchdog-20261003T091923Z-9c6818-probe/branch-16.json",
+        "sha256": "c5b067d790827cde86e90a3406755365af7cf603b78b20ef3e7b73876298b967"
+      },
+      {
+        "bytes": 316435,
+        "path": "results/watchdog-20261003T091923Z-9c6818-probe/branch-32.json",
+        "sha256": "96ae208439981620138595bbda531cc09cef840bc505b397186312b1f11571d3"
+      }
+    ],
+    "checkpoint_numeric_sha256": "7267a59631eae89ffd461857cd8eb5e96e68c5ec0e947e661643f033154b57c6"
+  },
+  "purpose": "functional",
+  "package": "GianlucaMazza.XgpuE0_0.1.0.98_x64__g0p5dcfz4t9z4",
+  "commit": "cc134fe4458ffa51c73331ee6dd6af4a6ae8b0d7",
+  "ok": true,
+  "canonicalization": "sorted compact JSON of step, stream_position, tensors and moments; UTF-8"
+}
