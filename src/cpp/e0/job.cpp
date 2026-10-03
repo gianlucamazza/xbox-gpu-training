@@ -313,8 +313,29 @@ Json run_job(const std::filesystem::path &job_file, Kernel &kernel,
   const auto root = std::filesystem::absolute(job_file).parent_path();
   kernel.require_healthy();
   Json job = read_json(job_file);
-  if (job.contains("runtime_fault_probe"))
-    throw std::runtime_error("runtime fault probes are forbidden for scientific jobs");
+  uint64_t probe_step = 0;
+  if (job.contains("runtime_fault_probe")) {
+    if (job.value("purpose", "") != "functional")
+      throw std::runtime_error("runtime fault probes are forbidden for scientific jobs");
+    const auto &probe = job.at("runtime_fault_probe");
+    if (!probe.is_object() || probe.size() != 2 ||
+        probe.value("kind", "") != "published_fence_stall" ||
+        !probe.contains("after_checkpoint_step") ||
+        !probe.at("after_checkpoint_step").is_number() ||
+        probe.at("after_checkpoint_step") <= 0 ||
+        job.contains("resume") || job.contains("stop_after") || stop_after)
+      throw std::runtime_error("invalid functional runtime fault probe");
+    const auto &requested_step = probe.at("after_checkpoint_step");
+    if (requested_step.is_number_float()) {
+      const auto value = requested_step.get<double>();
+      if (!std::isfinite(value) || std::floor(value) != value ||
+          value >= std::ldexp(1.0, 64))
+        throw std::runtime_error("invalid functional runtime fault probe step");
+    }
+    probe_step = requested_step.get<uint64_t>();
+    if (!kernel.published_fence_stall)
+      throw std::runtime_error("published-fence probe requires an independent watchdog worker");
+  }
   const std::string id = job.at("job_id");
   if (id.empty() ||
       id.find_first_not_of(
@@ -357,6 +378,8 @@ Json run_job(const std::filesystem::path &job_file, Kernel &kernel,
     cooldowns[b] = std::max<uint64_t>(1, uint64_t(constants::kCooldownFrac * double(ends[b])));
     starts[b] = ends[b] - cooldowns[b];
   }
+  if (probe_step > starts[2])
+    throw std::runtime_error("runtime fault probe checkpoint is unreachable");
   const bool resume = job.contains("resume");
   if (!resume && !std::filesystem::create_directory(result))
     throw std::runtime_error(
@@ -444,6 +467,12 @@ Json run_job(const std::filesystem::path &job_file, Kernel &kernel,
         if (kernel.progress_callback) kernel.progress_callback("trunk", step, 0);
         report["last_loss"] = metric.at("loss");
         series.add(step, metric.at("loss").get<double>());
+        if (probe_step && step == probe_step) {
+          atomic_json(result / "checkpoint.json", model.checkpoint(step, job));
+          status("running");
+          kernel.published_fence_stall();
+          throw std::runtime_error("published-fence stall hook unexpectedly returned");
+        }
         if (step % 64 == 0) {
           atomic_json(result / "checkpoint.json", model.checkpoint(step, job));
           status("running");

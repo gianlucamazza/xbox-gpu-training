@@ -1,0 +1,54 @@
+{
+ "adapter": "SraKmd_arden",
+ "branches": [],
+ "checkpoint": {
+  "bytes": 1014570,
+  "path": "results/watchdog-20261003T091923Z-9c6818-probe/checkpoint.json",
+  "sha256": "ea1f44d8ef31324c22aaca077d720e000048718bce954102f9c8e990c6d483f0"
+ },
+ "dispatches": 244,
+ "gpu_seconds": 0.001604812030075189,
+ "hardware_gpu": true,
+ "job_id": "watchdog-20261003T091923Z-9c6818-probe",
+ "job_sha256": "10bf9ed7a547d0d658d2665786f8086ce76953667c09ac9778e96a3260577b7e",
+ "last_loss": 5.959905833005905,
+ "loss_series": [
+  {
+   "loss": 6.280833572149277,
+   "step": 1
+  },
+  {
+   "loss": 5.959905833005905,
+   "step": 2
+  }
+ ],
+ "peak_memory_bytes": 41230336,
+ "phase": "trunk",
+ "runtime_fault": {
+  "completed_fence": 332,
+  "elapsed_ms": 600813,
+  "error": "published GPU fence frozen",
+  "kind": "gpu_wait_timeout",
+  "requested_fence": 0
+ },
+ "schedule": {
+  "T": 8,
+  "cooldown_starts": [
+   7,
+   15,
+   29
+  ],
+  "ends": [
+   8,
+   16,
+   32
+  ],
+  "tokens_per_step": 16,
+  "warmup": 1
+ },
+ "schema": "floppylm.e0.result.v1",
+ "state": "interrupted",
+ "transfer_bytes": 371456,
+ "trunk_step": 2,
+ "wall_seconds": 0.068433767
+}

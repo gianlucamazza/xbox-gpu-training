@@ -78,6 +78,12 @@ void worker() {
     kernel->gpu_progress = [&](uint64_t fence, const std::string &operation) {
       lifecycle->gpu_progress(fence, operation);
     };
+    kernel->published_fence_stall = [] {
+      // Functional-only job hook. Hold no locks; the ordinary heartbeat thread
+      // must detect the frozen fence and exit this process at the real deadline.
+      for (;;)
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+    };
     lifecycle->ready();
     lifecycle->publish();
     e0::atomic_json(

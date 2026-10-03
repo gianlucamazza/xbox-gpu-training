@@ -1,0 +1,38 @@
+{
+ "baseline_broken": false,
+ "commit": "cc134fe4458ffa51c73331ee6dd6af4a6ae8b0d7",
+ "fixed": true,
+ "package": "GianlucaMazza.XgpuE0_0.1.0.98_x64__g0p5dcfz4t9z4",
+ "probes": {
+  "identity": {
+   "accepted": false,
+   "error": "Xbox fixture failed: claim_job_id_mismatch"
+  },
+  "oversized": {
+   "accepted": false,
+   "error": "Xbox fixture failed: invalid E0 command dimensions/buffers"
+  },
+  "reuse": {
+   "accepted": true,
+   "result": {
+    "adapter": "SraKmd_arden",
+    "cases": [
+     {
+      "dispatches": 1,
+      "id": "reuse",
+      "values": [
+       3.0
+      ]
+     }
+    ],
+    "dispatches": 1,
+    "gpu_seconds": 3.969924812030075e-06,
+    "hardware_gpu": true,
+    "peak_memory_bytes": 36696064,
+    "schema": "floppylm.e0.kernels.result.v1",
+    "transfer_bytes": 12
+   }
+  }
+ },
+ "purpose": "functional"
+}

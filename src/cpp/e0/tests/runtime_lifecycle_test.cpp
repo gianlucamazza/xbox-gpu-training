@@ -199,6 +199,34 @@ int main(int argc, char **argv) {
     auto resume_job = Json::parse(payload);
     resume_job["resume"] = status.at("checkpoint");
     resume_job.erase("stop_after");
+    {
+      const auto probe_inbox = root / "probe-resume";
+      fs::copy(inbox, probe_inbox, fs::copy_options::recursive);
+      auto probe_original = Json::parse(payload);
+      probe_original.erase("stop_after");
+      probe_original["runtime_fault_probe"] =
+          {{"kind", "published_fence_stall"}, {"after_checkpoint_step", 1}};
+      auto probe_owner = owner;
+      probe_owner["job_payload"] = probe_original.dump();
+      probe_owner["job_sha256"] = e0::sha256_bytes(probe_original.dump());
+      e0::atomic_json(probe_inbox / "trial.owner.json", probe_owner);
+      auto probe_status = reconciled;
+      probe_status["job_sha256"] = probe_owner.at("job_sha256");
+      e0::atomic_json(probe_inbox / "results/trial/status.json", probe_status);
+      auto rejected = resume_job;
+      rejected["runtime_fault_probe"] = probe_original.at("runtime_fault_probe");
+      e0::atomic_json(probe_inbox / "trial.job.json", rejected);
+      check(throws([&] { e0::persist_claim(probe_inbox, "trial", live.snapshot()); }),
+            "resume cannot retain the fault probe");
+      rejected = resume_job;
+      rejected["seed"] = 123;
+      e0::atomic_json(probe_inbox / "trial.job.json", rejected);
+      check(throws([&] { e0::persist_claim(probe_inbox, "trial", live.snapshot()); }),
+            "probe removal does not permit recipe changes");
+      e0::atomic_json(probe_inbox / "trial.job.json", resume_job);
+      check(!throws([&] { e0::persist_claim(probe_inbox, "trial", live.snapshot()); }),
+            "verified interrupted probe resumes with the probe removed");
+    }
     raw(inbox / "trial.job.json", resume_job.dump());
     const auto resume_owned =
         e0::persist_claim(inbox, "trial", live.snapshot());

@@ -1,5 +1,6 @@
 #include "model.h"
 #include <chrono>
+#include <cmath>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
@@ -197,6 +198,65 @@ int main(int argc, char **argv) {
                    {"lr", 0.001},
                    {"wd", 0.0}}}};
     e0::atomic_json(file, job);
+    {
+      auto probe_job = job;
+      probe_job["job_id"] = "watchdog-probe";
+      probe_job["purpose"] = "functional";
+      probe_job["runtime_fault_probe"] = {
+          {"kind", "published_fence_stall"}, {"after_checkpoint_step", 1.0}};
+      e0::CpuKernel probe_kernel;
+      bool entered = false;
+      probe_kernel.published_fence_stall = [&] {
+        const auto result = root / "results/watchdog-probe";
+        const auto status = e0::read_json(result / "status.json");
+        require(status.at("state") == "running" && status.at("trunk_step") == 1,
+                "probe did not park after the requested step");
+        require(status.at("checkpoint").at("sha256") ==
+                    e0::sha256_file(result / "checkpoint.json"),
+                "probe did not publish its checkpoint before parking");
+        require(!probe_kernel.poisoned(), "probe invoked fault path directly");
+        entered = true;
+        throw std::runtime_error("test park intercepted");
+      };
+      e0::atomic_json(file, probe_job);
+      try {
+        e0::run_job(file, probe_kernel);
+      } catch (const std::exception &e) {
+        require(std::string(e.what()) == "test park intercepted", e.what());
+      }
+      require(entered, "functional training probe did not execute");
+      for (const auto &kind : {"scientific", "missing-purpose", "resume",
+                              "unreachable", "zero", "fraction", "overflow",
+                              "stop-after", "no-watchdog"}) {
+        auto bad = probe_job;
+        bad["job_id"] = std::string("bad-") + kind;
+        if (std::string(kind) == "scientific") bad["purpose"] = "scientific";
+        if (std::string(kind) == "missing-purpose") bad.erase("purpose");
+        if (std::string(kind) == "resume") bad["resume"] = e0::Json::object();
+        if (std::string(kind) == "unreachable")
+          bad["runtime_fault_probe"]["after_checkpoint_step"] = 10000;
+        if (std::string(kind) == "zero")
+          bad["runtime_fault_probe"]["after_checkpoint_step"] = 0;
+        if (std::string(kind) == "fraction")
+          bad["runtime_fault_probe"]["after_checkpoint_step"] = 1.5;
+        if (std::string(kind) == "overflow")
+          bad["runtime_fault_probe"]["after_checkpoint_step"] = std::ldexp(1.0, 64);
+        if (std::string(kind) == "stop-after") bad["stop_after"] = 1;
+        e0::CpuKernel rejected;
+        if (std::string(kind) != "no-watchdog")
+          rejected.published_fence_stall = [] { throw std::runtime_error("bad probe ran"); };
+        e0::atomic_json(file, bad);
+        bool rejected_before_dispatch = false;
+        try {
+          e0::run_job(file, rejected);
+        } catch (const std::exception &) {
+          rejected_before_dispatch = rejected.dispatches == 0 &&
+              !std::filesystem::exists(root / "results" / bad.at("job_id").get<std::string>());
+        }
+        require(rejected_before_dispatch, "invalid probe reached execution");
+      }
+      e0::atomic_json(file, job);
+    }
     {
       auto fresh_job = job;
       fresh_job["job_id"] = "fresh";

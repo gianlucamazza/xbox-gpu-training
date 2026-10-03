@@ -72,6 +72,8 @@ struct Kernel {
   std::function<void(const std::string &, uint64_t, uint64_t)>
       progress_callback;
   std::function<void(uint64_t, const std::string &)> gpu_progress;
+  // Installed only by a worker with an independent process-exit watchdog.
+  std::function<void()> published_fence_stall;
   virtual void inject_runtime_fault(const std::string &) {
     throw std::runtime_error("runtime fault probes require the GPU backend");
   }

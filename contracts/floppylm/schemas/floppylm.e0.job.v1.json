@@ -50,7 +50,25 @@
     "stop_after": {
       "type": "integer",
       "minimum": 1
+    },
+    "runtime_fault_probe": {
+      "description": "Functional fresh-job watchdog probe; explicit resume removes it.",
+      "type": "object",
+      "required": ["kind", "after_checkpoint_step"],
+      "properties": {
+        "kind": {"const": "published_fence_stall"},
+        "after_checkpoint_step": {"type": "integer", "minimum": 1}
+      },
+      "additionalProperties": false
     }
   },
+  "allOf": [{
+    "if": {"required": ["runtime_fault_probe"]},
+    "then": {
+      "required": ["purpose"],
+      "properties": {"purpose": {"const": "functional"}},
+      "not": {"anyOf": [{"required": ["resume"]}, {"required": ["stop_after"]}]}
+    }
+  }],
   "additionalProperties": false
 }

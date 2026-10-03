@@ -1,0 +1,15 @@
+{
+  "shots": [
+    {
+      "label": "idle-final",
+      "file": "idle-final.png",
+      "sha256": "26259fea31280242274aebd161c4bdde4dcce6e0fa1fb7c684af817289850597",
+      "width": 1920,
+      "height": 1080,
+      "captured_at": "2026-10-03T09:34:10+00:00",
+      "package": "GianlucaMazza.XgpuE0_0.1.0.98_x64__g0p5dcfz4t9z4",
+      "commit": "cc134fe4458ffa51c73331ee6dd6af4a6ae8b0d7",
+      "status": {}
+    }
+  ]
+}

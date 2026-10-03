@@ -1,0 +1,20 @@
+{
+ "commit": "cc134fe4458ffa51c73331ee6dd6af4a6ae8b0d7",
+ "exact_recovery": true,
+ "observation": {
+  "elapsed_seconds": 600.4604996349999,
+  "heartbeat_advanced": true,
+  "process_exited": true,
+  "samples": 280,
+  "worker_id": "089c77a2-75f4-4d14-b59f-e773551feeb3"
+ },
+ "ok": true,
+ "package": "GianlucaMazza.XgpuE0_0.1.0.98_x64__g0p5dcfz4t9z4",
+ "probe_jobs": [
+  "watchdog-20261003T091923Z-9c6818-control",
+  "watchdog-20261003T091923Z-9c6818-probe"
+ ],
+ "protected_unchanged": true,
+ "protection_scope": "pre-existing inbox inventory; committed scientific job JSON bytes and result descriptors; archived payloads checked by inventory, not rehashed",
+ "purpose": "functional"
+}

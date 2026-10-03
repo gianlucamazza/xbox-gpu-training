@@ -22,6 +22,7 @@ Not numerical gates, but required before a campaign:
 | Worker probes | A job with a mismatched id and an oversized dispatch are rejected; the worker then accepts valid work |
 | Runner recovery | Completed retrieval is unchanged; runner resume is idempotent; interrupted recovery is exact |
 | Lifecycle | A real Dev Home suspension writes a checkpoint; the recovered run ends identical to an uninterrupted one |
+| Published-fence watchdog | Functional parked executor, advancing heartbeat, real timeout, process exit and exact recovery against an uninterrupted control (ADR 0009) |
 | Throughput | Representative synthetic benchmark: wall time, GPU time, dispatches, transfers, peak app memory |
 | Bit identity | Engine changes only: outputs identical to the previous package ([engine.md](engine.md#bit-identity-rule)) |
 

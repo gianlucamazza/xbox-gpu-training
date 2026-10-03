@@ -16,5 +16,7 @@ rewritten; superseding ADRs say what they replace.
 | [0007](0007-uwp-stay-alive.md) | UWP stay-alive during idle gaps | Accepted, EE request superseded by 0008 | Always-on DisplayRequest; cooperative suspend stays the lifecycle contract |
 | [0008](0008-drop-extended-execution.md) | Drop Extended Execution after lifecycle failure | Accepted | No ExtendedExecutionSession request; DisplayRequest and Suspending unchanged |
 
+| [0009](0009-watchdog-functional-qualification.md) | Real-deadline functional watchdog qualification | Accepted | Dormant fresh-job probe and exact recovery proof |
+
 Companion decisions (FloppyLM ADR 0011 campaign, ADR 0012 repository boundaries)
 live in the [FloppyLM](https://github.com/gianlucamazza/floppylm) repository.
