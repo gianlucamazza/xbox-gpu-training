@@ -148,3 +148,17 @@ The wait handling polls
 and sleeps in bounded chunks. It does not wait on the D3D12 fence event:
 `WaitForSingleObjectEx` on that handle can ignore its timeout on Xbox, so the
 600 s deadline would never run.
+
+
+### Published-fence functional training probe
+
+Under [ADR 0009](../adr/0009-watchdog-functional-qualification.md), a fresh
+`purpose: functional` training job may carry
+`runtime_fault_probe: {kind: published_fence_stall, after_checkpoint_step: 2}`.
+The step must be a positive reachable trunk step. Scientific jobs, resumed jobs,
+combined `stop_after` requests and executors without an independent watchdog refuse
+it before dispatch. The hook parks only after checkpoint and status publication;
+it holds no lifecycle locks and does not call the fault handler. The normal UWP
+heartbeat thread must detect the frozen fence at its ordinary deadline and exit.
+Explicit host resume removes the hook using journaled publication. Hardware proof
+is separate from portable coverage and is not implied by this interface.
