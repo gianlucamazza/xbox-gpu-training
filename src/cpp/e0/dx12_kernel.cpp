@@ -380,8 +380,12 @@ private:
     check(ctx_.list->Close(), "list close");
     ID3D12CommandList *lists[] = {ctx_.list.Get()};
     ctx_.queue->ExecuteCommandLists(1, lists);
+    if (gpu_wait)
+      gpu_wait(ctx_.fence_value + 1, ctx_.last_operation);
     std::string error;
     if (!WaitForGpu(ctx_, error)) {
+      if (gpu_wait_end)
+        gpu_wait_end();
       runtime_fault = ctx_.fault;
       runtime_fault.error = error;
       pool_->quarantine();

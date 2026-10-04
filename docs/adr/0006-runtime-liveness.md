@@ -44,6 +44,16 @@ it records `gpu_wait_timeout`, marks `status.json` interrupted when
 It does not call `GetCompletedValue` and it does not resubmit the job.
 Explicit recovery still starts the next process.
 
+## Amendment (2026-10-04)
+
+A frozen published fence is not, by itself, an in-flight GPU wait. The heartbeat
+records `progress_stall` with `requested_fence` 0 when the job is active, the
+published fence does not move, and no GPU wait has been entered. It records
+`gpu_wait_timeout` only when a GPU wait is in flight, and that record names the
+requested fence. Both still interrupt a running checkpoint and exit the process.
+The functional probe parks off the GPU and therefore expects `progress_stall`.
+Package 0.1.0.98 remains historical evidence of the earlier classification.
+
 ## Alternatives
 
 Infinite waits, automatic restart/retraining, and treating stored running status

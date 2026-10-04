@@ -32,6 +32,8 @@ public:
   void ready();
   void running(const Json &claim);
   void progress(const std::string &phase, uint64_t trunk, uint64_t cooldown);
+  void begin_gpu_wait(uint64_t requested, const std::string &operation);
+  void end_gpu_wait();
   void gpu_progress(uint64_t fence, const std::string &operation);
   void fail(const Json &fault);
   void set_extended_execution(std::string status);
@@ -45,6 +47,8 @@ private:
   void interrupt_if_checkpoint(const std::string &job_id,
                                const GpuRuntimeFault &fault);
   PublishedFenceWatch fence_watch_;
+  bool gpu_wait_in_flight_ = false;
+  uint64_t gpu_wait_requested_ = 0;
   std::function<void(const GpuRuntimeFault &)> on_frozen_;
   std::filesystem::path local_;
   mutable std::mutex mutex_;

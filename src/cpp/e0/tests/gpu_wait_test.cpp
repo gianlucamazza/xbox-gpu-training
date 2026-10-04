@@ -60,15 +60,22 @@ void published_fence_does_not_touch_a_device() {
   require(!watch.observe({true, 11, 1000}, 600000, fault), "moving fence resets");
   require(!watch.observe({true, 11, 600999}, 600000, fault), "just inside deadline");
   require(watch.observe({true, 11, 601000}, 600000, fault) &&
-              fault.kind == "gpu_wait_timeout" && fault.completed_fence == 11 &&
-              fault.elapsed_ms == 600000,
-          "frozen published fence faults without a device");
+              fault.kind == "progress_stall" && fault.requested_fence == 0 &&
+              fault.completed_fence == 11 && fault.elapsed_ms == 600000,
+          "frozen published fence without a GPU wait is not a GPU timeout");
   require(!watch.observe({false, 11, 700000}, 600000, fault), "idle clears");
   PublishedFenceWatch again;
   require(!again.observe({true, 0, 5}, 600000, fault), "zero fence arms");
   require(again.observe({true, 0, 600005}, 600000, fault) &&
-              fault.completed_fence == 0,
-          "a fence that never advanced still faults");
+              fault.kind == "progress_stall" && fault.completed_fence == 0,
+          "a fence that never advanced still faults as a progress stall");
+  PublishedFenceWatch waiting;
+  require(!waiting.observe({true, 11, 0, true, 12}, 600000, fault),
+          "entering a GPU wait arms a new deadline");
+  require(waiting.observe({true, 11, 600000, true, 12}, 600000, fault) &&
+              fault.kind == "gpu_wait_timeout" && fault.requested_fence == 12 &&
+              fault.completed_fence == 11,
+          "an in-flight GPU wait keeps its requested fence");
 }
 int main(int argc, char **argv) {
   if (argc != 2)
