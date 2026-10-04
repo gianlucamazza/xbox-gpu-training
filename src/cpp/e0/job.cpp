@@ -116,7 +116,12 @@ void write_text_file(const std::filesystem::path &path, const std::string &text)
 
 void write_new_body(const std::filesystem::path &path, const std::string &body) {
 #ifdef _WIN32
+#ifdef XGPU_UWP
+  // AppContainer does not export CreateFileW. FromApp is the LocalState writer.
+  HANDLE handle = CreateFileFromAppW(
+#else
   HANDLE handle = CreateFileW(
+#endif
       path.c_str(), GENERIC_WRITE,
       FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, CREATE_ALWAYS,
       FILE_ATTRIBUTE_NORMAL, nullptr);
