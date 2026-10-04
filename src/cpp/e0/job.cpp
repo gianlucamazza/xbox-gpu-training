@@ -1,7 +1,10 @@
 #include "constants.h"
 #include "model.h"
+#include <algorithm>
+#include <atomic>
 #include <chrono>
 #include <cmath>
+#include <cstdint>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -88,32 +91,102 @@ Json read_json(const std::filesystem::path &path) {
     throw std::runtime_error("missing JSON: " + path_text(path));
   return Json::parse(input);
 }
-void atomic_json(const std::filesystem::path &path, const Json &value) {
-  const auto temporary = path_text(path) + ".tmp";
-  {
-    std::ofstream file(temporary, std::ios::binary | std::ios::trunc);
-    if (!file)
-      throw std::runtime_error("JSON write failed");
-    file << value.dump();
-    file.flush();
-    if (!file)
-      throw std::runtime_error("JSON flush failed");
+namespace {
+struct DeleteFile {
+  std::filesystem::path path;
+  ~DeleteFile() {
+    std::error_code error;
+    std::filesystem::remove(path, error);
   }
+};
+
+// A stable "<dest>.tmp" is truncated before the body exists. A reader of that
+// name can hold the writer. Serialize first, then write a unique partial.
+constexpr std::size_t kPhaseTraceBytes = 1u << 20;
+
+void write_text_file(const std::filesystem::path &path, const std::string &text) {
+  std::ofstream file(path, std::ios::binary | std::ios::trunc);
+  if (!file)
+    throw std::runtime_error("JSON phase write failed");
+  file << text;
+  file.flush();
+  if (!file)
+    throw std::runtime_error("JSON phase write failed");
+}
+
+void write_new_body(const std::filesystem::path &path, const std::string &body) {
+#ifdef _WIN32
+  HANDLE handle = CreateFileW(
+      path.c_str(), GENERIC_WRITE,
+      FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, CREATE_ALWAYS,
+      FILE_ATTRIBUTE_NORMAL, nullptr);
+  if (handle == INVALID_HANDLE_VALUE)
+    throw std::runtime_error("JSON write failed");
+  struct Close {
+    HANDLE handle;
+    ~Close() { CloseHandle(handle); }
+  } close{handle};
+  for (size_t offset = 0; offset < body.size();) {
+    const auto chunk = static_cast<DWORD>(std::min<size_t>(body.size() - offset, 1u << 20));
+    DWORD wrote = 0;
+    if (!WriteFile(handle, body.data() + offset, chunk, &wrote, nullptr) || wrote != chunk)
+      throw std::runtime_error("JSON write failed");
+    offset += wrote;
+  }
+  if (!FlushFileBuffers(handle))
+    throw std::runtime_error("JSON flush failed");
+#else
+  std::ofstream file(path, std::ios::binary | std::ios::trunc);
+  if (!file)
+    throw std::runtime_error("JSON write failed");
+  file.write(body.data(), static_cast<std::streamsize>(body.size()));
+  file.flush();
+  if (!file)
+    throw std::runtime_error("JSON flush failed");
+#endif
+}
+
+std::filesystem::path partial_path(const std::filesystem::path &path) {
+  static std::atomic<uint64_t> sequence{0};
+  const auto tick = static_cast<uint64_t>(
+      std::chrono::steady_clock::now().time_since_epoch().count());
+  const auto id = sequence.fetch_add(1, std::memory_order_relaxed);
+  std::ostringstream name;
+  name << path_text(path) << '.' << std::hex << tick << '-' << id << ".partial";
+  return std::filesystem::path(name.str());
+}
+}  // namespace
+
+void atomic_json(const std::filesystem::path &path, const Json &value) {
+  // ExitProcess skips destructors, so a hung publish leaves this one line.
+  DeleteFile phase{std::filesystem::path(path_text(path) + ".phase")};
+  write_text_file(phase.path, "dumping\n");
+  const std::string body = value.dump();
+  const bool trace = body.size() > kPhaseTraceBytes;
+  if (trace)
+    write_text_file(phase.path, "writing " + std::to_string(body.size()) + '\n');
+  else {
+    std::error_code error;
+    std::filesystem::remove(phase.path, error);
+  }
+  const auto temporary = partial_path(path);
+  DeleteFile partial{temporary};
+  write_new_body(temporary, body);
+  if (trace)
+    write_text_file(phase.path, "replacing\n");
 #ifdef _WIN32
   DWORD error = ERROR_SUCCESS;
   for (unsigned attempt = 0; attempt < 40; ++attempt) {
     const DWORD attrs = GetFileAttributesW(path.c_str());
     bool published = false;
     if (attrs == INVALID_FILE_ATTRIBUTES && GetLastError() == ERROR_FILE_NOT_FOUND) {
-      published = MoveFileExW(std::filesystem::path(temporary).c_str(), path.c_str(),
-                              MOVEFILE_WRITE_THROUGH);
+      published = MoveFileExW(temporary.c_str(), path.c_str(), MOVEFILE_WRITE_THROUGH);
     } else {
 #ifdef XGPU_UWP
-      published = ReplaceFileFromAppW(path.c_str(), std::filesystem::path(temporary).c_str(),
-                                      nullptr, 0, nullptr, nullptr);
+      published = ReplaceFileFromAppW(path.c_str(), temporary.c_str(), nullptr, 0, nullptr,
+                                      nullptr);
 #else
-      published = ReplaceFileW(path.c_str(), std::filesystem::path(temporary).c_str(),
-                               nullptr, 0, nullptr, nullptr);
+      published = ReplaceFileW(path.c_str(), temporary.c_str(), nullptr, 0, nullptr, nullptr);
 #endif
     }
     if (published)
@@ -124,8 +197,8 @@ void atomic_json(const std::filesystem::path &path, const Json &value) {
       break;
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
   }
-  throw std::runtime_error("JSON atomic replacement failed: " +
-                           path_text(path) + " win32=" + std::to_string(error));
+  throw std::runtime_error("JSON atomic replacement failed: " + path_text(path) +
+                           " win32=" + std::to_string(error));
 #else
   std::filesystem::rename(temporary, path);
 #endif
