@@ -77,29 +77,44 @@ struct PublishedFenceSample {
   bool job_active = false;
   uint64_t completed_fence = 0;
   uint64_t now_ms = 0;
+  // Appended so existing positional samples stay "no GPU wait in flight".
+  bool gpu_wait_in_flight = false;
+  uint64_t requested_fence = 0;
 };
 struct PublishedFenceWatch {
   bool tracking = false;
   uint64_t fence = 0;
   uint64_t since_ms = 0;
+  bool in_flight = false;
+  uint64_t requested = 0;
   bool observe(const PublishedFenceSample &sample, uint64_t deadline_ms,
                GpuRuntimeFault &fault) {
     if (!sample.job_active) {
       tracking = false;
       return false;
     }
-    if (!tracking || sample.completed_fence != fence ||
-        sample.now_ms < since_ms) {
+    const bool waiting =
+        sample.gpu_wait_in_flight && sample.requested_fence > sample.completed_fence;
+    if (!tracking || sample.completed_fence != fence || waiting != in_flight ||
+        sample.requested_fence != requested || sample.now_ms < since_ms) {
       tracking = true;
       fence = sample.completed_fence;
+      in_flight = waiting;
+      requested = sample.requested_fence;
       since_ms = sample.now_ms;
       return false;
     }
     const auto elapsed = sample.now_ms - since_ms;
     if (elapsed < deadline_ms)
       return false;
-    fault = {"gpu_wait_timeout", "published GPU fence frozen", 0, fence,
-             elapsed};
+    // A frozen published fence is not a GPU wait unless this sample entered one.
+    if (waiting)
+      fault = {"gpu_wait_timeout", "GPU fence deadline exceeded",
+               sample.requested_fence, fence, elapsed};
+    else
+      fault = {"progress_stall",
+               "published progress frozen without an in-flight GPU request", 0,
+               fence, elapsed};
     return true;
   }
 };

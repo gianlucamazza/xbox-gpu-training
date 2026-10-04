@@ -78,6 +78,10 @@ void worker() {
     kernel->gpu_progress = [&](uint64_t fence, const std::string &operation) {
       lifecycle->gpu_progress(fence, operation);
     };
+    kernel->gpu_wait = [&](uint64_t requested, const std::string &operation) {
+      lifecycle->begin_gpu_wait(requested, operation);
+    };
+    kernel->gpu_wait_end = [&] { lifecycle->end_gpu_wait(); };
     kernel->published_fence_stall = [] {
       // Functional-only job hook. Hold no locks; the ordinary heartbeat thread
       // must detect the frozen fence and exit this process at the real deadline.

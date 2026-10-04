@@ -146,9 +146,23 @@ void RuntimeLifecycle::progress(const std::string &phase, uint64_t trunk,
   p["trunk_step"] = trunk;
   p["cooldown_step"] = cooldown;
 }
+void RuntimeLifecycle::begin_gpu_wait(uint64_t requested,
+                                      const std::string &operation) {
+  std::lock_guard<std::mutex> guard(mutex_);
+  gpu_wait_in_flight_ = true;
+  gpu_wait_requested_ = requested;
+  state_["progress"]["operation"] = operation;
+}
+void RuntimeLifecycle::end_gpu_wait() {
+  std::lock_guard<std::mutex> guard(mutex_);
+  gpu_wait_in_flight_ = false;
+  gpu_wait_requested_ = 0;
+}
 void RuntimeLifecycle::gpu_progress(uint64_t fence,
                                     const std::string &operation) {
   std::lock_guard<std::mutex> guard(mutex_);
+  gpu_wait_in_flight_ = false;
+  gpu_wait_requested_ = 0;
   auto &p = state_["progress"];
   p["sequence"] = p["sequence"].get<uint64_t>() + 1;
   p["completed_fence"] = fence;
@@ -178,6 +192,8 @@ bool RuntimeLifecycle::observe_published_fence(uint64_t now_ms,
     sample.completed_fence =
         state_["progress"].value("completed_fence", uint64_t(0));
     sample.now_ms = now_ms;
+    sample.gpu_wait_in_flight = gpu_wait_in_flight_;
+    sample.requested_fence = gpu_wait_requested_;
     handler = on_frozen_;
     if (sample.job_active && state_["active_job"].is_object())
       job_id = state_["active_job"].value("job_id", "");
@@ -259,7 +275,8 @@ bool recoverable_fault(const Json &status) {
     return false;
   const auto kind = status.at("runtime_fault").value("kind", "");
   return kind == "gpu_wait_timeout" || kind == "gpu_wait_failed" ||
-         kind == "gpu_device_removed" || kind == "gpu_fence_error";
+         kind == "gpu_device_removed" || kind == "gpu_fence_error" ||
+         kind == "progress_stall";
 }
 void verify_orphan(const std::filesystem::path &inbox, const Json &owner,
                    const Json &worker, Json &status) {

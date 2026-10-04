@@ -79,7 +79,7 @@ int main(int argc, char **argv) {
       int fired = 0;
       stalled.on_published_fence_frozen(
           [&](const GpuRuntimeFault &fault) {
-            check(fault.kind == "gpu_wait_timeout", "handler sees the fault");
+            check(fault.kind == "progress_stall", "handler sees the fault");
             ++fired;
           });
       stalled.running(Json{{"job_id", "trial"}, {"job_sha256", "abc"}});
@@ -94,14 +94,31 @@ int main(int argc, char **argv) {
                                         "status.json");
       check(status.at("state") == "interrupted",
             "running status becomes interrupted");
-      check(status.at("runtime_fault").at("kind") == "gpu_wait_timeout",
-            "status records gpu_wait_timeout");
+      check(status.at("runtime_fault").at("kind") == "progress_stall",
+            "status records progress_stall");
+      check(status.at("runtime_fault").at("requested_fence") == 0,
+            "a CPU stall has no requested fence");
+      {
+        e0::RuntimeLifecycle waiting(watched, "wait-worker", 3, "package",
+                                     "commit");
+        waiting.running(Json{{"job_id", "trial"}, {"job_sha256", "abc"}});
+        waiting.gpu_progress(40, "tensor op 0");
+        waiting.begin_gpu_wait(41, "tensor op 1");
+        check(!waiting.observe_published_fence(2000),
+              "entering a GPU wait restarts the deadline");
+        check(waiting.observe_published_fence(2000 + 600000),
+              "in-flight GPU wait reaches its deadline");
+        check(waiting.snapshot().at("fault").at("kind") == "gpu_wait_timeout",
+              "in-flight wait is a GPU timeout");
+        check(waiting.snapshot().at("fault").at("requested_fence") == 41,
+              "GPU timeout names the requested fence");
+      }
       check(status.at("checkpoint").at("sha256") ==
                 e0::sha256_file(watched / "inbox" / "results" / "trial" /
                                 "checkpoint.json"),
             "checkpoint descriptor matches the file on disk");
-      check(stalled.snapshot().at("fault").at("kind") == "gpu_wait_timeout",
-            "worker fault is the published-fence timeout");
+      check(stalled.snapshot().at("fault").at("kind") == "progress_stall",
+            "worker fault is the published progress stall");
       check(!stalled.observe_published_fence(1000 + 1200000),
             "a failed worker does not fire again");
       check(fired == 1, "handler does not repeat");
