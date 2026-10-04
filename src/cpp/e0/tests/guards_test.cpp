@@ -2,6 +2,7 @@
 #include <cstdio>
 #include <filesystem>
 #include <stdexcept>
+#include <string>
 
 namespace {
 int failures = 0;
@@ -47,5 +48,34 @@ int main(int argc, char **argv) {
   e0::record_failure(root / "new.job.json", "bad input");
   check(e0::read_json(root / "results/new/status.json").at("state") == "failed",
         "early failure without previous execution not reported");
+
+  const auto published = root / "results" / "publish" / "status.json";
+  std::filesystem::create_directories(published.parent_path());
+  e0::atomic_json(published, e0::Json{{"n", 1}});
+  e0::atomic_json(published, e0::Json{{"n", 2}});
+  check(e0::read_json(published).at("n") == 2, "second publish missing");
+  const auto stable_tmp = std::filesystem::path(e0::path_text(published) + ".tmp");
+  const auto phase = std::filesystem::path(e0::path_text(published) + ".phase");
+  check(!std::filesystem::exists(stable_tmp), "stable tmp left behind");
+  check(!std::filesystem::exists(phase), "phase left behind");
+  for (const auto &entry : std::filesystem::directory_iterator(published.parent_path()))
+    check(entry.path().filename().string().find(".partial") == std::string::npos,
+          "partial left behind");
+  const auto kept = e0::Json{{"state", "kept"}};
+  e0::atomic_json(published, kept);
+  bool rejected = false;
+  try {
+    e0::atomic_json(published, e0::Json(std::string("\xC3\x28")));
+  } catch (const std::exception &) {
+    rejected = true;
+  }
+  check(rejected, "invalid text was published");
+  check(e0::read_json(published) == kept, "failed publish replaced the previous file");
+  check(!std::filesystem::exists(stable_tmp), "failed publish left a stable tmp");
+  const std::string big(1024 * 1024 + 1, 'a');
+  e0::atomic_json(published, e0::Json{{"blob", big}});
+  check(e0::read_json(published).at("blob").get<std::string>().size() == big.size(),
+        "large body mismatch");
+  check(!std::filesystem::exists(phase), "large publish left a phase file");
   return failures ? 1 : 0;
 }
