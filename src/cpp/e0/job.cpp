@@ -148,11 +148,13 @@ void write_new_body(const std::filesystem::path &path, const std::string &body) 
   for (size_t offset = 0; offset < body.size();) {
     const auto chunk = static_cast<DWORD>(std::min<size_t>(body.size() - offset, 1u << 20));
     DWORD wrote = 0;
-    if (!WriteFile(handle, body.data() + offset, chunk, &wrote, nullptr) || wrote != chunk) {
+    if (!WriteFile(handle, body.data() + offset, chunk, &wrote, nullptr)) {
       const DWORD write_error = GetLastError();
       throw std::runtime_error("JSON write failed: " + path_text(path) +
                                " win32=" + std::to_string(write_error));
     }
+    if (wrote == 0)
+      throw std::runtime_error("JSON write failed: " + path_text(path) + " short write");
     offset += wrote;
   }
   if (!FlushFileBuffers(handle))
