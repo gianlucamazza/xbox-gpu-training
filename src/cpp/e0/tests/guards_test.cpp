@@ -1,4 +1,5 @@
 #include "../model.h"
+#include <cerrno>
 #include <cstdio>
 #include <filesystem>
 #include <stdexcept>
@@ -77,5 +78,29 @@ int main(int argc, char **argv) {
   check(e0::read_json(published).at("blob").get<std::string>().size() == big.size(),
         "large body mismatch");
   check(!std::filesystem::exists(phase), "large publish left a phase file");
+#ifndef _WIN32
+  // NAME_MAX is 255. A 244-byte leaf keeps "<leaf>.phase" (250) inside the limit.
+  // The unique partial adds ".<tick>-<id>.partial" (at least 12 bytes), so the body
+  // open fails after the phase file has already been removed.
+  const auto open_dir = root / "results" / "open-fail";
+  std::filesystem::create_directories(open_dir);
+  const auto overlong = open_dir / std::string(244, 'n');
+  bool opened = false;
+  std::string open_error;
+  try {
+    e0::atomic_json(overlong, e0::Json{{"n", 1}});
+    opened = true;
+  } catch (const std::exception &error) {
+    open_error = error.what();
+  }
+  check(!opened, "overlong partial open succeeded");
+  check(open_error.rfind("JSON write failed: ", 0) == 0, "open failure omitted the path diagnostic");
+  check(open_error.find(overlong.filename().string()) != std::string::npos,
+        "open failure omitted the partial path");
+  check(open_error.find("errno=" + std::to_string(ENAMETOOLONG)) != std::string::npos,
+        "open failure was not ENAMETOOLONG");
+  check(!std::filesystem::exists(std::filesystem::path(e0::path_text(overlong) + ".phase")),
+        "failed open left a phase file");
+#endif
   return failures ? 1 : 0;
 }
