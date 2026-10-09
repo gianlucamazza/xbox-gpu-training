@@ -19,6 +19,7 @@
 #include <fileapifromapp.h>
 #endif
 #else
+#include <cerrno>
 #include <openssl/evp.h>
 #endif
 namespace e0 {
@@ -116,17 +117,30 @@ void write_text_file(const std::filesystem::path &path, const std::string &text)
 
 void write_new_body(const std::filesystem::path &path, const std::string &body) {
 #ifdef _WIN32
+  HANDLE handle = INVALID_HANDLE_VALUE;
+  DWORD open_error = ERROR_SUCCESS;
+  for (unsigned attempt = 0; attempt < 40; ++attempt) {
 #ifdef XGPU_UWP
-  // AppContainer does not export CreateFileW. FromApp is the LocalState writer.
-  HANDLE handle = CreateFileFromAppW(
+    // AppContainer does not export CreateFileW. FromApp is the LocalState writer.
+    handle = CreateFileFromAppW(
 #else
-  HANDLE handle = CreateFileW(
+    handle = CreateFileW(
 #endif
-      path.c_str(), GENERIC_WRITE,
-      FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, CREATE_ALWAYS,
-      FILE_ATTRIBUTE_NORMAL, nullptr);
+        path.c_str(), GENERIC_WRITE,
+        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, CREATE_ALWAYS,
+        FILE_ATTRIBUTE_NORMAL, nullptr);
+    if (handle != INVALID_HANDLE_VALUE)
+      break;
+    open_error = GetLastError();
+    // Same two codes and the same 40 by 50 ms bound as the replacement below.
+    // A full volume and every other code are reported on the first failure.
+    if (open_error != ERROR_SHARING_VIOLATION && open_error != ERROR_LOCK_VIOLATION)
+      break;
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+  }
   if (handle == INVALID_HANDLE_VALUE)
-    throw std::runtime_error("JSON write failed");
+    throw std::runtime_error("JSON write failed: " + path_text(path) +
+                             " win32=" + std::to_string(open_error));
   struct Close {
     HANDLE handle;
     ~Close() { CloseHandle(handle); }
@@ -134,16 +148,24 @@ void write_new_body(const std::filesystem::path &path, const std::string &body) 
   for (size_t offset = 0; offset < body.size();) {
     const auto chunk = static_cast<DWORD>(std::min<size_t>(body.size() - offset, 1u << 20));
     DWORD wrote = 0;
-    if (!WriteFile(handle, body.data() + offset, chunk, &wrote, nullptr) || wrote != chunk)
-      throw std::runtime_error("JSON write failed");
+    if (!WriteFile(handle, body.data() + offset, chunk, &wrote, nullptr)) {
+      const DWORD write_error = GetLastError();
+      throw std::runtime_error("JSON write failed: " + path_text(path) +
+                               " win32=" + std::to_string(write_error));
+    }
+    if (wrote == 0)
+      throw std::runtime_error("JSON write failed: " + path_text(path) + " short write");
     offset += wrote;
   }
   if (!FlushFileBuffers(handle))
     throw std::runtime_error("JSON flush failed");
 #else
   std::ofstream file(path, std::ios::binary | std::ios::trunc);
-  if (!file)
-    throw std::runtime_error("JSON write failed");
+  if (!file) {
+    const int err = errno;
+    throw std::runtime_error("JSON write failed: " + path_text(path) +
+                             " errno=" + std::to_string(err));
+  }
   file.write(body.data(), static_cast<std::streamsize>(body.size()));
   file.flush();
   if (!file)

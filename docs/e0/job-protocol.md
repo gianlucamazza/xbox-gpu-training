@@ -3,8 +3,10 @@
 Implementation map of the file protocol owned by the [FloppyLM schemas](https://github.com/gianlucamazza/floppylm/tree/main/schemas)
 and vendored at [PIN.json](../../contracts/floppylm/PIN.json). Describes the exchange between the companion runner and the UWP worker
 (`uwp/App.cpp`, `src/cpp/e0/job.cpp`). All paths are under the package
-`LocalState` folder. All JSON is written with `atomic_json` (temporary file, then
-replace; retried on transient Device Portal sharing violations).
+`LocalState` folder. All JSON is written with `atomic_json`: the body is serialized
+first, written to a unique partial, then moved into place. Opening that partial and
+replacing the destination both retry sharing and lock violations; a failed open names
+the partial path and the Win32 code.
 
 ## Device record
 
