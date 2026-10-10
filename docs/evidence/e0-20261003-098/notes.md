@@ -9,7 +9,7 @@ CI [37112204165](https://github.com/gianlucamazza/xbox-gpu-training/actions/runs
 from PR merge source `cc134fe4458ffa51c73331ee6dd6af4a6ae8b0d7`. Its tree matches PR head
 `3ecac8a687e75e895707c505c9b6cf5f3d7fe163`. [Lineage](package-lineage.json) binds unsigned/signed package
 hashes and all preserved CI payloads. Signing used the existing development
-certificate. Deployment used an Odroid SSH tunnel and the existing Device Portal
+certificate. Deployment used a jump-host SSH tunnel and the existing Device Portal
 TLS pin; no pin or credential configuration was changed and no uninstall occurred.
 
 The post-install start command returned HTTP 400, but the process listing and two
