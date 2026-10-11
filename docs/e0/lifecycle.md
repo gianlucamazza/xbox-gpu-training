@@ -60,10 +60,14 @@ Orphan detection uses this app instance, not GPU utilisation and not
 historical inbox files:
 
 - `job_active` comes from the live `worker.json` (`state` / `active_job`)
-  and only when the process is present. Finished `.claimed` files (a
-  console can keep thousands from past jobs) are ignored. A `.claimed`
-  with no result is a weak signal only when it is newer than app start.
-  A `.ready` file is current queue, not history.
+  whenever the process is present and that document has a state. Finished
+  `.claimed` files are ignored in that case — fixtures, kernels and
+  optimizer write `inbox/<id>.actual.json` rather than
+  `inbox/results/<id>/`, so a leftover `.claimed` is not in-flight.
+  `.claimed` is only a fallback when `worker.json` is missing. A
+  completion artefact (`results/<id>/status.json`, `<id>.actual.json`,
+  `<id>.rejected.json`, or a `.cancel` the worker has processed) marks
+  the job done. A `.ready` file is current queue, not history.
 - App start and instance identity come from `LocalState/instance.json`
   (`schema` `xgpu.instance.v1`: `instance_id`, `started_at` UTC ISO-8601,
   `pid`). The worker writes that file at startup. It is not part of
@@ -84,8 +88,12 @@ historical inbox files:
   `orphan: null`, `reason: start_time_unknown`. The before-check is
   `ok: true` and emits a warning. `--orphan-strict` /
   `XGPU_ORPHAN_STRICT=1` refuses instead (default off).
-- With no process, `worker_state` is `null` rather than the leftover
-  value from a stale `worker.json`.
+- With no process, `worker_state` and `app_age_seconds` are `null`
+  rather than leftover values from a stale `worker.json` /
+  `instance.json`. The in-app idle timer and the host tool both ignore
+  a `host.heartbeat` whose `instance_id` differs from `instance.json`
+  or that predates `started_at`. `teardown` deletes `host.heartbeat`
+  after the process is gone.
 
 No process plus stale history is `job_active=false`, `orphan=false`,
 `process_present=false` — OK to launch. `idle-gpu --when after` fails
@@ -101,7 +109,9 @@ reads ~100% for any idle foreground app; do not treat that as an orphan.
 
 `prepare` lists `inbox` and deletes `inbox/shutdown` only if that name is
 present. Device Portal accepts DELETE of a missing file; `cleared` is
-reported only when the marker was actually there.
+reported only when the marker was actually there. After the process is
+gone, `teardown` also deletes `host.heartbeat` so the next instance
+does not inherit a leftover file time.
 
 `teardown` uploads `inbox/shutdown`, waits, then `DELETE`s
 `/api/taskmanager/app?package=<base64>` and/or `/api/taskmanager/process?pid=…`.

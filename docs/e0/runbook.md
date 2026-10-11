@@ -116,8 +116,9 @@ python3 scripts/e0_console_lifecycle.py idle-gpu --when after
 
 `prepare` deletes `inbox/shutdown` only if the listing shows it. `idle-gpu
 --when before` treats an idle, ready app as OK to reuse, including a fresh
-instance sitting on historical `.claimed` / results or a leftover
-`host.heartbeat` from an earlier instance. It refuses only a live
+instance sitting on historical `.claimed` / results, a leftover
+`host.heartbeat` from an earlier instance, or a finished fixture that
+left `<id>.claimed` next to `<id>.actual.json`. It refuses only a live
 worker job (or a leftover process idle past the deadline since *this*
 instance started, using `LocalState/instance.json`). When that start
 time is unknown the before-check reports `reason: start_time_unknown`,

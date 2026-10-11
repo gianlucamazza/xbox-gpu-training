@@ -21,6 +21,7 @@ from e0_console_lifecycle import (  # noqa: E402
     app_processes,
     average_adapter_engines,
     classify_app_state,
+    completion_job_ids,
     csrf_cookie,
     csrf_headers,
     decode_terminate_package,
@@ -29,6 +30,7 @@ from e0_console_lifecycle import (  # noqa: E402
     heartbeat_for_instance,
     ingest_cookies,
     last_job_ended_age_seconds,
+    last_job_ended_at,
     lifecycle_report,
     live_claimed_without_result,
     load_settings,
@@ -248,6 +250,7 @@ class Detection(unittest.TestCase):
         self.assertFalse(state["job_active"])
         self.assertFalse(state["orphan"])
         self.assertIsNone(state["worker_state"])
+        self.assertIsNone(state["app_age_seconds"])
         self.assertTrue(lifecycle_report(state, when="before")["ok"])
 
     def test_unknown_start_is_not_orphan(self):
@@ -359,7 +362,18 @@ class Detection(unittest.TestCase):
             app_start,
         )
         self.assertEqual(live, ("fresh.claimed",))
-        state = classify_app_state(
+        fallback = classify_app_state(
+            process_present=True,
+            worker={},
+            inbox=[{"name": "fresh.claimed", "modified": app_start + 1}],
+            result_job_ids=(),
+            now=now,
+            app_start_seconds=app_start,
+            worker_fresh=False,
+        )
+        self.assertTrue(fallback["job_active"])
+        self.assertEqual(fallback["claimed_live"], ("fresh.claimed",))
+        trusted = classify_app_state(
             process_present=True,
             worker={"state": "ready", "active_job": None},
             inbox=[{"name": "fresh.claimed", "modified": app_start + 1}],
@@ -367,8 +381,72 @@ class Detection(unittest.TestCase):
             now=now,
             app_start_seconds=app_start,
         )
+        self.assertFalse(trusted["job_active"])
+        self.assertTrue(trusted["worker_fresh"])
+        self.assertEqual(trusted["claimed_live"], ())
+
+    def test_fixture_actual_json_is_completion_not_live_claimed(self):
+        now = 2_000_000.0
+        app_start = now - 60
+        inbox = [
+            {"name": "reuse.claimed", "modified": now - 9},
+            {"name": "reuse.actual.json", "modified": now - 9},
+            {"name": "reuse.job.json", "modified": now - 9},
+            {"name": "reuse.owner.json", "modified": now - 9},
+        ]
+        self.assertIn("reuse", completion_job_ids(inbox, set()))
+        self.assertEqual(live_claimed_without_result(inbox, set(), app_start), ())
+        state = classify_app_state(
+            process_present=True,
+            worker={"state": "ready", "active_job": None},
+            inbox=inbox,
+            result_job_ids=(),
+            now=now,
+            app_start_seconds=app_start,
+            last_job_ended_at=now - 9,
+            idle_exit_seconds=300,
+        )
+        report = lifecycle_report(state, when="before")
+        self.assertFalse(state["job_active"])
+        self.assertFalse(state["claimed"])
+        self.assertTrue(state["ready"])
+        self.assertTrue(report["ok"])
+        self.assertEqual(report["reason"], "ok")
+
+    def test_processed_cancel_is_completion(self):
+        now = 2_000_000.0
+        app_start = now - 40
+        inbox = [
+            {"name": "trial.claimed", "modified": now - 20},
+            {"name": "trial.cancel", "modified": now - 15},
+        ]
+        self.assertEqual(
+            live_claimed_without_result(inbox, {"trial"}, app_start), ()
+        )
+        fallback = classify_app_state(
+            process_present=True,
+            worker={},
+            inbox=inbox,
+            result_job_ids={"trial"},
+            now=now,
+            app_start_seconds=app_start,
+            worker_fresh=False,
+        )
+        self.assertFalse(fallback["job_active"])
+
+    def test_stale_worker_claimed_without_artefact_is_live(self):
+        now = 2_000_000.0
+        state = classify_app_state(
+            process_present=True,
+            worker={},
+            inbox=[{"name": "inflight.claimed", "modified": now - 5}],
+            result_job_ids=(),
+            now=now,
+            app_start_seconds=now - 20,
+            worker_fresh=False,
+        )
         self.assertTrue(state["job_active"])
-        self.assertEqual(state["claimed_live"], ("fresh.claimed",))
+        self.assertEqual(state["claimed_live"], ("inflight.claimed",))
 
     def test_after_ignores_advisory_gpu(self):
         gone = classify_app_state(process_present=False)
@@ -385,6 +463,15 @@ class Detection(unittest.TestCase):
             [files("status.json", modified=now - 125)], now=now
         )
         self.assertAlmostEqual(age, 125.0)
+
+    def test_last_job_age_from_fixture_actual_json(self):
+        now = 2_000_000.0
+        ended = last_job_ended_at(
+            [],
+            now=now,
+            inbox_items=[{"name": "reuse.actual.json", "modified": now - 9}],
+        )
+        self.assertAlmostEqual(ended, now - 9)
 
 
 class Config(unittest.TestCase):
@@ -751,6 +838,7 @@ class FakePortal(unittest.TestCase):
         self.processes = listing()
         gone_again = portal.check_idle("before", sleep=lambda _: None, now=self.now)
         self.assertIsNone(gone_again["worker_state"])
+        self.assertIsNone(gone_again["app_age_seconds"])
 
     def test_observe_unknown_start_without_instance_or_createtime(self):
         self.processes = listing(app_proc())
@@ -846,6 +934,42 @@ class FakePortal(unittest.TestCase):
         self.assertEqual(payload["schema"], "floppylm.host.heartbeat.v1")
         self.assertEqual(payload["instance_id"], "live-id")
         self.assertIn("written_at", payload)
+
+    def test_observe_fixture_reuse_probe_is_not_job_active(self):
+        self.files["inbox"] = files(
+            "reuse.claimed",
+            "reuse.actual.json",
+            "reuse.job.json",
+            "reuse.owner.json",
+            modified=self.now - 9,
+        )
+        self.contents[("", "instance.json")] = {
+            "schema": "xgpu.instance.v1",
+            "instance_id": "fresh-id",
+            "started_at": self.now - 60,
+            "pid": 4242,
+        }
+        self.files[""] = files(
+            "worker.json", "device.json", "instance.json", modified=self.now - 2
+        )
+        self.processes = listing(app_proc())
+        report = self.portal().check_idle("before", sleep=lambda _: None, now=self.now)
+        self.assertFalse(report["job_active"])
+        self.assertTrue(report["ready"])
+        self.assertTrue(report["ok"])
+        self.assertEqual(report["reason"], "ok")
+        self.assertAlmostEqual(report["last_job_ended_age_seconds"], 9)
+
+    def test_teardown_removes_host_heartbeat(self):
+        report = self.portal().teardown(sleep=lambda _: None)
+        self.assertIn("host.heartbeat", report["cleared"])
+        self.assertNotIn(("", "host.heartbeat"), self.contents)
+        self.assertFalse(
+            any(
+                item.get("Name") == "host.heartbeat"
+                for item in self.files.get("", {}).get("Items", [])
+            )
+        )
 
 
 def replace_terminate(settings, by):

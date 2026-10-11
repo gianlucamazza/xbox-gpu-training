@@ -88,6 +88,10 @@ ENV_ALIASES = {
 SHUTDOWN_NAME = DEFAULTS["shutdown_name"]
 HEARTBEAT_NAME = DEFAULTS["heartbeat_name"]
 INSTANCE_NAME = DEFAULTS["instance_name"]
+# Worker completion artefacts. See uwp/App.cpp and src/cpp/e0/job.cpp.
+ACTUAL_SUFFIX = ".actual.json"
+REJECTED_SUFFIX = ".rejected.json"
+CANCEL_SUFFIX = ".cancel"
 FILE_TYPE = 32
 GPU_ADVISORY_NOTE = (
     "GPU utilisation is advisory and not decisive. On Xbox the foreground "
@@ -586,6 +590,7 @@ def last_job_ended_at(
     now: float,
     statuses: list[dict] | None = None,
     not_before: float | None = None,
+    inbox_items: list[dict] | tuple[str, ...] | None = None,
 ) -> float | None:
     """Unix time of the most recent finished job, optionally only this instance."""
     instants = []
@@ -602,6 +607,15 @@ def last_job_ended_at(
             instant = parse_portal_time(status.get(key), now)
             if instant is not None:
                 instants.append(instant)
+    for item in inbox_items or []:
+        if isinstance(item, str):
+            name, modified = item, None
+        else:
+            name, modified = str(item.get("name") or ""), item.get("modified")
+        lower = name.lower()
+        if lower.endswith(ACTUAL_SUFFIX) or lower.endswith(REJECTED_SUFFIX):
+            if modified is not None:
+                instants.append(modified)
     if not_before is not None:
         instants = [instant for instant in instants if instant >= not_before]
     return max(instants) if instants else None
@@ -645,6 +659,39 @@ def result_job_ids(result_listings: list[dict]) -> set[str]:
     return ids
 
 
+def job_id_from_suffix(name: str, suffix: str) -> str:
+    lower = name.lower()
+    if lower.endswith(suffix):
+        return name[: -len(suffix)]
+    return ""
+
+
+def worker_document_fresh(worker: dict | None) -> bool:
+    """A just-fetched worker.json with a state is the live authority."""
+    return bool(worker and str(worker.get("state") or ""))
+
+
+def completion_job_ids(
+    inbox_items: list[dict] | tuple[str, ...],
+    result_ids: set[str] | tuple[str, ...],
+) -> set[str]:
+    """Job ids the worker has finished writing an artefact for."""
+    done = set(result_ids)
+    names = []
+    for item in inbox_items:
+        name = item if isinstance(item, str) else str(item.get("name") or "")
+        names.append(name)
+        for suffix in (ACTUAL_SUFFIX, REJECTED_SUFFIX):
+            job_id = job_id_from_suffix(name, suffix)
+            if job_id:
+                done.add(job_id)
+    for name in names:
+        job_id = job_id_from_suffix(name, CANCEL_SUFFIX)
+        if job_id and job_id in done:
+            done.add(job_id)
+    return done
+
+
 def process_start_seconds(procs: list[dict], now: float) -> float | None:
     starts = []
     for proc in procs:
@@ -668,11 +715,13 @@ def live_claimed_without_result(
     result_ids: set[str],
     app_start: float | None,
 ) -> tuple[str, ...]:
-    """Historical .claimed files with a result are ignored.
+    """Fallback in-flight signal when worker.json is missing.
 
-    A .claimed with no result is a weak in-flight signal only when it is
-    newer than this app instance.
+    A .claimed is live only when this instance wrote it and the worker has
+    not published a completion artefact (results/<id>/status.json,
+    <id>.actual.json, <id>.rejected.json, or a processed .cancel).
     """
+    completed = completion_job_ids(inbox_items, result_ids)
     live = []
     for item in inbox_items:
         if isinstance(item, str):
@@ -680,7 +729,7 @@ def live_claimed_without_result(
         else:
             name, modified = str(item.get("name") or ""), item.get("modified")
         job_id = claimed_job_id(name)
-        if not job_id or job_id in result_ids:
+        if not job_id or job_id in completed:
             continue
         if app_start is None or modified is None or modified < app_start:
             continue
@@ -702,6 +751,7 @@ def classify_app_state(
     heartbeat_written_at: float | None = None,
     last_job_ended_age_seconds: float | None = None,
     last_job_ended_at: float | None = None,
+    worker_fresh: bool | None = None,
     idle_exit_seconds: float = DEFAULTS["idle_exit_seconds"],
     heartbeat_stale_seconds: float = DEFAULTS["heartbeat_stale_seconds"],
 ) -> dict:
@@ -709,7 +759,9 @@ def classify_app_state(
 
     Start time comes from the caller (instance.json, else process CreateTime).
     worker.json is not a start-time source: floppylm.worker.v1 has no
-    started_at and additionalProperties is false.
+    started_at and additionalProperties is false. When the process is
+    present and worker.json has a state, that document is the job
+    authority; .claimed is only a fallback.
     """
     worker = worker or {}
     clock = time.time() if now is None else now
@@ -722,17 +774,19 @@ def classify_app_state(
     names = tuple(str(item.get("name") or "") for item in inbox_items)
     result_ids = set(result_job_ids)
     queued = bool(process_present) and any(name.lower().endswith(".ready") for name in names)
-    weak_claimed = (
-        live_claimed_without_result(inbox_items, result_ids, app_start_seconds)
-        if process_present
-        else ()
-    )
+    if worker_fresh is None:
+        worker_fresh = bool(process_present) and worker_document_fresh(worker)
     worker_state = str(worker.get("state") or "") if process_present else None
     if worker_state == "":
         worker_state = None
     active = worker.get("active_job") if process_present else None
-    running = bool(process_present) and (
+    running = bool(process_present) and worker_fresh and (
         worker_state == "running" or isinstance(active, dict)
+    )
+    weak_claimed = (
+        live_claimed_without_result(inbox_items, result_ids, app_start_seconds)
+        if process_present and not worker_fresh
+        else ()
     )
     job_active = running or queued or bool(weak_claimed)
     ready = bool(process_present) and worker_state == "ready" and not job_active
@@ -760,7 +814,9 @@ def classify_app_state(
     idle_since = max(anchors) if anchors else None
     idle_age = None if idle_since is None else max(0.0, clock - idle_since)
     app_age = (
-        None if app_start_seconds is None else max(0.0, clock - app_start_seconds)
+        None
+        if (not process_present or app_start_seconds is None)
+        else max(0.0, clock - app_start_seconds)
     )
     heartbeat_age = (
         None
@@ -788,6 +844,7 @@ def classify_app_state(
         "running": running,
         "ready": ready,
         "worker_state": worker_state,
+        "worker_fresh": bool(worker_fresh) if process_present else False,
         "instance_id": instance_id or None,
         "start_time_known": start_known,
         "app_age_seconds": app_age,
@@ -958,10 +1015,14 @@ class LifecyclePortal:
         local = self._optional_listing("")
         results = self._optional_listing("inbox/results")
         result_listings = [results]
+        status_ids = set()
         for item in listing_items(results):
             name = item_name(item)
             if name and not item_is_file(item):
-                result_listings.append(self._optional_listing("inbox/results/" + name))
+                child = self._optional_listing("inbox/results/" + name)
+                result_listings.append(child)
+                if any(item_name(entry) == "status.json" for entry in listing_items(child)):
+                    status_ids.add(name)
         instance_id = instance_id_of(instance)
         app_start = instance_start_seconds(instance, now_s)
         if app_start is None:
@@ -975,18 +1036,23 @@ class LifecyclePortal:
             now=now_s,
             listing_written_at=listing_written,
         )
+        inbox_items = inbox_entries(inbox, now_s)
+        completed_ids = completion_job_ids(inbox_items, status_ids)
         state = classify_app_state(
             process_present=bool(procs),
             worker=worker,
             device=device,
-            inbox=inbox_entries(inbox, now_s),
-            result_job_ids=result_job_ids(result_listings),
+            inbox=inbox_items,
+            result_job_ids=completed_ids,
             now=now_s,
             app_start_seconds=app_start,
             instance_id=instance_id,
             heartbeat_written_at=heartbeat_written,
             last_job_ended_at=last_job_ended_at(
-                result_listings, now=now_s, not_before=app_start
+                result_listings,
+                now=now_s,
+                not_before=app_start,
+                inbox_items=inbox_items,
             ),
             idle_exit_seconds=self.settings.idle_exit_seconds,
             heartbeat_stale_seconds=self.settings.heartbeat_stale_seconds,
@@ -1048,6 +1114,15 @@ class LifecyclePortal:
             cleared.append("inbox/shutdown")
         return {"cleared": cleared}
 
+    def clear_host_heartbeat(self) -> list[str]:
+        """Delete leftover host.heartbeat after the process is gone."""
+        listing = self._optional_listing("")
+        names = {item_name(item) for item in listing_items(listing)}
+        if HEARTBEAT_NAME in names:
+            self.delete_file(HEARTBEAT_NAME, "")
+            return [HEARTBEAT_NAME]
+        return []
+
     def terminate(self) -> dict:
         listing = self.processes()
         procs = self.matching_processes(listing)
@@ -1103,8 +1178,13 @@ class LifecyclePortal:
                 killed = True
                 if not self.wait_gone(timeout, sleep=sleep):
                     raise TimeoutError("console process still listed after terminate")
+        cleared = []
         try:
-            self.clear_stale_markers()
+            cleared.extend(self.clear_stale_markers()["cleared"])
+        except (FileNotFoundError, RuntimeError):
+            pass
+        try:
+            cleared.extend(self.clear_host_heartbeat())
         except (FileNotFoundError, RuntimeError):
             pass
         after = lifecycle_report(
@@ -1113,6 +1193,7 @@ class LifecyclePortal:
             orphan_strict=self.settings.orphan_strict,
         )
         after["terminated"] = killed
+        after["cleared"] = cleared
         return after
 
     def check_idle(self, when: str, *, sleep=time.sleep, now=None) -> dict:

@@ -152,7 +152,9 @@ the last completed operation and fence. A heartbeat therefore proves process
 liveness, not training progress. The on-console dashboard reads `worker.json`
 every second and shows that line; thirty seconds without a rewrite is
 unreachable. The host `host.heartbeat` document carries the same
-`instance_id`; a leftover heartbeat from an earlier instance is ignored.
+`instance_id`; a leftover heartbeat from an earlier instance is ignored
+by both the host tool and the in-app idle timer. `teardown` deletes
+`host.heartbeat` after the process exits.
 
 After claiming `<id>.ready`, the worker persists the exact submitted payload in
 `<id>.owner.json` and executes `<id>.owned.job.json`, which contains the same bytes.

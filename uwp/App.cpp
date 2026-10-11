@@ -29,7 +29,9 @@ uint64_t monotonic_ms() {
                       std::chrono::steady_clock::now().time_since_epoch())
                       .count());
 }
-uint64_t host_heartbeat_age_ms(const std::filesystem::path &local) {
+uint64_t host_heartbeat_age_ms(const std::filesystem::path &local,
+                               const std::string &instance_id,
+                               double started_at_unix) {
   const auto path = local / L"host.heartbeat";
   std::error_code error;
   if (!std::filesystem::exists(path, error))
@@ -38,9 +40,16 @@ uint64_t host_heartbeat_age_ms(const std::filesystem::path &local) {
                        std::filesystem::file_time_type::clock::now() -
                        std::filesystem::last_write_time(path, error))
                        .count();
-  if (error || age < 0)
-    return 0;
-  return uint64_t(age);
+  const auto file_age =
+      (error || age < 0) ? uint64_t(0) : uint64_t(age);
+  try {
+    const auto now = double(std::chrono::system_clock::to_time_t(
+        std::chrono::system_clock::now()));
+    return instance_heartbeat_age_ms(e0::read_json(path), instance_id,
+                                     started_at_unix, now, file_age);
+  } catch (...) {
+    return std::numeric_limits<uint64_t>::max();
+  }
 }
 HostIdleConfig load_local_idle_config(const std::filesystem::path &local) {
   try {
@@ -51,13 +60,15 @@ HostIdleConfig load_local_idle_config(const std::filesystem::path &local) {
 }
 bool request_worker_exit(HostIdleWatch &watch, const HostIdleConfig &config,
                          const std::filesystem::path &local, bool job_active,
+                         const std::string &instance_id, double started_at_unix,
                          std::string &reason) {
   const auto shutdown_path = local / L"inbox" / L"shutdown";
   HostIdleSample sample;
   sample.job_active = job_active;
   sample.shutdown_requested = std::filesystem::exists(shutdown_path);
   sample.now_ms = monotonic_ms();
-  sample.host_heartbeat_age_ms = host_heartbeat_age_ms(local);
+  sample.host_heartbeat_age_ms =
+      host_heartbeat_age_ms(local, instance_id, started_at_unix);
   if (!watch.observe(sample, config.idle_exit_ms, reason,
                      config.heartbeat_stale_ms))
     return false;
@@ -93,19 +104,21 @@ std::string worker_uuid() {
   }
   return out.str();
 }
-std::string utc_iso8601_now() {
-  const auto now = std::chrono::system_clock::now();
-  const auto time = std::chrono::system_clock::to_time_t(now);
+std::string utc_iso8601(std::chrono::system_clock::time_point when) {
+  const auto time = std::chrono::system_clock::to_time_t(when);
   std::tm utc{};
   gmtime_s(&utc, &time);
   std::ostringstream out;
   out << std::put_time(&utc, "%Y-%m-%dT%H:%M:%SZ");
   return out.str();
 }
+std::string utc_iso8601_now() { return utc_iso8601(std::chrono::system_clock::now()); }
 void worker() {
   winrt::init_apartment();
   std::unique_ptr<e0::WorkerLock> ownership;
   std::unique_ptr<e0::RuntimeLifecycle> lifecycle;
+  std::string instance_id;
+  double started_at_unix = 0;
   try {
     auto local = std::filesystem::path(
         winrt::Windows::Storage::ApplicationData::Current()
@@ -115,10 +128,13 @@ void worker() {
     inbox = local / L"inbox";
     std::filesystem::create_directories(inbox);
     ownership = std::make_unique<e0::WorkerLock>(local / L"worker.lock");
-    const auto instance_id = worker_uuid();
+    instance_id = worker_uuid();
+    const auto started_tp = std::chrono::system_clock::now();
+    started_at_unix =
+        double(std::chrono::system_clock::to_time_t(started_tp));
     const auto pid = uint64_t(GetCurrentProcessId());
     e0::atomic_json(local / L"instance.json",
-                    instance_document(instance_id, utc_iso8601_now(), pid));
+                    instance_document(instance_id, utc_iso8601(started_tp), pid));
     lifecycle = std::make_unique<e0::RuntimeLifecycle>(
         local, instance_id, pid,
         winrt::to_string(winrt::Windows::ApplicationModel::Package::Current()
@@ -172,7 +188,7 @@ void worker() {
     while (true) {
       std::string exit_reason;
       if (request_worker_exit(idle_watch, idle_config, local, false,
-                             exit_reason))
+                             instance_id, started_at_unix, exit_reason))
         exit_worker(exit_reason);
       if (lifecycle->snapshot().at("state") == "failed")
         throw std::runtime_error(
@@ -290,7 +306,7 @@ void worker() {
           while (true) {
             std::string exit_reason;
             if (request_worker_exit(idle_watch, idle_config, local, false,
-                                   exit_reason))
+                                   instance_id, started_at_unix, exit_reason))
               exit_worker(exit_reason);
             std::this_thread::sleep_for(
                 std::chrono::milliseconds(idle_config.poll_interval_ms));
@@ -335,7 +351,7 @@ void worker() {
     while (true) {
       std::string exit_reason;
       if (request_worker_exit(failed_watch, failed_config, local, false,
-                             exit_reason))
+                             instance_id, started_at_unix, exit_reason))
         exit_worker(exit_reason);
       std::this_thread::sleep_for(
           std::chrono::milliseconds(failed_config.poll_interval_ms));

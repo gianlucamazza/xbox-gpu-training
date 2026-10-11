@@ -3,7 +3,10 @@
 #include <cmath>
 #include <cstdint>
 #include <filesystem>
+#include <limits>
 #include <nlohmann/json.hpp>
+#include <string>
+#include <string_view>
 #include <system_error>
 
 // LocalState/lifecycle.json overrides. Missing keys keep documented defaults.
@@ -56,4 +59,36 @@ inline bool consume_shutdown_marker(const std::filesystem::path &path) {
   std::error_code remove_error;
   std::filesystem::remove(path, remove_error);
   return !remove_error;
+}
+
+// A leftover host.heartbeat from an earlier process does not keep this
+// instance alive. Mirrors scripts/e0_console_lifecycle.py.
+inline bool heartbeat_belongs_to_instance(const nlohmann::json &heartbeat,
+                                          std::string_view instance_id,
+                                          double started_at_unix) {
+  if (!heartbeat.is_object())
+    return false;
+  const auto hb_id = heartbeat.value("instance_id", std::string{});
+  if (!instance_id.empty() && hb_id != instance_id)
+    return false;
+  if (!heartbeat.contains("written_at") || !heartbeat.at("written_at").is_number())
+    return true;
+  const auto written = heartbeat.at("written_at").get<double>();
+  if (started_at_unix > 0 && written < started_at_unix)
+    return false;
+  return true;
+}
+
+inline uint64_t instance_heartbeat_age_ms(const nlohmann::json &heartbeat,
+                                          std::string_view instance_id,
+                                          double started_at_unix, double now_unix,
+                                          uint64_t file_age_ms) {
+  if (!heartbeat_belongs_to_instance(heartbeat, instance_id, started_at_unix))
+    return std::numeric_limits<uint64_t>::max();
+  if (heartbeat.contains("written_at") && heartbeat.at("written_at").is_number()) {
+    const auto written = heartbeat.at("written_at").get<double>();
+    if (now_unix >= written)
+      return static_cast<uint64_t>(std::llround((now_unix - written) * 1000.0));
+  }
+  return file_age_ms;
 }

@@ -4,6 +4,7 @@
 #include <cmath>
 #include <fstream>
 #include <iostream>
+#include <limits>
 #include <stdexcept>
 
 static void require(bool ok, const char *message) {
@@ -170,6 +171,28 @@ void host_idle_watch_exits_on_shutdown_and_stale_heartbeat() {
               instance.at("started_at") == "2026-10-11T12:00:00Z" &&
               instance.at("pid") == 4242 && !instance.contains("state"),
           "instance.json is a separate start-time document");
+  const e0::Json leftover{
+      {"schema", "floppylm.host.heartbeat.v1"},
+      {"instance_id", "previous"},
+      {"written_at", 1'999'000.0}};
+  require(!heartbeat_belongs_to_instance(leftover, "current", 1'999'982.0),
+          "a leftover heartbeat from another instance is ignored");
+  const e0::Json predates{
+      {"schema", "floppylm.host.heartbeat.v1"},
+      {"instance_id", "current"},
+      {"written_at", 1'999'900.0}};
+  require(!heartbeat_belongs_to_instance(predates, "current", 1'999'982.0),
+          "a heartbeat written before this instance started is ignored");
+  const e0::Json mine{
+      {"schema", "floppylm.host.heartbeat.v1"},
+      {"instance_id", "current"},
+      {"written_at", 1'999'990.0}};
+  require(heartbeat_belongs_to_instance(mine, "current", 1'999'982.0),
+          "this instance's heartbeat is kept");
+  require(instance_heartbeat_age_ms(leftover, "current", 1'999'982.0,
+                                    2'000'000.0, 50) ==
+              std::numeric_limits<uint64_t>::max(),
+          "ignored leftover heartbeat has no age");
   std::filesystem::remove_all(root);
 }
 int main(int argc, char **argv) {
