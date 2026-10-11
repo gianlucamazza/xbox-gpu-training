@@ -1,4 +1,5 @@
 #include "App.h"
+#include "../src/cpp/e0/idle_config.h"
 #include "../src/cpp/e0/model.h"
 #include "../src/cpp/e0/runtime_lifecycle.h"
 #include "App.g.cpp"
@@ -10,21 +11,83 @@
 #include <condition_variable>
 #include <filesystem>
 #include <fstream>
+#include <ctime>
 #include <iomanip>
+#include <limits>
 #include <memory>
 #include <mutex>
 #include <sstream>
+#include <system_error>
 #include <thread>
 
 #ifndef XGPU_COMMIT
 #define XGPU_COMMIT "unknown"
 #endif
 namespace {
+uint64_t monotonic_ms() {
+  return uint64_t(std::chrono::duration_cast<std::chrono::milliseconds>(
+                      std::chrono::steady_clock::now().time_since_epoch())
+                      .count());
+}
+uint64_t host_heartbeat_age_ms(const std::filesystem::path &local,
+                               const std::string &instance_id,
+                               double started_at_unix) {
+  const auto path = local / L"host.heartbeat";
+  std::error_code error;
+  if (!std::filesystem::exists(path, error))
+    return std::numeric_limits<uint64_t>::max();
+  const auto age = std::chrono::duration_cast<std::chrono::milliseconds>(
+                       std::filesystem::file_time_type::clock::now() -
+                       std::filesystem::last_write_time(path, error))
+                       .count();
+  const auto file_age =
+      (error || age < 0) ? uint64_t(0) : uint64_t(age);
+  try {
+    const auto now = double(std::chrono::system_clock::to_time_t(
+        std::chrono::system_clock::now()));
+    return instance_heartbeat_age_ms(e0::read_json(path), instance_id,
+                                     started_at_unix, now, file_age);
+  } catch (...) {
+    return std::numeric_limits<uint64_t>::max();
+  }
+}
+HostIdleConfig load_local_idle_config(const std::filesystem::path &local) {
+  try {
+    return load_host_idle_config(e0::read_json(local / L"lifecycle.json"));
+  } catch (...) {
+    return {};
+  }
+}
+bool request_worker_exit(HostIdleWatch &watch, const HostIdleConfig &config,
+                         const std::filesystem::path &local, bool job_active,
+                         const std::string &instance_id, double started_at_unix,
+                         std::string &reason) {
+  const auto shutdown_path = local / L"inbox" / L"shutdown";
+  HostIdleSample sample;
+  sample.job_active = job_active;
+  sample.shutdown_requested = std::filesystem::exists(shutdown_path);
+  sample.now_ms = monotonic_ms();
+  sample.host_heartbeat_age_ms =
+      host_heartbeat_age_ms(local, instance_id, started_at_unix);
+  if (!watch.observe(sample, config.idle_exit_ms, reason,
+                     config.heartbeat_stale_ms))
+    return false;
+  if (reason == "shutdown")
+    consume_shutdown_marker(shutdown_path);
+  return true;
+}
+void exit_worker(const std::string &reason) {
+  ExitProcess(reason == "shutdown" || reason == "idle_timeout" ? 0 : 1);
+}
 std::filesystem::path inbox;
 std::mutex active_mutex;
 std::condition_variable active_changed;
 std::filesystem::path active_job;
 std::unique_ptr<xgpu::DashboardView> dashboard;
+void notify_dashboard(bool job_active) {
+  if (dashboard)
+    dashboard->set_training_active(job_active);
+}
 std::string worker_uuid() {
   unsigned char uuid[16];
   if (BCryptGenRandom(nullptr, uuid, sizeof(uuid),
@@ -41,10 +104,20 @@ std::string worker_uuid() {
   }
   return out.str();
 }
+std::string utc_iso8601(std::chrono::system_clock::time_point when) {
+  const auto time = std::chrono::system_clock::to_time_t(when);
+  std::tm utc{};
+  gmtime_s(&utc, &time);
+  std::ostringstream out;
+  out << std::put_time(&utc, "%Y-%m-%dT%H:%M:%SZ");
+  return out.str();
+}
 void worker() {
   winrt::init_apartment();
   std::unique_ptr<e0::WorkerLock> ownership;
   std::unique_ptr<e0::RuntimeLifecycle> lifecycle;
+  std::string instance_id;
+  double started_at_unix = 0;
   try {
     auto local = std::filesystem::path(
         winrt::Windows::Storage::ApplicationData::Current()
@@ -54,8 +127,15 @@ void worker() {
     inbox = local / L"inbox";
     std::filesystem::create_directories(inbox);
     ownership = std::make_unique<e0::WorkerLock>(local / L"worker.lock");
+    instance_id = worker_uuid();
+    const auto started_tp = std::chrono::system_clock::now();
+    started_at_unix =
+        double(std::chrono::system_clock::to_time_t(started_tp));
+    const auto pid = uint64_t(GetCurrentProcessId());
+    e0::atomic_json(local / L"instance.json",
+                    instance_document(instance_id, utc_iso8601(started_tp), pid));
     lifecycle = std::make_unique<e0::RuntimeLifecycle>(
-        local, worker_uuid(), GetCurrentProcessId(),
+        local, instance_id, pid,
         winrt::to_string(winrt::Windows::ApplicationModel::Package::Current()
                              .Id()
                              .FullName()),
@@ -90,6 +170,8 @@ void worker() {
     };
     lifecycle->ready();
     lifecycle->publish();
+    const auto idle_config = load_local_idle_config(local);
+    HostIdleWatch idle_watch;
     e0::atomic_json(
         local / L"device.json",
         {{"schema", "floppylm.device.v1"},
@@ -103,6 +185,10 @@ void worker() {
          {"capabilities", e0::capabilities()},
          {"commit", XGPU_COMMIT}});
     while (true) {
+      std::string exit_reason;
+      if (request_worker_exit(idle_watch, idle_config, local, false,
+                             instance_id, started_at_unix, exit_reason))
+        exit_worker(exit_reason);
       if (lifecycle->snapshot().at("state") == "failed")
         throw std::runtime_error(
             "worker lifecycle failed; explicit app restart required");
@@ -126,6 +212,13 @@ void worker() {
         }
         bool execution_admitted = false;
         std::string submitted_hash;
+        {
+          std::string ignored;
+          idle_watch.observe({true, false, monotonic_ms()},
+                             idle_config.idle_exit_ms, ignored,
+                             idle_config.heartbeat_stale_ms);
+          notify_dashboard(true);
+        }
         try {
           const auto id = winrt::to_string(stem);
           const auto owned_job = e0::persist_claim(
@@ -195,6 +288,7 @@ void worker() {
           active_job.clear();
         }
         active_changed.notify_all();
+        notify_dashboard(false);
         if (kernel->poisoned()) {
           lifecycle->publish();
           try {
@@ -205,15 +299,23 @@ void worker() {
                              {"commit", XGPU_COMMIT}});
           } catch (...) {
           }
-          // Keep ownership, heartbeat and the quarantined GPU alive. Only an
-          // explicit process restart can create a fresh device or accept work.
-          while (true)
-            std::this_thread::sleep_for(std::chrono::seconds(1));
+          // Keep ownership, heartbeat and the quarantined GPU alive until the
+          // host writes shutdown, the idle deadline expires, or an operator
+          // restarts the process.
+          while (true) {
+            std::string exit_reason;
+            if (request_worker_exit(idle_watch, idle_config, local, false,
+                                   instance_id, started_at_unix, exit_reason))
+              exit_worker(exit_reason);
+            std::this_thread::sleep_for(
+                std::chrono::milliseconds(idle_config.poll_interval_ms));
+          }
         }
         lifecycle->ready();
         lifecycle->publish();
       }
-      std::this_thread::sleep_for(std::chrono::seconds(1));
+      std::this_thread::sleep_for(
+          std::chrono::milliseconds(idle_config.poll_interval_ms));
     }
   } catch (const std::exception &error) {
     // A second worker must not overwrite the current owner's readiness files.
@@ -243,8 +345,16 @@ void worker() {
                                                {"commit", XGPU_COMMIT}});
     } catch (...) {
     }
-    while (true)
-      std::this_thread::sleep_for(std::chrono::seconds(1));
+    const auto failed_config = load_local_idle_config(local);
+    HostIdleWatch failed_watch;
+    while (true) {
+      std::string exit_reason;
+      if (request_worker_exit(failed_watch, failed_config, local, false,
+                             instance_id, started_at_unix, exit_reason))
+        exit_worker(exit_reason);
+      std::this_thread::sleep_for(
+          std::chrono::milliseconds(failed_config.poll_interval_ms));
+    }
   }
 }
 } // namespace

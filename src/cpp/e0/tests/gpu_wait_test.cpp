@@ -1,8 +1,10 @@
+#include "idle_config.h"
 #include "model.h"
 #include <chrono>
 #include <cmath>
 #include <fstream>
 #include <iostream>
+#include <limits>
 #include <stdexcept>
 
 static void require(bool ok, const char *message) {
@@ -77,11 +79,128 @@ void published_fence_does_not_touch_a_device() {
               fault.completed_fence == 11,
           "an in-flight GPU wait keeps its requested fence");
 }
+void host_idle_watch_exits_on_shutdown_and_stale_heartbeat() {
+  HostIdleWatch watch;
+  std::string reason;
+  require(!watch.observe({true, false, 0, 0}, 1000, reason),
+          "a running job never idle-exits");
+  require(!watch.observe({true, true, 10, 0}, 1000, reason) && reason.empty(),
+          "shutdown waits for the active job to finish");
+  require(watch.observe({false, true, 20}, 1000, reason) && reason == "shutdown",
+          "idle plus shutdown exits immediately");
+  HostIdleWatch idle;
+  reason.clear();
+  require(!idle.observe({false, false, 100}, 1000, reason),
+          "first idle sample arms");
+  require(!idle.observe({false, false, 1099}, 1000, reason),
+          "inside the idle deadline");
+  require(idle.observe({false, false, 1100}, 1000, reason) &&
+              reason == "idle_timeout",
+          "no work and no host heartbeat reaches the idle deadline");
+  HostIdleWatch kept;
+  reason.clear();
+  require(!kept.observe({false, false, 0, 0}, 1000, reason),
+          "fresh host heartbeat keeps an idle worker");
+  require(!kept.observe({false, false, 5000, 0}, 1000, reason),
+          "another fresh heartbeat still keeps the worker");
+  require(!kept.observe({false, false, 6000, 2000}, 1000, reason),
+          "stale heartbeat starts the idle clock");
+  require(kept.observe({false, false, 7000, 3000}, 1000, reason) &&
+              reason == "idle_timeout",
+          "stale heartbeat plus no work exits");
+  HostIdleWatch work;
+  reason.clear();
+  require(!work.observe({false, false, 0}, 1000, reason), "idle arms");
+  require(!work.observe({true, false, 2000}, 1000, reason),
+          "a new job clears idle tracking");
+  require(!work.observe({false, false, 2500}, 1000, reason),
+          "idle after a job restarts the deadline");
+  require(!work.observe({false, false, 3499}, 1000, reason),
+          "post-job idle stays inside the deadline");
+  HostIdleWatch split;
+  reason.clear();
+  require(!split.observe({false, false, 0, 1500}, 5000, reason, 1000),
+          "stale heartbeat uses its own threshold");
+  require(split.observe({false, false, 5000, 6500}, 5000, reason, 1000) &&
+              reason == "idle_timeout",
+          "idle deadline stays independent of heartbeat staleness");
+  const auto overridden = host_idle_config_override(5, 7, 2);
+  require(overridden.idle_exit_ms == 5000 &&
+              overridden.heartbeat_stale_ms == 7000 &&
+              overridden.poll_interval_ms == 2000,
+          "second overrides replace the documented defaults");
+  const auto from_json = load_host_idle_config(
+      e0::Json{{"idle_exit_seconds", 12}, {"poll_interval_seconds", 3}});
+  require(from_json.idle_exit_ms == 12000 &&
+              from_json.heartbeat_stale_ms == kHostIdleExitMs &&
+              from_json.poll_interval_ms == 3000,
+          "JSON overrides only the keys that are present");
+  const auto from_float = load_host_idle_config(
+      e0::Json{{"heartbeat_stale_seconds", 9.0}});
+  require(from_float.heartbeat_stale_ms == 9000 &&
+              from_float.idle_exit_ms == kHostIdleExitMs,
+          "JSON accepts numeric seconds that are not unsigned integers");
+  const auto half = load_host_idle_config(
+      e0::Json{{"poll_interval_seconds", 0.5}});
+  require(half.poll_interval_ms == 500, "fractional seconds keep milliseconds");
+  const auto tiny = load_host_idle_config(
+      e0::Json{{"poll_interval_seconds", 0.0}});
+  require(tiny.poll_interval_ms == kMinPollIntervalMs,
+          "sub-minimum poll is clamped");
+  const auto root =
+      std::filesystem::temp_directory_path() /
+      ("xgpu-shutdown-marker-" +
+       std::to_string(
+           std::chrono::steady_clock::now().time_since_epoch().count()));
+  std::filesystem::create_directories(root);
+  const auto marker = root / "shutdown";
+  {
+    std::ofstream out(marker);
+    out << "campaign-complete";
+  }
+  require(consume_shutdown_marker(marker) && !std::filesystem::exists(marker),
+          "shutdown marker is deleted when consumed");
+  require(!consume_shutdown_marker(marker),
+          "a missing shutdown marker is not an error");
+  const auto instance =
+      instance_document("8f14e45f-ceea-467c-9d73-aa7d99aa7d99",
+                        "2026-10-11T12:00:00Z", 4242);
+  require(instance.at("schema") == "xgpu.instance.v1" &&
+              instance.at("instance_id") ==
+                  "8f14e45f-ceea-467c-9d73-aa7d99aa7d99" &&
+              instance.at("started_at") == "2026-10-11T12:00:00Z" &&
+              instance.at("pid") == 4242 && !instance.contains("state"),
+          "instance.json is a separate start-time document");
+  const e0::Json leftover{
+      {"schema", "floppylm.host.heartbeat.v1"},
+      {"instance_id", "previous"},
+      {"written_at", 1'999'000.0}};
+  require(!heartbeat_belongs_to_instance(leftover, "current", 1'999'982.0),
+          "a leftover heartbeat from another instance is ignored");
+  const e0::Json predates{
+      {"schema", "floppylm.host.heartbeat.v1"},
+      {"instance_id", "current"},
+      {"written_at", 1'999'900.0}};
+  require(!heartbeat_belongs_to_instance(predates, "current", 1'999'982.0),
+          "a heartbeat written before this instance started is ignored");
+  const e0::Json mine{
+      {"schema", "floppylm.host.heartbeat.v1"},
+      {"instance_id", "current"},
+      {"written_at", 1'999'990.0}};
+  require(heartbeat_belongs_to_instance(mine, "current", 1'999'982.0),
+          "this instance's heartbeat is kept");
+  require(instance_heartbeat_age_ms(leftover, "current", 1'999'982.0,
+                                    2'000'000.0, 50) ==
+              std::numeric_limits<uint64_t>::max(),
+          "ignored leftover heartbeat has no age");
+  std::filesystem::remove_all(root);
+}
 int main(int argc, char **argv) {
   if (argc != 2)
     return 2;
   try {
     published_fence_does_not_touch_a_device();
+    host_idle_watch_exits_on_shutdown_and_stale_heartbeat();
     {
       Fake f;
       auto api = f.api();

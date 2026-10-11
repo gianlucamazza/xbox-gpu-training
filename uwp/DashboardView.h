@@ -20,6 +20,7 @@ public:
   DashboardView(std::filesystem::path local,
                 std::function<std::filesystem::path()> active_job);
   winrt::Windows::UI::Xaml::UIElement root() const { return root_; }
+  void set_training_active(bool on);
 
 private:
   using TextBlock = winrt::Windows::UI::Xaml::Controls::TextBlock;
@@ -28,6 +29,7 @@ private:
     TextBlock value{nullptr}, note{nullptr};
   };
 
+  void apply_compositor_hold(bool job_active);
   void refresh();
   void show_job(const std::filesystem::path &job);
   void show_status(const e0ui::Json &status, double age_seconds);
@@ -58,7 +60,7 @@ private:
   e0ui::Json previous_ = e0ui::Json::object(), segment_ = e0ui::Json::object();
   double tokens_per_second_ = 0;
   std::string last_state_, last_job_id_;
-  bool display_held_ = false, device_shown_ = false;
+  bool display_held_ = false, device_shown_ = false, timer_running_ = false;
   e0ui::Ticks ticks_;
   e0ui::LossRange range_;
   float now_x_ = -1, band_ = 0;

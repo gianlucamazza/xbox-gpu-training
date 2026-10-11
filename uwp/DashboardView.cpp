@@ -282,9 +282,32 @@ DashboardView::DashboardView(std::filesystem::path local,
   timer_ = X::DispatcherTimer();
   timer_.Interval(std::chrono::seconds(1));
   timer_.Tick([this](auto &&, auto &&) { refresh(); });
-  timer_.Start();
-  // Idle used to release this; Xbox then suspended during job gaps.
-  keep_display(true);
+  // Idle must not keep a compositor tick or DisplayRequest. A job starts both.
+  apply_compositor_hold(false);
+}
+
+void DashboardView::set_training_active(bool on) {
+  if (!root_) {
+    apply_compositor_hold(on);
+    return;
+  }
+  root_.Dispatcher().RunAsync(
+      winrt::Windows::UI::Core::CoreDispatcherPriority::Normal,
+      [this, on] { apply_compositor_hold(on); });
+}
+
+void DashboardView::apply_compositor_hold(bool job_active) {
+  const bool hold = e0ui::compositor_hold(job_active);
+  if (timer_) {
+    if (hold && !timer_running_) {
+      timer_.Start();
+      timer_running_ = true;
+    } else if (!hold && timer_running_) {
+      timer_.Stop();
+      timer_running_ = false;
+    }
+  }
+  keep_display(hold);
 }
 
 void DashboardView::refresh() {
@@ -302,8 +325,10 @@ void DashboardView::refresh() {
           show_status(e0::read_json(final_status), 0);
       }
       show_idle();
+      apply_compositor_hold(false);
       return;
     }
+    apply_compositor_hold(true);
     if (job != current_)
       show_job(job);
     if (!training_job_)
@@ -635,8 +660,8 @@ void DashboardView::show_device() {
 }
 
 void DashboardView::keep_display(bool on) {
-  // Hold for the process lifetime. Idle gaps used to release this and Xbox
-  // then suspended the UWP app; OS steal-focus still suspends.
+  // Held only while a job is active. Idle used to keep this for the process
+  // lifetime and left a compositor client running with no work.
   if (on == display_held_)
     return;
   if (!display_)

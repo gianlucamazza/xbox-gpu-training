@@ -151,4 +151,8 @@ std::string format_megabytes(uint64_t bytes);
 std::string format_compact(double value);
 // Four significant digits, so small losses keep their precision: 2.826, 0.003812.
 std::string format_loss(double loss);
+
+// Idle jobs must not keep a compositor tick or DisplayRequest. Independent
+// of process exit; a later job turns both back on.
+inline bool compositor_hold(bool job_active) { return job_active; }
 } // namespace e0ui

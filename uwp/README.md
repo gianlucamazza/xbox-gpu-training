@@ -1,7 +1,7 @@
 # `uwp/` — XgpuE0 UWP app
 
 x64 UWP App that hosts the E0 trainer on a Series S in Dev Mode. On launch it starts
-a worker that reports `device.json` and runs jobs from `LocalState/inbox`; on
+a worker that reports `device.json` and `instance.json` and runs jobs from `LocalState/inbox`; on
 suspension it asks the active job to checkpoint. The window shows a read-only
 training dashboard.
 
@@ -38,7 +38,7 @@ interrupt and resume reconstruct the trail instead of starting empty at the resu
 without the field (older packages) still plots `last_loss` at `trunk_step`. Eight tiles show
 trunk loss, tokens/s over the last 64 steps with the run-segment average, tokens processed of the total,
 elapsed time of the run segment, a labelled remaining-time estimate, GPU/wall time, peak memory and the
-trunk step of the last checkpoint; the footer shows `device.json`. It holds a `DisplayRequest` for the process lifetime so idle gaps do not release the TV stay-awake request; OS steal-focus still suspends ([ADR 0007](../docs/adr/0007-uwp-stay-alive.md), [ADR 0008](../docs/adr/0008-drop-extended-execution.md)). When idle,
+trunk step of the last checkpoint; the footer shows `device.json`. A job holds a `DisplayRequest` and the one-second timer; idle stops both so the compositor is not kept busy with no work ([lifecycle.md](../docs/e0/lifecycle.md), [ADR 0010](../docs/adr/0010-idle-compositor-release.md)). OS steal-focus still suspends. When idle,
 the header names the last job and its final state, the progress bar takes that state's colour and the
 tiles are labelled "last job". The worker line still updates. With no last job the chart shows
 an empty-state caption instead of a blank surface. After that transition the idle layout is

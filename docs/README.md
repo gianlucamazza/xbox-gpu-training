@@ -28,8 +28,10 @@ for what may be claimed.
 | [status.md](status.md) | Active package, measured values, open items (single source of truth) |
 | [e0/engine.md](e0/engine.md) | E0 code map, training step, execution engine, bit-identity rule |
 | [e0/job-protocol.md](e0/job-protocol.md) | Console inbox, job / status / device schemas |
+| [e0/lifecycle.md](e0/lifecycle.md) | Portable console process teardown and idle-GPU config |
 | [e0/acceptance.md](e0/acceptance.md) | Gates, functional proofs, evidence file formats |
 | [evidence/](evidence/README.md) | Committed console evidence per package |
+| [rca/2026-10-11-xgpue0-orphan-gpu.md](rca/2026-10-11-xgpue0-orphan-gpu.md) | Orphan XgpuE0 process after campaign end |
 | [glossary.md](glossary.md) | Terms and spelling |
 
 ## Results and history

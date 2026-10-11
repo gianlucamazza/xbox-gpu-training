@@ -98,6 +98,41 @@ companion. Each PNG is listed in `shots.json` with its SHA-256, size, the instal
 `commit`, and the status fields it shows. A shot whose `device.json` names another package is refused.
 Screenshots prove what the dashboard renders, nothing about training quality.
 
+## 6. Stop the console app
+
+[`scripts/e0_console_lifecycle.py`](../../scripts/e0_console_lifecycle.py) is the
+host-side Device Portal client for process teardown and idle-GPU checks.
+Settings, defaults and overrides are in [lifecycle.md](lifecycle.md). Mutating
+calls discover a CSRF/XSRF cookie and echo it as `X-CSRF-Token`; 400/403 retry
+once.
+
+```bash
+python3 scripts/e0_console_lifecycle.py prepare
+python3 scripts/e0_console_lifecycle.py idle-gpu --when before
+python3 scripts/e0_console_lifecycle.py heartbeat
+python3 scripts/e0_console_lifecycle.py teardown
+python3 scripts/e0_console_lifecycle.py idle-gpu --when after
+```
+
+`prepare` deletes `inbox/shutdown` only if the listing shows it. `idle-gpu
+--when before` treats an idle, ready app as OK to reuse, including a fresh
+instance sitting on historical `.claimed` / results, a leftover
+`host.heartbeat` from an earlier instance, or a finished fixture that
+left `<id>.claimed` next to `<id>.actual.json`. It refuses only a live
+worker job (or a leftover process idle past the deadline since *this*
+instance started, using `LocalState/instance.json`). When that start
+time is unknown the before-check reports `reason: start_time_unknown`,
+`orphan: null`, and passes with a warning; `--orphan-strict` refuses.
+GPU samples are advisory. `teardown` uploads
+`inbox/shutdown`, waits, then `DELETE`s by base64 package and/or pid. `idle-gpu
+--when after` requires the process gone. Call `prepare` before launch and
+`teardown` from campaign completion and from the host unit `ExecStop`. The
+companion runner in `gianlucamazza/floppylm` still has to invoke these
+commands.
+
+Do not install or bump a package from this step. Package `0.1.0.98` remains the
+historical accepted record in [status.md](../status.md).
+
 ## PIX
 
 PIX on Windows can be installed ([diagnostic/setup.md](../diagnostic/setup.md#pix)),

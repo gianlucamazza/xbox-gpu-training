@@ -118,3 +118,53 @@ struct PublishedFenceWatch {
     return true;
   }
 };
+
+// Idle / host-liveness exit. This does not call into D3D. A completed job
+// leaves the worker in the ready loop; without a host heartbeat or a shutdown
+// marker that loop used to run until an operator killed the process.
+struct HostIdleSample {
+  bool job_active = false;
+  bool shutdown_requested = false;
+  uint64_t now_ms = 0;
+  // Age of LocalState/host.heartbeat. max() means the file is absent.
+  uint64_t host_heartbeat_age_ms = std::numeric_limits<uint64_t>::max();
+};
+inline constexpr uint64_t kHostIdleExitMs = 30ull * 60ull * 1000ull;
+struct HostIdleConfig {
+  uint64_t idle_exit_ms = kHostIdleExitMs;
+  uint64_t heartbeat_stale_ms = kHostIdleExitMs;
+  uint64_t poll_interval_ms = 1000;
+};
+inline HostIdleConfig host_idle_config_override(uint64_t idle_seconds,
+                                                uint64_t stale_seconds,
+                                                uint64_t poll_seconds) {
+  return {idle_seconds * 1000ull, stale_seconds * 1000ull,
+          poll_seconds * 1000ull};
+}
+struct HostIdleWatch {
+  bool tracking = false;
+  uint64_t idle_since_ms = 0;
+  bool observe(const HostIdleSample &sample, uint64_t deadline_ms,
+               std::string &reason, uint64_t heartbeat_stale_ms = 0) {
+    const uint64_t stale =
+        heartbeat_stale_ms == 0 ? deadline_ms : heartbeat_stale_ms;
+    if (sample.shutdown_requested && !sample.job_active) {
+      reason = "shutdown";
+      tracking = false;
+      return true;
+    }
+    if (sample.job_active || sample.host_heartbeat_age_ms < stale) {
+      tracking = false;
+      return false;
+    }
+    if (!tracking || sample.now_ms < idle_since_ms) {
+      tracking = true;
+      idle_since_ms = sample.now_ms;
+      return false;
+    }
+    if (sample.now_ms - idle_since_ms < deadline_ms)
+      return false;
+    reason = "idle_timeout";
+    return true;
+  }
+};

@@ -24,6 +24,21 @@ On start the worker writes `LocalState/device.json`:
 
 Acceptance must match `package` and `commit` against the expected build.
 
+## Instance record
+
+On start, after the process lock, the worker writes `LocalState/instance.json`.
+This is not a FloppyLM schema and is not an extension of `worker.json`.
+
+| Key | Value |
+| --- | --- |
+| `schema` | `xgpu.instance.v1` |
+| `instance_id` | the same random UUID published as `worker_id` |
+| `started_at` | UTC ISO-8601 launch time |
+| `pid` | current process id when available |
+
+The host lifecycle tool reads this file for start time and instance identity.
+See [lifecycle.md](lifecycle.md).
+
 ## Inbox
 
 ```
@@ -79,14 +94,42 @@ branch artifacts still verify.
   stops without a new checkpoint (the trunk checkpoint before the branch stands).
 - **Suspension.** On `Suspending` the app writes `<id>.cancel` containing `suspend`
   for the active job and holds the deferral up to 4 s for the job to stop.
-- **Stay-alive (best effort).** The dashboard holds a `DisplayRequest` for the
-  process lifetime so idle gaps do not drop the TV stay-awake request
-  ([ADR 0007](../adr/0007-uwp-stay-alive.md), [ADR 0008](../adr/0008-drop-extended-execution.md)).
+- **Stay-alive (best effort).** A running job holds a `DisplayRequest` and the
+  dashboard timer. Idle releases both so the compositor is not kept busy with
+  no work ([lifecycle.md](lifecycle.md), [ADR 0010](../adr/0010-idle-compositor-release.md)).
   The app does not request `ExtendedExecutionSession`: a grant on 0.1.0.84
   let a lifecycle job run to completion under Dev Home with no `.cancel`.
   Cooperative `Suspending` remains the lifecycle contract.
 
 Stopping a companion campaign cleanly is described in [FloppyLM Xbox runbook](https://github.com/gianlucamazza/floppylm/blob/main/docs/operations/xbox-e0.md#recover).
+Host teardown of the console process is [`scripts/e0_console_lifecycle.py`](../../scripts/e0_console_lifecycle.py);
+see [Shutdown and idle exit](#shutdown-and-idle-exit).
+
+## Shutdown and idle exit
+
+The worker used to poll forever after the last job
+([RCA](../rca/2026-10-11-xgpue0-orphan-gpu.md)). It now exits the process when
+idle and either of these is true:
+
+| Signal | Path | Effect |
+| --- | --- | --- |
+| Host shutdown | `LocalState/inbox/shutdown` | Exit 0 as soon as no job is running; the marker is deleted before exit |
+| Host heartbeat stale or absent, and no job past the idle deadline | `LocalState/host.heartbeat` | Exit 0 (`idle_timeout`) |
+
+Defaults are 30 minutes for idle exit and heartbeat staleness
+([lifecycle.md](lifecycle.md)). `LocalState/lifecycle.json` overrides
+`idle_exit_seconds`, `heartbeat_stale_seconds` and `poll_interval_seconds`.
+A running job is not interrupted; the next ready-loop iteration exits. With no
+job the dashboard stops its timer and releases `DisplayRequest` so the
+compositor is not held after the last job. The published-fence watchdog is
+unchanged. The host refreshes `host.heartbeat` while it still intends to submit
+work, runs `scripts/e0_console_lifecycle.py prepare` before launch to clear a
+stale `inbox/shutdown`, writes `inbox/shutdown` when work is done, and runs
+`teardown` from campaign end and from the host unit stop path. Idle/orphan
+checks use this instance's worker state and start time, not GPU
+utilisation or historical `.claimed` files
+([lifecycle.md](lifecycle.md)). The companion campaign runner in
+`gianlucamazza/floppylm` must invoke that tool.
 
 ## Runtime ownership and explicit recovery
 
@@ -97,14 +140,21 @@ copy. Neither runtime faults nor lifecycle reconciliation change weights,
 optimizer formulas, schedules or the final-test reservation.
 
 Before readiness, the worker acquires an exclusive process-lifetime `worker.lock`,
-creates a random instance ID and reconciles abandoned claims. `worker.json` is
+creates a random instance ID, writes `LocalState/instance.json`
+(`xgpu.instance.v1`: `instance_id`, `started_at` UTC ISO-8601, `pid`) and
+reconciles abandoned claims. That file is the host-visible start time and
+instance identity. It is not an extension of `worker.json`
+(`floppylm.worker.v1` has `additionalProperties: false`). `worker.json` is
 atomically published every five seconds by an independent thread. Heartbeat ticks
 only increment `heartbeat_seq`; completed GPU fences and optimizer steps update
 `progress.sequence`. The snapshot distinguishes trunk/cooldown steps and records
 the last completed operation and fence. A heartbeat therefore proves process
 liveness, not training progress. The on-console dashboard reads `worker.json`
 every second and shows that line; thirty seconds without a rewrite is
-unreachable.
+unreachable. The host `host.heartbeat` document carries the same
+`instance_id`; a leftover heartbeat from an earlier instance is ignored
+by both the host tool and the in-app idle timer. `teardown` deletes
+`host.heartbeat` after the process exits.
 
 After claiming `<id>.ready`, the worker persists the exact submitted payload in
 `<id>.owner.json` and executes `<id>.owned.job.json`, which contains the same bytes.
