@@ -6,3 +6,7 @@ updates:
       interval: weekly
     labels:
       - documentation
+    groups:
+      version-updates:
+        applies-to: version-updates
+        patterns: ['*']
