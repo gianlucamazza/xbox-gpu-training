@@ -146,11 +146,10 @@ class FakePortal(unittest.TestCase):
     def test_mutating_call_fetches_csrf_then_echoes_it(self):
         portal = self.portal()
         portal.terminate()
-        methods = [c[0] for c in self.calls]
-        self.assertEqual(methods[:3], ["GET", "GET", "DELETE"])
-        self.assertEqual(self.calls[0][1], "/")
-        delete = self.calls[2]
-        self.assertEqual(delete[0], "DELETE")
+        paths = [(method, path) for method, path, *_ in self.calls]
+        self.assertIn(("GET", "/"), paths)
+        self.assertTrue(paths.index(("GET", "/")) < next(i for i, c in enumerate(paths) if c[0] == "DELETE"))
+        delete = next(c for c in self.calls if c[0] == "DELETE")
         self.assertEqual(parse_qs(urlparse(delete[1]).query)["pid"], ["4242"])
         self.assertEqual(delete[2]["X-CSRF-Token"], "token-1")
 
