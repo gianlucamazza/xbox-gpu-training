@@ -98,6 +98,32 @@ companion. Each PNG is listed in `shots.json` with its SHA-256, size, the instal
 `commit`, and the status fields it shows. A shot whose `device.json` names another package is refused.
 Screenshots prove what the dashboard renders, nothing about training quality.
 
+## 6. Stop the console app
+
+[`scripts/e0_console_lifecycle.py`](../../scripts/e0_console_lifecycle.py) is the
+host-side Device Portal client for process teardown and idle-GPU checks. Same
+settings as the screenshot recorder. Mutating calls echo the `CSRF-Token` cookie
+as `X-CSRF-Token`.
+
+```bash
+python3 scripts/e0_console_lifecycle.py idle-gpu --when before
+python3 scripts/e0_console_lifecycle.py heartbeat          # while the host still owns work
+python3 scripts/e0_console_lifecycle.py teardown           # shutdown, wait, DELETE if needed
+python3 scripts/e0_console_lifecycle.py idle-gpu --when after
+```
+
+`idle-gpu --when before` refuses the orphan signature from
+[the 2026-10-11 RCA](../rca/2026-10-11-xgpue0-orphan-gpu.md) (process present,
+CPU idle, engine 5 ≥ 90%). `teardown` uploads `inbox/shutdown`, waits for the
+process to leave the list, then `DELETE /api/taskmanager/process?pid=…`.
+`idle-gpu --when after` requires the process gone and engine 5 not pinned.
+Call `teardown` from campaign completion and from the host unit `ExecStop`.
+The companion runner in `gianlucamazza/floppylm` still has to invoke these
+commands.
+
+Do not install or bump a package from this step. Package `0.1.0.98` remains the
+historical accepted record in [status.md](../status.md).
+
 ## PIX
 
 PIX on Windows can be installed ([diagnostic/setup.md](../diagnostic/setup.md#pix)),

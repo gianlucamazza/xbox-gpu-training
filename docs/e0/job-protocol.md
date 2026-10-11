@@ -87,6 +87,29 @@ branch artifacts still verify.
   Cooperative `Suspending` remains the lifecycle contract.
 
 Stopping a companion campaign cleanly is described in [FloppyLM Xbox runbook](https://github.com/gianlucamazza/floppylm/blob/main/docs/operations/xbox-e0.md#recover).
+Host teardown of the console process is [`scripts/e0_console_lifecycle.py`](../../scripts/e0_console_lifecycle.py);
+see [Shutdown and idle exit](#shutdown-and-idle-exit).
+
+## Shutdown and idle exit
+
+The worker used to poll forever after the last job
+([RCA](../rca/2026-10-11-xgpue0-orphan-gpu.md)). It now exits the process when
+idle and either of these is true:
+
+| Signal | Path | Effect |
+| --- | --- | --- |
+| Host shutdown | `LocalState/inbox/shutdown` | Exit 0 as soon as no job is running |
+| Host heartbeat stale or absent, and no job for 30 minutes | `LocalState/host.heartbeat` | Exit 0 (`idle_timeout`) |
+
+A running job is not interrupted by shutdown or the idle deadline; the next
+ready-loop iteration exits. The published-fence watchdog is unchanged. The host
+refreshes `host.heartbeat` while it still intends to submit work, writes
+`inbox/shutdown` when the campaign is done, and runs
+`scripts/e0_console_lifecycle.py teardown` from campaign end and from the host
+unit stop path. Device Portal `DELETE` calls echo the `CSRF-Token` cookie as
+`X-CSRF-Token`. The companion campaign runner in `gianlucamazza/floppylm` must
+invoke that tool; this repository owns the Device Portal terminate and idle-GPU
+check.
 
 ## Runtime ownership and explicit recovery
 

@@ -11,15 +11,49 @@
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
+#include <limits>
 #include <memory>
 #include <mutex>
 #include <sstream>
+#include <system_error>
 #include <thread>
 
 #ifndef XGPU_COMMIT
 #define XGPU_COMMIT "unknown"
 #endif
 namespace {
+uint64_t monotonic_ms() {
+  return uint64_t(std::chrono::duration_cast<std::chrono::milliseconds>(
+                      std::chrono::steady_clock::now().time_since_epoch())
+                      .count());
+}
+uint64_t host_heartbeat_age_ms(const std::filesystem::path &local) {
+  const auto path = local / L"host.heartbeat";
+  std::error_code error;
+  if (!std::filesystem::exists(path, error))
+    return std::numeric_limits<uint64_t>::max();
+  const auto age = std::chrono::duration_cast<std::chrono::milliseconds>(
+                       std::filesystem::file_time_type::clock::now() -
+                       std::filesystem::last_write_time(path, error))
+                       .count();
+  if (error || age < 0)
+    return 0;
+  return uint64_t(age);
+}
+bool request_worker_exit(HostIdleWatch &watch,
+                         const std::filesystem::path &local, bool job_active,
+                         std::string &reason) {
+  HostIdleSample sample;
+  sample.job_active = job_active;
+  sample.shutdown_requested =
+      std::filesystem::exists(local / L"inbox" / L"shutdown");
+  sample.now_ms = monotonic_ms();
+  sample.host_heartbeat_age_ms = host_heartbeat_age_ms(local);
+  return watch.observe(sample, kHostIdleExitMs, reason);
+}
+void exit_worker(const std::string &reason) {
+  ExitProcess(reason == "shutdown" || reason == "idle_timeout" ? 0 : 1);
+}
 std::filesystem::path inbox;
 std::mutex active_mutex;
 std::condition_variable active_changed;
@@ -90,6 +124,7 @@ void worker() {
     };
     lifecycle->ready();
     lifecycle->publish();
+    HostIdleWatch idle_watch;
     e0::atomic_json(
         local / L"device.json",
         {{"schema", "floppylm.device.v1"},
@@ -103,6 +138,9 @@ void worker() {
          {"capabilities", e0::capabilities()},
          {"commit", XGPU_COMMIT}});
     while (true) {
+      std::string exit_reason;
+      if (request_worker_exit(idle_watch, local, false, exit_reason))
+        exit_worker(exit_reason);
       if (lifecycle->snapshot().at("state") == "failed")
         throw std::runtime_error(
             "worker lifecycle failed; explicit app restart required");
@@ -126,6 +164,11 @@ void worker() {
         }
         bool execution_admitted = false;
         std::string submitted_hash;
+        {
+          std::string ignored;
+          idle_watch.observe({true, false, monotonic_ms()}, kHostIdleExitMs,
+                             ignored);
+        }
         try {
           const auto id = winrt::to_string(stem);
           const auto owned_job = e0::persist_claim(
@@ -205,10 +248,15 @@ void worker() {
                              {"commit", XGPU_COMMIT}});
           } catch (...) {
           }
-          // Keep ownership, heartbeat and the quarantined GPU alive. Only an
-          // explicit process restart can create a fresh device or accept work.
-          while (true)
+          // Keep ownership, heartbeat and the quarantined GPU alive until the
+          // host writes shutdown, the idle deadline expires, or an operator
+          // restarts the process.
+          while (true) {
+            std::string exit_reason;
+            if (request_worker_exit(idle_watch, local, false, exit_reason))
+              exit_worker(exit_reason);
             std::this_thread::sleep_for(std::chrono::seconds(1));
+          }
         }
         lifecycle->ready();
         lifecycle->publish();
@@ -243,8 +291,13 @@ void worker() {
                                                {"commit", XGPU_COMMIT}});
     } catch (...) {
     }
-    while (true)
+    HostIdleWatch failed_watch;
+    while (true) {
+      std::string exit_reason;
+      if (request_worker_exit(failed_watch, local, false, exit_reason))
+        exit_worker(exit_reason);
       std::this_thread::sleep_for(std::chrono::seconds(1));
+    }
   }
 }
 } // namespace

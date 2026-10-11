@@ -77,11 +77,51 @@ void published_fence_does_not_touch_a_device() {
               fault.completed_fence == 11,
           "an in-flight GPU wait keeps its requested fence");
 }
+void host_idle_watch_exits_on_shutdown_and_stale_heartbeat() {
+  HostIdleWatch watch;
+  std::string reason;
+  require(!watch.observe({true, false, 0, 0}, 1000, reason),
+          "a running job never idle-exits");
+  require(!watch.observe({true, true, 10, 0}, 1000, reason) && reason.empty(),
+          "shutdown waits for the active job to finish");
+  require(watch.observe({false, true, 20}, 1000, reason) && reason == "shutdown",
+          "idle plus shutdown exits immediately");
+  HostIdleWatch idle;
+  reason.clear();
+  require(!idle.observe({false, false, 100}, 1000, reason),
+          "first idle sample arms");
+  require(!idle.observe({false, false, 1099}, 1000, reason),
+          "inside the idle deadline");
+  require(idle.observe({false, false, 1100}, 1000, reason) &&
+              reason == "idle_timeout",
+          "no work and no host heartbeat reaches the idle deadline");
+  HostIdleWatch kept;
+  reason.clear();
+  require(!kept.observe({false, false, 0, 0}, 1000, reason),
+          "fresh host heartbeat keeps an idle worker");
+  require(!kept.observe({false, false, 5000, 0}, 1000, reason),
+          "another fresh heartbeat still keeps the worker");
+  require(!kept.observe({false, false, 6000, 2000}, 1000, reason),
+          "stale heartbeat starts the idle clock");
+  require(kept.observe({false, false, 7000, 3000}, 1000, reason) &&
+              reason == "idle_timeout",
+          "stale heartbeat plus no work exits");
+  HostIdleWatch work;
+  reason.clear();
+  require(!work.observe({false, false, 0}, 1000, reason), "idle arms");
+  require(!work.observe({true, false, 2000}, 1000, reason),
+          "a new job clears idle tracking");
+  require(!work.observe({false, false, 2500}, 1000, reason),
+          "idle after a job restarts the deadline");
+  require(!work.observe({false, false, 3499}, 1000, reason),
+          "post-job idle stays inside the deadline");
+}
 int main(int argc, char **argv) {
   if (argc != 2)
     return 2;
   try {
     published_fence_does_not_touch_a_device();
+    host_idle_watch_exits_on_shutdown_and_stale_heartbeat();
     {
       Fake f;
       auto api = f.api();

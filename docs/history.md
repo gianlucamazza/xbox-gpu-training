@@ -19,6 +19,7 @@ Chronology of the project. Current state lives in [status.md](status.md).
 | 2026-10-01 | ADR 0005, canonical documentation links and dashboard update caching merged | [PR #27](https://github.com/gianlucamazza/xbox-gpu-training/pull/27) (`53ab3c2`) |
 | 2026-10-01 | Actual CodeRabbit review accepted; openappx PR #7 merged and 0.7.0 installed locally | [openappx record](evidence/e0-20261001-dashboard/openappx.json) |
 | 2026-10-01 | Package 0.1.0.56 signed/deployed with TLS pin; full hardware gates and bit identity passed; idle GPU hypothesis falsified | [release evidence](evidence/e0-20261001-dashboard/notes.md) |
+| 2026-10-11 | Package `0.1.0.109` left `XgpuE0.exe` running after campaign `e0-campaign-20261009-109`; operator-reported engine 5 pinned until a manual Device Portal kill | [RCA](rca/2026-10-11-xgpue0-orphan-gpu.md) |
 
 ## Phases (GitHub milestones)
 
