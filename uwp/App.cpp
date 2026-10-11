@@ -51,14 +51,18 @@ HostIdleConfig load_local_idle_config(const std::filesystem::path &local) {
 bool request_worker_exit(HostIdleWatch &watch, const HostIdleConfig &config,
                          const std::filesystem::path &local, bool job_active,
                          std::string &reason) {
+  const auto shutdown_path = local / L"inbox" / L"shutdown";
   HostIdleSample sample;
   sample.job_active = job_active;
-  sample.shutdown_requested =
-      std::filesystem::exists(local / L"inbox" / L"shutdown");
+  sample.shutdown_requested = std::filesystem::exists(shutdown_path);
   sample.now_ms = monotonic_ms();
   sample.host_heartbeat_age_ms = host_heartbeat_age_ms(local);
-  return watch.observe(sample, config.idle_exit_ms, reason,
-                       config.heartbeat_stale_ms);
+  if (!watch.observe(sample, config.idle_exit_ms, reason,
+                     config.heartbeat_stale_ms))
+    return false;
+  if (reason == "shutdown")
+    consume_shutdown_marker(shutdown_path);
+  return true;
 }
 void exit_worker(const std::string &reason) {
   ExitProcess(reason == "shutdown" || reason == "idle_timeout" ? 0 : 1);

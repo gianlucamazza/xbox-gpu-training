@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Portable Device Portal teardown and idle-GPU checks for the console worker.
+"""Portable Device Portal teardown and idle-app checks for the console worker.
 
 No host, user, credential or filesystem path is baked in. Every value has a
 documented default and can be overridden by a credentials/settings file, an
@@ -14,15 +14,17 @@ import hashlib
 import http.client
 import json
 import os
+import re
 import shlex
 import ssl
 import sys
 import time
 from dataclasses import dataclass, replace
+from datetime import datetime, timezone
 from http.cookies import SimpleCookie
 from pathlib import Path
 from typing import Callable
-from urllib.parse import urlencode, urlsplit
+from urllib.parse import parse_qs, urlencode, urlsplit
 
 RequestFn = Callable[[str, str, dict, bytes | None], tuple[int, list[tuple[str, str]], bytes]]
 
@@ -35,6 +37,7 @@ DEFAULTS = {
     "gpu_sample_count": 3,
     "gpu_sample_interval_seconds": 1.0,
     "gpu_engine_filter": (),
+    "gpu_engine_exclude": (),
     "idle_cpu_percent": 1.0,
     "teardown_wait_seconds": 60.0,
     "portal_port": 11443,
@@ -54,6 +57,7 @@ ENV = {
     "gpu_sample_count": "XGPU_GPU_SAMPLE_COUNT",
     "gpu_sample_interval_seconds": "XGPU_GPU_SAMPLE_INTERVAL_SECONDS",
     "gpu_engine_filter": "XGPU_GPU_ENGINES",
+    "gpu_engine_exclude": "XGPU_GPU_ENGINE_EXCLUDE",
     "idle_cpu_percent": "XGPU_IDLE_CPU_PERCENT",
     "teardown_wait_seconds": "XGPU_TEARDOWN_WAIT_SECONDS",
     "portal_url": "XGPU_PORTAL_URL",
@@ -79,6 +83,11 @@ ENV_ALIASES = {
 
 SHUTDOWN_NAME = DEFAULTS["shutdown_name"]
 HEARTBEAT_NAME = DEFAULTS["heartbeat_name"]
+FILE_TYPE = 32
+GPU_ADVISORY_NOTE = (
+    "GPU utilisation is advisory and not decisive. On Xbox the foreground "
+    "engine often reads ~100% for any idle foreground app."
+)
 
 
 class PortalAuthError(RuntimeError):
@@ -89,8 +98,13 @@ def split_csv(value: str) -> tuple[str, ...]:
     return tuple(part.strip() for part in value.split(",") if part.strip())
 
 
+def parse_int_setting(value: str | int | float) -> int:
+    """Accept integers and float-looking strings ('20.0' → 20)."""
+    return int(float(value))
+
+
 def parse_int_tuple(value: str) -> tuple[int, ...]:
-    return tuple(int(part) for part in split_csv(value))
+    return tuple(parse_int_setting(part) for part in split_csv(value))
 
 
 def read_settings_file(path: Path) -> dict[str, str]:
@@ -125,6 +139,7 @@ class LifecycleSettings:
     gpu_sample_count: int = DEFAULTS["gpu_sample_count"]
     gpu_sample_interval_seconds: float = DEFAULTS["gpu_sample_interval_seconds"]
     gpu_engine_filter: tuple[int, ...] = DEFAULTS["gpu_engine_filter"]
+    gpu_engine_exclude: tuple[int, ...] = DEFAULTS["gpu_engine_exclude"]
     idle_cpu_percent: float = DEFAULTS["idle_cpu_percent"]
     teardown_wait_seconds: float = DEFAULTS["teardown_wait_seconds"]
     portal_url: str = ""
@@ -166,7 +181,7 @@ class LifecycleSettings:
         for key in ints:
             raw = env_value(mapping, key)
             if raw is not None:
-                updates[key] = int(raw)
+                updates[key] = parse_int_setting(raw)
         for key in floats:
             raw = env_value(mapping, key)
             if raw is not None:
@@ -178,6 +193,9 @@ class LifecycleSettings:
         raw = env_value(mapping, "gpu_engine_filter")
         if raw is not None:
             updates["gpu_engine_filter"] = parse_int_tuple(raw)
+        raw = env_value(mapping, "gpu_engine_exclude")
+        if raw is not None:
+            updates["gpu_engine_exclude"] = parse_int_tuple(raw)
         raw = env_value(mapping, "process_images")
         if raw is not None:
             updates["process_images"] = tuple(name.lower() for name in split_csv(raw))
@@ -210,6 +228,8 @@ class LifecycleSettings:
                 updates[key] = value
         if getattr(args, "gpu_engine", None):
             updates["gpu_engine_filter"] = tuple(args.gpu_engine)
+        if getattr(args, "gpu_engine_exclude", None):
+            updates["gpu_engine_exclude"] = tuple(args.gpu_engine_exclude)
         if getattr(args, "process_image", None):
             updates["process_images"] = tuple(name.lower() for name in args.process_image)
         if getattr(args, "terminate_by", None):
@@ -287,12 +307,22 @@ def cpu_usage(proc: dict) -> float:
     return 0.0
 
 
+def encode_package_name(package: str) -> str:
+    return base64.b64encode(package.encode("utf-8")).decode("ascii")
+
+
 def terminate_process_path(pid: int) -> str:
     return "/api/taskmanager/process?" + urlencode({"pid": str(pid)})
 
 
 def terminate_app_path(package: str) -> str:
-    return "/api/taskmanager/app?" + urlencode({"package": package})
+    return "/api/taskmanager/app?" + urlencode({"package": encode_package_name(package)})
+
+
+def decode_terminate_package(path: str) -> str:
+    query = parse_qs(urlsplit(path).query)
+    raw = (query.get("package") or [""])[0]
+    return base64.b64decode(raw.encode("ascii")).decode("utf-8")
 
 
 def csrf_cookie(cookies: SimpleCookie) -> tuple[str, str] | None:
@@ -366,11 +396,15 @@ def pinned_engines(
     adapters: list[list[float]],
     threshold: float,
     engine_filter: tuple[int, ...] = (),
+    engine_exclude: tuple[int, ...] = (),
 ) -> list[dict]:
     hits = []
     allowed = set(engine_filter) if engine_filter else None
+    excluded = set(engine_exclude)
     for adapter, engines in enumerate(adapters):
         for engine, percent in enumerate(engines):
+            if engine in excluded:
+                continue
             if allowed is not None and engine not in allowed:
                 continue
             if percent >= threshold:
@@ -380,46 +414,192 @@ def pinned_engines(
     return hits
 
 
-def orphan_gpu_signature(
+def gpu_advisory(
     adapters: list[list[float]],
-    listing: dict,
     *,
-    package: str = "",
-    package_family: str = "",
-    images: tuple[str, ...] = DEFAULTS["process_images"],
     threshold: float = DEFAULTS["gpu_threshold_percent"],
     engine_filter: tuple[int, ...] = (),
-    idle_cpu_percent: float = DEFAULTS["idle_cpu_percent"],
+    engine_exclude: tuple[int, ...] = (),
 ) -> dict:
-    procs = app_processes(
-        listing, package=package, package_family=package_family, images=images
+    pinned = pinned_engines(
+        adapters, threshold, engine_filter=engine_filter, engine_exclude=engine_exclude
     )
-    pinned = pinned_engines(adapters, threshold, engine_filter)
-    cpu_idle = bool(procs) and all(cpu_usage(p) <= idle_cpu_percent for p in procs)
     return {
-        "process_present": bool(procs),
-        "cpu_idle": cpu_idle,
+        "decisive": False,
+        "note": GPU_ADVISORY_NOTE,
         "engine_pinned": bool(pinned),
         "pinned": pinned,
+        "excluded": list(engine_exclude),
         "adapters": adapters,
-        "orphan": bool(procs) and cpu_idle and bool(pinned),
     }
 
 
-def idle_gpu_report(observed: dict, *, when: str) -> dict:
+def listing_items(listing: dict | None) -> list[dict]:
+    if not listing:
+        return []
+    items = listing.get("Items")
+    if items is None:
+        items = listing.get("items")
+    return list(items or [])
+
+
+def item_name(item: dict) -> str:
+    return str(item.get("Name") or item.get("name") or "")
+
+
+def item_is_file(item: dict) -> bool:
+    typ = item.get("Type", item.get("type"))
+    return typ in (FILE_TYPE, "File", "file") or (
+        typ not in (16, "Folder", "folder", "Directory", "directory")
+        and item.get("FileSize", item.get("fileSize")) is not None
+    )
+
+
+def inbox_names(listing: dict | None) -> tuple[str, ...]:
+    return tuple(item_name(item) for item in listing_items(listing) if item_name(item))
+
+
+def parse_portal_time(value, now: float) -> float | None:
+    """Absolute unix seconds from a Device Portal date field, or None."""
+    if value is None or value == "":
+        return None
+    if isinstance(value, str):
+        match = re.search(r"/Date\((\d+)\)/", value)
+        if match:
+            return int(match.group(1)) / 1000.0
+        try:
+            return datetime.fromisoformat(value.replace("Z", "+00:00")).timestamp()
+        except ValueError:
+            return None
+    if isinstance(value, (int, float)):
+        number = float(value)
+        if number > 1e16:
+            return number / 1e7 - 11644473600.0
+        if number > 1e11:
+            return number / 1000.0
+        if 0 < number < now + 86400:
+            return number
+    return None
+
+
+def item_age_seconds(item: dict, now: float) -> float | None:
+    for key in (
+        "DateModified",
+        "dateModified",
+        "Modified",
+        "LastModified",
+        "DateCreated",
+        "dateCreated",
+    ):
+        instant = parse_portal_time(item.get(key), now)
+        if instant is not None:
+            return max(0.0, now - instant)
+    return None
+
+
+def heartbeat_age_seconds(
+    local_listing: dict | None,
+    *,
+    name: str = HEARTBEAT_NAME,
+    now: float,
+    written_at: float | None = None,
+) -> float | None:
+    if written_at is not None:
+        return max(0.0, now - written_at)
+    for item in listing_items(local_listing):
+        if item_name(item) == name:
+            return item_age_seconds(item, now)
+    return None
+
+
+def last_job_ended_age_seconds(
+    result_listings: list[dict],
+    *,
+    now: float,
+    statuses: list[dict] | None = None,
+) -> float | None:
+    ages = []
+    for listing in result_listings:
+        for item in listing_items(listing):
+            if item_name(item) == "status.json":
+                age = item_age_seconds(item, now)
+                if age is not None:
+                    ages.append(age)
+    for status in statuses or []:
+        if status.get("state") in ("running",):
+            continue
+        for key in ("finished_at", "completed_at", "ended_at"):
+            instant = parse_portal_time(status.get(key), now)
+            if instant is not None:
+                ages.append(max(0.0, now - instant))
+    return min(ages) if ages else None
+
+
+def classify_app_state(
+    *,
+    process_present: bool,
+    worker: dict | None = None,
+    device: dict | None = None,
+    inbox: tuple[str, ...] = (),
+    heartbeat_age_seconds: float | None = None,
+    last_job_ended_age_seconds: float | None = None,
+    idle_exit_seconds: float = DEFAULTS["idle_exit_seconds"],
+    heartbeat_stale_seconds: float = DEFAULTS["heartbeat_stale_seconds"],
+) -> dict:
+    """Orphan predicate from LocalState job/heartbeat ages. GPU is not used."""
+    worker = worker or {}
+    device = device or {}
+    names = {name.lower() for name in inbox}
+    queued = any(name.endswith(".ready") for name in names)
+    claimed = any(name.endswith(".claimed") for name in names)
+    worker_state = str(worker.get("state") or device.get("state") or "")
+    running = worker_state == "running" or worker.get("active_job") not in (None, "", {})
+    job_active = running or queued or claimed
+    ready = worker_state in ("ready", "") and not job_active
+    heartbeat_stale = (
+        heartbeat_age_seconds is None or heartbeat_age_seconds >= heartbeat_stale_seconds
+    )
+    leftover = (
+        last_job_ended_age_seconds is not None
+        and last_job_ended_age_seconds >= idle_exit_seconds
+    )
+    orphan = bool(process_present) and (not job_active) and heartbeat_stale and leftover
+    return {
+        "process_present": bool(process_present),
+        "job_active": job_active,
+        "queued": queued,
+        "claimed": claimed,
+        "running": running,
+        "ready": ready,
+        "worker_state": worker_state,
+        "heartbeat_age_seconds": heartbeat_age_seconds,
+        "heartbeat_stale": heartbeat_stale,
+        "last_job_ended_age_seconds": last_job_ended_age_seconds,
+        "orphan": orphan,
+    }
+
+
+def lifecycle_report(observed: dict, *, when: str) -> dict:
     if when == "before":
-        ok = not observed["orphan"]
-        reason = "orphan_gpu_signature" if observed["orphan"] else "ok"
+        if observed.get("job_active"):
+            ok, reason = False, "job_active"
+        elif observed.get("orphan"):
+            ok, reason = False, "orphan_stale_idle"
+        else:
+            ok, reason = True, "ok"
     elif when == "after":
-        if observed["process_present"]:
+        if observed.get("process_present"):
             ok, reason = False, "process_still_running"
-        elif observed["engine_pinned"]:
-            ok, reason = False, "engine_still_pinned"
         else:
             ok, reason = True, "ok"
     else:
         raise ValueError("when must be before or after")
     return {"when": when, "ok": ok, "reason": reason, **observed}
+
+
+def localstate_dir(directory: str) -> str:
+    cleaned = directory.replace("/", "\\").strip("\\")
+    return "\\LocalState" + (("\\" + cleaned) if cleaned else "")
 
 
 class LifecyclePortal:
@@ -467,11 +647,45 @@ class LifecyclePortal:
             raise RuntimeError(f"Device Portal {method} failed: HTTP {status}")
         return json.loads(payload) if json_result else payload
 
+    def filesystem_path(
+        self, endpoint: str, directory: str, filename: str | None = None
+    ) -> str:
+        if not self.settings.package:
+            raise RuntimeError("package full name is required for LocalState access")
+        query = {
+            "knownfolderid": "LocalAppData",
+            "packagefullname": self.settings.package,
+            "path": localstate_dir(directory),
+        }
+        if filename is not None:
+            query["filename"] = filename
+        return f"/api/filesystem/apps/{endpoint}?" + urlencode(query)
+
     def processes(self) -> dict:
         return self.request("GET", "/api/resourcemanager/processes", json_result=True)
 
     def systemperf(self) -> dict:
         return self.request("GET", "/api/resourcemanager/systemperf", json_result=True)
+
+    def list_files(self, directory: str = "inbox") -> dict:
+        return self.request(
+            "GET", self.filesystem_path("files", directory), json_result=True
+        )
+
+    def download(self, filename: str, directory: str = "") -> bytes:
+        return self.request("GET", self.filesystem_path("file", directory, filename))
+
+    def read_json(self, filename: str, directory: str = "") -> dict:
+        try:
+            payload = json.loads(self.download(filename, directory))
+        except FileNotFoundError:
+            return {}
+        return payload if isinstance(payload, dict) else {}
+
+    def delete_file(self, filename: str, directory: str = "inbox") -> None:
+        if not filename or any(c in filename for c in '\\/"\r\n'):
+            raise ValueError("unsafe remote filename")
+        self.request("DELETE", self.filesystem_path("file", directory, filename))
 
     def sample_adapters(self, *, sleep=time.sleep) -> list[list[float]]:
         samples = []
@@ -491,18 +705,54 @@ class LifecyclePortal:
             images=self.settings.process_images,
         )
 
-    def observe_gpu(self, listing: dict | None = None, *, sleep=time.sleep) -> dict:
+    def _optional_listing(self, directory: str) -> dict:
+        try:
+            return self.list_files(directory)
+        except FileNotFoundError:
+            return {}
+
+    def observe(self, listing: dict | None = None, *, sleep=time.sleep, now=None) -> dict:
         listing = listing if listing is not None else self.processes()
-        return orphan_gpu_signature(
+        procs = self.matching_processes(listing)
+        now_s = time.time() if now is None else now
+        worker = self.read_json("worker.json", "")
+        device = self.read_json("device.json", "")
+        heartbeat_doc = self.read_json(HEARTBEAT_NAME, "")
+        written_at = parse_portal_time(
+            heartbeat_doc.get("written_at") if heartbeat_doc else None, now_s
+        )
+        inbox = self._optional_listing("inbox")
+        local = self._optional_listing("")
+        results = self._optional_listing("inbox/results")
+        result_listings = [results]
+        for item in listing_items(results):
+            name = item_name(item)
+            if name and not item_is_file(item):
+                result_listings.append(self._optional_listing("inbox/results/" + name))
+        state = classify_app_state(
+            process_present=bool(procs),
+            worker=worker,
+            device=device,
+            inbox=inbox_names(inbox),
+            heartbeat_age_seconds=heartbeat_age_seconds(
+                local, now=now_s, written_at=written_at
+            ),
+            last_job_ended_age_seconds=last_job_ended_age_seconds(
+                result_listings, now=now_s
+            ),
+            idle_exit_seconds=self.settings.idle_exit_seconds,
+            heartbeat_stale_seconds=self.settings.heartbeat_stale_seconds,
+        )
+        state["cpu_idle"] = bool(procs) and all(
+            cpu_usage(proc) <= self.settings.idle_cpu_percent for proc in procs
+        )
+        state["gpu_advisory"] = gpu_advisory(
             self.sample_adapters(sleep=sleep),
-            listing,
-            package=self.settings.package,
-            package_family=self.settings.package_family,
-            images=self.settings.process_images,
             threshold=self.settings.gpu_threshold_percent,
             engine_filter=self.settings.gpu_engine_filter,
-            idle_cpu_percent=self.settings.idle_cpu_percent,
+            engine_exclude=self.settings.gpu_engine_exclude,
         )
+        return state
 
     def upload(self, filename: str, data: bytes, directory: str = "inbox") -> None:
         if not filename or any(c in filename for c in '\\/"\r\n'):
@@ -515,17 +765,9 @@ class LifecyclePortal:
             f'filename="{filename}"\r\nContent-Type: application/octet-stream\r\n\r\n'
         ).encode()
         payload = header + data + f"\r\n--{boundary}--\r\n".encode()
-        query = urlencode(
-            {
-                "knownfolderid": "LocalAppData",
-                "packagefullname": self.settings.package,
-                "path": "\\LocalState\\" + directory.replace("/", "\\"),
-                "filename": filename,
-            }
-        )
         self.request(
             "POST",
-            "/api/filesystem/apps/file?" + query,
+            self.filesystem_path("file", directory, filename),
             payload,
             {"Content-Type": f"multipart/form-data; boundary={boundary}"},
         )
@@ -533,17 +775,32 @@ class LifecyclePortal:
     def write_heartbeat(self) -> None:
         self.upload(
             HEARTBEAT_NAME,
-            json.dumps({"schema": "floppylm.host.heartbeat.v1"}).encode(),
+            json.dumps(
+                {
+                    "schema": "floppylm.host.heartbeat.v1",
+                    "written_at": datetime.now(timezone.utc).timestamp(),
+                }
+            ).encode(),
             directory="",
         )
 
     def write_shutdown(self, reason: str = "campaign-complete") -> None:
         self.upload(SHUTDOWN_NAME, reason.encode(), directory="inbox")
 
+    def clear_stale_markers(self) -> dict:
+        """Delete leftover inbox/shutdown so the next launch does not exit."""
+        cleared = []
+        try:
+            self.delete_file(SHUTDOWN_NAME, "inbox")
+            cleared.append("inbox/shutdown")
+        except FileNotFoundError:
+            pass
+        return {"cleared": cleared}
+
     def terminate(self) -> dict:
         listing = self.processes()
         procs = self.matching_processes(listing)
-        result = {"packages": [], "pids": []}
+        result = {"packages": [], "pids": [], "package_errors": []}
         by = set(self.settings.terminate_by)
         packages = []
         if self.settings.package:
@@ -554,8 +811,13 @@ class LifecyclePortal:
                 packages.append(full)
         if "package" in by:
             for package in packages:
-                self.request("DELETE", terminate_app_path(package))
-                result["packages"].append(package)
+                try:
+                    self.request("DELETE", terminate_app_path(package))
+                    result["packages"].append(package)
+                except (PortalAuthError, RuntimeError, FileNotFoundError) as error:
+                    result["package_errors"].append(
+                        {"package": package, "error": str(error)}
+                    )
         if "pid" in by:
             for proc in procs:
                 pid = process_id(proc)
@@ -579,6 +841,7 @@ class LifecyclePortal:
             self.settings.teardown_wait_seconds if wait_seconds is None else wait_seconds
         )
         present = bool(self.matching_processes())
+        killed = False
         if present:
             try:
                 self.write_shutdown("campaign-complete")
@@ -586,14 +849,19 @@ class LifecyclePortal:
                 pass
             if not self.wait_gone(timeout, sleep=sleep):
                 self.terminate()
+                killed = True
                 if not self.wait_gone(timeout, sleep=sleep):
                     raise TimeoutError("console process still listed after terminate")
-        after = idle_gpu_report(self.observe_gpu(sleep=sleep), when="after")
-        after["terminated"] = present
+        try:
+            self.clear_stale_markers()
+        except (FileNotFoundError, RuntimeError):
+            pass
+        after = lifecycle_report(self.observe(sleep=sleep), when="after")
+        after["terminated"] = killed
         return after
 
-    def check_idle_gpu(self, when: str, *, sleep=time.sleep) -> dict:
-        return idle_gpu_report(self.observe_gpu(sleep=sleep), when=when)
+    def check_idle(self, when: str, *, sleep=time.sleep) -> dict:
+        return lifecycle_report(self.observe(sleep=sleep), when=when)
 
 
 def https_request_fn(settings: LifecycleSettings) -> RequestFn:
@@ -648,20 +916,23 @@ def https_request_fn(settings: LifecycleSettings) -> RequestFn:
 def add_settings_flags(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--credentials", default="")
     parser.add_argument("--portal-url", default="")
-    parser.add_argument("--portal-port", type=int, default=None)
+    parser.add_argument("--portal-port", type=parse_int_setting, default=None)
     parser.add_argument("--tls-verify", choices=("pin", "none", "system"), default=None)
     parser.add_argument("--tls-pin", default="")
     parser.add_argument("--package", default="")
     parser.add_argument("--package-family", default="")
     parser.add_argument("--process-image", action="append", default=None)
-    parser.add_argument("--idle-exit-seconds", type=int, default=None)
-    parser.add_argument("--heartbeat-interval-seconds", type=int, default=None)
-    parser.add_argument("--heartbeat-stale-seconds", type=int, default=None)
+    parser.add_argument("--idle-exit-seconds", type=parse_int_setting, default=None)
+    parser.add_argument("--heartbeat-interval-seconds", type=parse_int_setting, default=None)
+    parser.add_argument("--heartbeat-stale-seconds", type=parse_int_setting, default=None)
     parser.add_argument("--poll-interval-seconds", type=float, default=None)
     parser.add_argument("--gpu-threshold-percent", type=float, default=None)
-    parser.add_argument("--gpu-sample-count", type=int, default=None)
+    parser.add_argument("--gpu-sample-count", type=parse_int_setting, default=None)
     parser.add_argument("--gpu-sample-interval-seconds", type=float, default=None)
-    parser.add_argument("--gpu-engine", action="append", type=int, default=None)
+    parser.add_argument("--gpu-engine", action="append", type=parse_int_setting, default=None)
+    parser.add_argument(
+        "--gpu-engine-exclude", action="append", type=parse_int_setting, default=None
+    )
     parser.add_argument("--idle-cpu-percent", type=float, default=None)
     parser.add_argument("--teardown-wait-seconds", type=float, default=None)
     parser.add_argument(
@@ -676,17 +947,21 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     add_settings_flags(parser)
     sub = parser.add_subparsers(dest="command", required=True)
+    sub.add_parser("prepare", help="clear stale inbox/shutdown before launch")
     sub.add_parser("heartbeat", help="refresh LocalState/host.heartbeat")
     shutdown = sub.add_parser("shutdown", help="upload inbox/shutdown")
     shutdown.add_argument("--reason", default="campaign-complete")
     sub.add_parser("terminate", help="DELETE by package and/or pid")
-    sub.add_parser("teardown", help="shutdown, wait, terminate if needed, idle-GPU after")
-    idle = sub.add_parser("idle-gpu", help="sample systemperf before or after a campaign")
+    sub.add_parser("teardown", help="shutdown, wait, terminate if needed, idle check after")
+    idle = sub.add_parser("idle-gpu", help="observe job/heartbeat state before or after")
     idle.add_argument("--when", choices=("before", "after"), required=True)
     args = parser.parse_args(argv)
 
     settings = load_settings(args)
     portal = LifecyclePortal(https_request_fn(settings), settings)
+    if args.command == "prepare":
+        print(json.dumps(portal.clear_stale_markers(), sort_keys=True), flush=True)
+        return 0
     if args.command == "heartbeat":
         portal.write_heartbeat()
         print("heartbeat: ok", flush=True)
@@ -702,7 +977,7 @@ def main(argv: list[str] | None = None) -> int:
         report = portal.teardown()
         print(json.dumps(report, sort_keys=True), flush=True)
         return 0 if report["ok"] else 1
-    report = portal.check_idle_gpu(args.when)
+    report = portal.check_idle(args.when)
     print(json.dumps(report, sort_keys=True), flush=True)
     return 0 if report["ok"] else 1
 

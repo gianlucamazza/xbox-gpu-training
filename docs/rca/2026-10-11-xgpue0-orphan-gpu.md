@@ -34,25 +34,29 @@ stops the host Python process; it does not terminate `XgpuE0.exe`.
 
 ## (b) Busy-wait, spin loop, or a persistent dispatch/present loop with no work?
 
-**No compute spin in the trainer. Persistent UI tick is proven. Compositor load is a hypothesis.**
+**No compute spin in the trainer. Dashboard hold is not what pins the GPU. Proven on console.**
 
-After a job the worker sleeps (`uwp/App.cpp:216`). `GpuKernel` records
+After a job the worker sleeps (`uwp/App.cpp` ready loop). `GpuKernel` records
 `Dispatch` only inside `run` (`src/cpp/e0/dx12_kernel.cpp:199`). There is no
 D3D12 `Present` or swap chain in the E0 kernel. In-flight GPU objects are kept
 until process exit (`docs/e0/job-protocol.md` around the quarantine paragraph;
 `src/cpp/e0/dx12_kernel.cpp:134-151`).
 
-The dashboard `DispatcherTimer` ticks every second for the process lifetime
-(`uwp/DashboardView.cpp:282-285`) and holds a `DisplayRequest`
-(`uwp/DashboardView.cpp:286-287`). That is a persistent present/composition
-client, not a compute dispatch loop.
+The pre-fix dashboard `DispatcherTimer` ticked every second for the process
+lifetime and held a `DisplayRequest` (`c9a197a` `uwp/DashboardView.cpp`). That
+is a persistent present/composition client, not a compute dispatch loop. It
+was a candidate for engine 5, not a proof.
 
-**Hypothesis:** engine 5 is the XAML/CoreWindow compositor while the app stays
-foreground. The 2026-10-01 idle investigation already recorded engine 5 near
-99% with a foreground trainer idle
-(`docs/evidence/e0-20261001-dashboard/notes.md`). Killing this process dropped
-the same counter to 0%, which is consistent with that client going away. It is
-not proof of a leftover compute shader.
+**On-console evidence, package `0.1.0.115` (tip `94769836` + pch `edbcefc3`):**
+a healthy, freshly launched, idle app still showed engine 5 at 99.7–100% with
+CPU 0% after the dashboard timer and `DisplayRequest` were released. When the
+app exited, that engine dropped to 0%. The orphan signature
+(engine ≥ threshold + CPU idle) therefore matches every normal idle
+foreground app. The “dashboard holds the GPU” hypothesis is false on this
+console. Most likely the foreground UWP/compositor engine is busy for any
+foreground app; that mechanism is unverified. GPU utilisation is advisory
+only. The real leftover is the process: it never exited, and the host never
+terminated it.
 
 ## (c) A fence or wait that never signals (hung dispatch / TDR-like wait)?
 
@@ -87,9 +91,14 @@ command before this RCA.
 | Worker stays in `while (true)` after the last job | Root cause |
 | No shutdown / host-heartbeat / idle-exit on the app | Root cause |
 | Host campaign end and unit stop do not terminate `XgpuE0.exe` | Root cause |
-| Engine 5 pinned by the XAML compositor + `DisplayRequest` | Hypothesis |
+| Engine 5 pinned by the dashboard timer + `DisplayRequest` | False on console (`0.1.0.115`) |
+| Foreground UWP/compositor engine busy for any foreground app | Unverified |
 | Hung leftover compute dispatch after `status=completed` | Hypothesis |
 | Why `campaign.json` completed after the lifecycle unit stopped | Not visible from this repo; companion host logs are required |
+
+The leftover GPU reading is a side effect of a process that should already
+have exited. Root cause = the app never exits after the last job, plus no
+host teardown.
 
 ## Fix (this change)
 
@@ -102,9 +111,12 @@ index is compiled in. Defaults and overrides are in
   (default 30 minutes; `LocalState/lifecycle.json` overrides).
 - When no job is running the dashboard stops its timer and releases
   `DisplayRequest`, independent of process exit
-  ([ADR 0010](../adr/0010-idle-compositor-release.md)).
+  ([ADR 0010](../adr/0010-idle-compositor-release.md)). That does not drop
+  the foreground GPU engine; it is not the stay-alive or orphan signal.
 - Host tool `scripts/e0_console_lifecycle.py`: CSRF cookie discovery, 400/403
-  retry, terminate by package and/or pid, and idle-GPU checks that average a
-  sample window across every adapter and engine.
+  retry, terminate by package (base64) and/or pid, and idle checks that use
+  LocalState job/heartbeat/last-job age. GPU samples stay advisory. The
+  consumed `inbox/shutdown` marker is deleted; `prepare` clears a stale one
+  before launch.
 - Companion runner and the host unit `ExecStop` still need to invoke that tool;
   that wiring lives in `gianlucamazza/floppylm`.

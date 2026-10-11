@@ -47,10 +47,15 @@ heartbeat expire at the configured deadline (default 30 minutes). Campaign
 end still requires the host teardown tool. A package that carries this
 decision must pass the lifecycle acceptance gate before a campaign binds it.
 
+Clarification — 2026-10-11 on-console (`0.1.0.115`): releasing the timer and
+`DisplayRequest` did not drop engine 5 (still 99.7–100% at CPU 0%). Process
+exit did. GPU utilisation is not the orphan predicate; see
+[the RCA](../rca/2026-10-11-xgpue0-orphan-gpu.md).
+
 ## Alternatives considered
 
 | Alternative | Why not |
 | --- | --- |
-| Keep process-lifetime `DisplayRequest` (ADR 0007/0008) | Leaves a compositor client after the last job; matches the orphan signature. |
+| Keep process-lifetime `DisplayRequest` (ADR 0007/0008) | Leaves a compositor client after the last job. On-console evidence later showed it is not what pins the foreground GPU engine. |
 | Exit the process immediately when idle | Breaks in-campaign gaps the host still intends to fill; the heartbeat covers those. |
 | Auto-relaunch sidecar | Forbidden by FloppyLM ADR 0017. |

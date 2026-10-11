@@ -107,19 +107,22 @@ calls discover a CSRF/XSRF cookie and echo it as `X-CSRF-Token`; 400/403 retry
 once.
 
 ```bash
+python3 scripts/e0_console_lifecycle.py prepare
 python3 scripts/e0_console_lifecycle.py idle-gpu --when before
 python3 scripts/e0_console_lifecycle.py heartbeat
 python3 scripts/e0_console_lifecycle.py teardown
 python3 scripts/e0_console_lifecycle.py idle-gpu --when after
 ```
 
-`idle-gpu --when before` refuses a present, CPU-idle process with any GPU
-engine on any adapter at or above the threshold (default 90%, averaged over the
-sample window). `teardown` uploads `inbox/shutdown`, waits, then `DELETE`s by
-package and/or pid. `idle-gpu --when after` requires the process gone and no
-engine still pinned. Call `teardown` from campaign completion and from the host
-unit `ExecStop`. The companion runner in `gianlucamazza/floppylm` still has to
-invoke these commands.
+`prepare` deletes a leftover `inbox/shutdown` before launch. `idle-gpu --when
+before` treats an idle, ready app as OK to reuse; it refuses only a running or
+queued job, or a leftover process whose heartbeat is stale and whose last job
+ended past the idle deadline. GPU samples are advisory. `teardown` uploads
+`inbox/shutdown`, waits, then `DELETE`s by base64 package and/or pid. `idle-gpu
+--when after` requires the process gone. Call `prepare` before launch and
+`teardown` from campaign completion and from the host unit `ExecStop`. The
+companion runner in `gianlucamazza/floppylm` still has to invoke these
+commands.
 
 Do not install or bump a package from this step. Package `0.1.0.98` remains the
 historical accepted record in [status.md](../status.md).

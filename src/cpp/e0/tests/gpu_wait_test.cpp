@@ -139,6 +139,29 @@ void host_idle_watch_exits_on_shutdown_and_stale_heartbeat() {
   require(from_float.heartbeat_stale_ms == 9000 &&
               from_float.idle_exit_ms == kHostIdleExitMs,
           "JSON accepts numeric seconds that are not unsigned integers");
+  const auto half = load_host_idle_config(
+      e0::Json{{"poll_interval_seconds", 0.5}});
+  require(half.poll_interval_ms == 500, "fractional seconds keep milliseconds");
+  const auto tiny = load_host_idle_config(
+      e0::Json{{"poll_interval_seconds", 0.0}});
+  require(tiny.poll_interval_ms == kMinPollIntervalMs,
+          "sub-minimum poll is clamped");
+  const auto root =
+      std::filesystem::temp_directory_path() /
+      ("xgpu-shutdown-marker-" +
+       std::to_string(
+           std::chrono::steady_clock::now().time_since_epoch().count()));
+  std::filesystem::create_directories(root);
+  const auto marker = root / "shutdown";
+  {
+    std::ofstream out(marker);
+    out << "campaign-complete";
+  }
+  require(consume_shutdown_marker(marker) && !std::filesystem::exists(marker),
+          "shutdown marker is deleted when consumed");
+  require(!consume_shutdown_marker(marker),
+          "a missing shutdown marker is not an error");
+  std::filesystem::remove_all(root);
 }
 int main(int argc, char **argv) {
   if (argc != 2)

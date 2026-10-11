@@ -98,7 +98,7 @@ idle and either of these is true:
 
 | Signal | Path | Effect |
 | --- | --- | --- |
-| Host shutdown | `LocalState/inbox/shutdown` | Exit 0 as soon as no job is running |
+| Host shutdown | `LocalState/inbox/shutdown` | Exit 0 as soon as no job is running; the marker is deleted before exit |
 | Host heartbeat stale or absent, and no job past the idle deadline | `LocalState/host.heartbeat` | Exit 0 (`idle_timeout`) |
 
 Defaults are 30 minutes for idle exit and heartbeat staleness
@@ -108,10 +108,12 @@ A running job is not interrupted; the next ready-loop iteration exits. With no
 job the dashboard stops its timer and releases `DisplayRequest` so the
 compositor is not held after the last job. The published-fence watchdog is
 unchanged. The host refreshes `host.heartbeat` while it still intends to submit
-work, writes `inbox/shutdown` when work is done, and runs
-`scripts/e0_console_lifecycle.py teardown` from campaign end and from the host
-unit stop path. The companion campaign runner in `gianlucamazza/floppylm` must
-invoke that tool.
+work, runs `scripts/e0_console_lifecycle.py prepare` before launch to clear a
+stale `inbox/shutdown`, writes `inbox/shutdown` when work is done, and runs
+`teardown` from campaign end and from the host unit stop path. Idle/orphan
+checks use job and heartbeat state, not GPU utilisation
+([lifecycle.md](lifecycle.md)). The companion campaign runner in
+`gianlucamazza/floppylm` must invoke that tool.
 
 ## Runtime ownership and explicit recovery
 
