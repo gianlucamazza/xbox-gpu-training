@@ -112,7 +112,6 @@ std::string utc_iso8601(std::chrono::system_clock::time_point when) {
   out << std::put_time(&utc, "%Y-%m-%dT%H:%M:%SZ");
   return out.str();
 }
-std::string utc_iso8601_now() { return utc_iso8601(std::chrono::system_clock::now()); }
 void worker() {
   winrt::init_apartment();
   std::unique_ptr<e0::WorkerLock> ownership;
