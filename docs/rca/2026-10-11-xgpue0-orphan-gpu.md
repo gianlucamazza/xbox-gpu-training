@@ -93,9 +93,18 @@ command before this RCA.
 
 ## Fix (this change)
 
-- App exits on `LocalState/inbox/shutdown` once idle, or after 30 minutes with
-  no work and no fresh `LocalState/host.heartbeat`.
-- Host tool `scripts/e0_console_lifecycle.py`: CSRF-aware terminate, campaign
-  teardown, and idle-GPU checks before/after a campaign.
+The implementation is portable: no console address, user, campaign id or engine
+index is compiled in. Defaults and overrides are in
+[lifecycle.md](../e0/lifecycle.md).
+
+- App exits on `LocalState/inbox/shutdown` once idle, or after the configured
+  idle deadline with no work and no fresh `LocalState/host.heartbeat`
+  (default 30 minutes; `LocalState/lifecycle.json` overrides).
+- When no job is running the dashboard stops its timer and releases
+  `DisplayRequest`, independent of process exit
+  ([ADR 0010](../adr/0010-idle-compositor-release.md)).
+- Host tool `scripts/e0_console_lifecycle.py`: CSRF cookie discovery, 400/403
+  retry, terminate by package and/or pid, and idle-GPU checks that average a
+  sample window across every adapter and engine.
 - Companion runner and the host unit `ExecStop` still need to invoke that tool;
   that wiring lives in `gianlucamazza/floppylm`.

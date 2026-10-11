@@ -1,4 +1,5 @@
 #include "App.h"
+#include "../src/cpp/e0/idle_config.h"
 #include "../src/cpp/e0/model.h"
 #include "../src/cpp/e0/runtime_lifecycle.h"
 #include "App.g.cpp"
@@ -40,7 +41,14 @@ uint64_t host_heartbeat_age_ms(const std::filesystem::path &local) {
     return 0;
   return uint64_t(age);
 }
-bool request_worker_exit(HostIdleWatch &watch,
+HostIdleConfig load_local_idle_config(const std::filesystem::path &local) {
+  try {
+    return load_host_idle_config(e0::read_json(local / L"lifecycle.json"));
+  } catch (...) {
+    return {};
+  }
+}
+bool request_worker_exit(HostIdleWatch &watch, const HostIdleConfig &config,
                          const std::filesystem::path &local, bool job_active,
                          std::string &reason) {
   HostIdleSample sample;
@@ -49,7 +57,8 @@ bool request_worker_exit(HostIdleWatch &watch,
       std::filesystem::exists(local / L"inbox" / L"shutdown");
   sample.now_ms = monotonic_ms();
   sample.host_heartbeat_age_ms = host_heartbeat_age_ms(local);
-  return watch.observe(sample, kHostIdleExitMs, reason);
+  return watch.observe(sample, config.idle_exit_ms, reason,
+                       config.heartbeat_stale_ms);
 }
 void exit_worker(const std::string &reason) {
   ExitProcess(reason == "shutdown" || reason == "idle_timeout" ? 0 : 1);
@@ -59,6 +68,10 @@ std::mutex active_mutex;
 std::condition_variable active_changed;
 std::filesystem::path active_job;
 std::unique_ptr<xgpu::DashboardView> dashboard;
+void notify_dashboard(bool job_active) {
+  if (dashboard)
+    dashboard->set_training_active(job_active);
+}
 std::string worker_uuid() {
   unsigned char uuid[16];
   if (BCryptGenRandom(nullptr, uuid, sizeof(uuid),
@@ -124,6 +137,7 @@ void worker() {
     };
     lifecycle->ready();
     lifecycle->publish();
+    const auto idle_config = load_local_idle_config(local);
     HostIdleWatch idle_watch;
     e0::atomic_json(
         local / L"device.json",
@@ -139,7 +153,8 @@ void worker() {
          {"commit", XGPU_COMMIT}});
     while (true) {
       std::string exit_reason;
-      if (request_worker_exit(idle_watch, local, false, exit_reason))
+      if (request_worker_exit(idle_watch, idle_config, local, false,
+                             exit_reason))
         exit_worker(exit_reason);
       if (lifecycle->snapshot().at("state") == "failed")
         throw std::runtime_error(
@@ -166,8 +181,10 @@ void worker() {
         std::string submitted_hash;
         {
           std::string ignored;
-          idle_watch.observe({true, false, monotonic_ms()}, kHostIdleExitMs,
-                             ignored);
+          idle_watch.observe({true, false, monotonic_ms()},
+                             idle_config.idle_exit_ms, ignored,
+                             idle_config.heartbeat_stale_ms);
+          notify_dashboard(true);
         }
         try {
           const auto id = winrt::to_string(stem);
@@ -238,6 +255,7 @@ void worker() {
           active_job.clear();
         }
         active_changed.notify_all();
+        notify_dashboard(false);
         if (kernel->poisoned()) {
           lifecycle->publish();
           try {
@@ -253,15 +271,18 @@ void worker() {
           // restarts the process.
           while (true) {
             std::string exit_reason;
-            if (request_worker_exit(idle_watch, local, false, exit_reason))
+            if (request_worker_exit(idle_watch, idle_config, local, false,
+                                   exit_reason))
               exit_worker(exit_reason);
-            std::this_thread::sleep_for(std::chrono::seconds(1));
+            std::this_thread::sleep_for(
+                std::chrono::milliseconds(idle_config.poll_interval_ms));
           }
         }
         lifecycle->ready();
         lifecycle->publish();
       }
-      std::this_thread::sleep_for(std::chrono::seconds(1));
+      std::this_thread::sleep_for(
+          std::chrono::milliseconds(idle_config.poll_interval_ms));
     }
   } catch (const std::exception &error) {
     // A second worker must not overwrite the current owner's readiness files.
@@ -291,12 +312,15 @@ void worker() {
                                                {"commit", XGPU_COMMIT}});
     } catch (...) {
     }
+    const auto failed_config = load_local_idle_config(local);
     HostIdleWatch failed_watch;
     while (true) {
       std::string exit_reason;
-      if (request_worker_exit(failed_watch, local, false, exit_reason))
+      if (request_worker_exit(failed_watch, failed_config, local, false,
+                             exit_reason))
         exit_worker(exit_reason);
-      std::this_thread::sleep_for(std::chrono::seconds(1));
+      std::this_thread::sleep_for(
+          std::chrono::milliseconds(failed_config.poll_interval_ms));
     }
   }
 }

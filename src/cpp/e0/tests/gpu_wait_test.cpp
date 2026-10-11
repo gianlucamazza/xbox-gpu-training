@@ -1,3 +1,4 @@
+#include "idle_config.h"
 #include "model.h"
 #include <chrono>
 #include <cmath>
@@ -115,6 +116,29 @@ void host_idle_watch_exits_on_shutdown_and_stale_heartbeat() {
           "idle after a job restarts the deadline");
   require(!work.observe({false, false, 3499}, 1000, reason),
           "post-job idle stays inside the deadline");
+  HostIdleWatch split;
+  reason.clear();
+  require(!split.observe({false, false, 0, 1500}, 5000, reason, 1000),
+          "stale heartbeat uses its own threshold");
+  require(split.observe({false, false, 5000, 6500}, 5000, reason, 1000) &&
+              reason == "idle_timeout",
+          "idle deadline stays independent of heartbeat staleness");
+  const auto overridden = host_idle_config_override(5, 7, 2);
+  require(overridden.idle_exit_ms == 5000 &&
+              overridden.heartbeat_stale_ms == 7000 &&
+              overridden.poll_interval_ms == 2000,
+          "second overrides replace the documented defaults");
+  const auto from_json = load_host_idle_config(
+      e0::Json{{"idle_exit_seconds", 12}, {"poll_interval_seconds", 3}});
+  require(from_json.idle_exit_ms == 12000 &&
+              from_json.heartbeat_stale_ms == kHostIdleExitMs &&
+              from_json.poll_interval_ms == 3000,
+          "JSON overrides only the keys that are present");
+  const auto from_float = load_host_idle_config(
+      e0::Json{{"heartbeat_stale_seconds", 9.0}});
+  require(from_float.heartbeat_stale_ms == 9000 &&
+              from_float.idle_exit_ms == kHostIdleExitMs,
+          "JSON accepts numeric seconds that are not unsigned integers");
 }
 int main(int argc, char **argv) {
   if (argc != 2)

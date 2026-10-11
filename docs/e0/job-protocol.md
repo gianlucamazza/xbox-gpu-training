@@ -79,9 +79,9 @@ branch artifacts still verify.
   stops without a new checkpoint (the trunk checkpoint before the branch stands).
 - **Suspension.** On `Suspending` the app writes `<id>.cancel` containing `suspend`
   for the active job and holds the deferral up to 4 s for the job to stop.
-- **Stay-alive (best effort).** The dashboard holds a `DisplayRequest` for the
-  process lifetime so idle gaps do not drop the TV stay-awake request
-  ([ADR 0007](../adr/0007-uwp-stay-alive.md), [ADR 0008](../adr/0008-drop-extended-execution.md)).
+- **Stay-alive (best effort).** A running job holds a `DisplayRequest` and the
+  dashboard timer. Idle releases both so the compositor is not kept busy with
+  no work ([lifecycle.md](lifecycle.md), [ADR 0010](../adr/0010-idle-compositor-release.md)).
   The app does not request `ExtendedExecutionSession`: a grant on 0.1.0.84
   let a lifecycle job run to completion under Dev Home with no `.cancel`.
   Cooperative `Suspending` remains the lifecycle contract.
@@ -99,17 +99,19 @@ idle and either of these is true:
 | Signal | Path | Effect |
 | --- | --- | --- |
 | Host shutdown | `LocalState/inbox/shutdown` | Exit 0 as soon as no job is running |
-| Host heartbeat stale or absent, and no job for 30 minutes | `LocalState/host.heartbeat` | Exit 0 (`idle_timeout`) |
+| Host heartbeat stale or absent, and no job past the idle deadline | `LocalState/host.heartbeat` | Exit 0 (`idle_timeout`) |
 
-A running job is not interrupted by shutdown or the idle deadline; the next
-ready-loop iteration exits. The published-fence watchdog is unchanged. The host
-refreshes `host.heartbeat` while it still intends to submit work, writes
-`inbox/shutdown` when the campaign is done, and runs
+Defaults are 30 minutes for idle exit and heartbeat staleness
+([lifecycle.md](lifecycle.md)). `LocalState/lifecycle.json` overrides
+`idle_exit_seconds`, `heartbeat_stale_seconds` and `poll_interval_seconds`.
+A running job is not interrupted; the next ready-loop iteration exits. With no
+job the dashboard stops its timer and releases `DisplayRequest` so the
+compositor is not held after the last job. The published-fence watchdog is
+unchanged. The host refreshes `host.heartbeat` while it still intends to submit
+work, writes `inbox/shutdown` when work is done, and runs
 `scripts/e0_console_lifecycle.py teardown` from campaign end and from the host
-unit stop path. Device Portal `DELETE` calls echo the `CSRF-Token` cookie as
-`X-CSRF-Token`. The companion campaign runner in `gianlucamazza/floppylm` must
-invoke that tool; this repository owns the Device Portal terminate and idle-GPU
-check.
+unit stop path. The companion campaign runner in `gianlucamazza/floppylm` must
+invoke that tool.
 
 ## Runtime ownership and explicit recovery
 

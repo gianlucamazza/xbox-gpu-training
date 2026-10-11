@@ -283,6 +283,8 @@ int main() {
         "missing schema is absent");
   check(e0ui::worker_line({}) == "WORKER · not published yet",
         "unpublished worker");
+  check(e0ui::compositor_hold(true) && !e0ui::compositor_hold(false),
+        "idle releases the dashboard timer and DisplayRequest");
 
   if (failures)
     return EXIT_FAILURE;
