@@ -16,7 +16,7 @@ Code-level map of the E0 trainer. Semantics are owned by FloppyLM under [ADR 000
 | `src/hlsl/e0_tensor.hlsl` | One `CSMain` multi-op compute shader; `op`/`mode` select the primitive and its forward (0) or input-gradient (1..3) variant. Compiled with `dxc -T cs_6_0 -E CSMain -Gis`. |
 | `uwp/App.cpp` | Console worker: inbox polling, schema dispatch, suspension, shutdown/idle exit ([job-protocol.md](job-protocol.md#shutdown-and-idle-exit)). |
 | `src/cpp/gpu_wait.h` | Portable `BoundedGpuWait`, published-fence watch, and host-idle/shutdown exit. |
-| `src/cpp/e0/idle_config.h` | `LocalState/lifecycle.json` overrides for idle, heartbeat stale and poll. |
+| `src/cpp/e0/idle_config.h` | `LocalState/lifecycle.json` overrides for idle, heartbeat stale and poll; `instance_document` for `LocalState/instance.json`. |
 | `scripts/e0_console_lifecycle.py` | Portable host teardown and idle/orphan checks ([lifecycle.md](lifecycle.md)). |
 
 CMake targets: `xgpu_e0` (static library), `xgpu_e0_train` (CLI), `xgpu_e0_cso`

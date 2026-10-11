@@ -24,6 +24,21 @@ On start the worker writes `LocalState/device.json`:
 
 Acceptance must match `package` and `commit` against the expected build.
 
+## Instance record
+
+On start, after the process lock, the worker writes `LocalState/instance.json`.
+This is not a FloppyLM schema and is not an extension of `worker.json`.
+
+| Key | Value |
+| --- | --- |
+| `schema` | `xgpu.instance.v1` |
+| `instance_id` | the same random UUID published as `worker_id` |
+| `started_at` | UTC ISO-8601 launch time |
+| `pid` | current process id when available |
+
+The host lifecycle tool reads this file for start time and instance identity.
+See [lifecycle.md](lifecycle.md).
+
 ## Inbox
 
 ```
@@ -125,14 +140,19 @@ copy. Neither runtime faults nor lifecycle reconciliation change weights,
 optimizer formulas, schedules or the final-test reservation.
 
 Before readiness, the worker acquires an exclusive process-lifetime `worker.lock`,
-creates a random instance ID and reconciles abandoned claims. `worker.json` is
+creates a random instance ID, writes `LocalState/instance.json`
+(`xgpu.instance.v1`: `instance_id`, `started_at` UTC ISO-8601, `pid`) and
+reconciles abandoned claims. That file is the host-visible start time and
+instance identity. It is not an extension of `worker.json`
+(`floppylm.worker.v1` has `additionalProperties: false`). `worker.json` is
 atomically published every five seconds by an independent thread. Heartbeat ticks
 only increment `heartbeat_seq`; completed GPU fences and optimizer steps update
 `progress.sequence`. The snapshot distinguishes trunk/cooldown steps and records
 the last completed operation and fence. A heartbeat therefore proves process
 liveness, not training progress. The on-console dashboard reads `worker.json`
 every second and shows that line; thirty seconds without a rewrite is
-unreachable.
+unreachable. The host `host.heartbeat` document carries the same
+`instance_id`; a leftover heartbeat from an earlier instance is ignored.
 
 After claiming `<id>.ready`, the worker persists the exact submitted payload in
 `<id>.owner.json` and executes `<id>.owned.job.json`, which contains the same bytes.

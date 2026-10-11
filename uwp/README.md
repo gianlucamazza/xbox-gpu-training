@@ -1,7 +1,7 @@
 # `uwp/` — XgpuE0 UWP app
 
 x64 UWP App that hosts the E0 trainer on a Series S in Dev Mode. On launch it starts
-a worker that reports `device.json` and runs jobs from `LocalState/inbox`; on
+a worker that reports `device.json` and `instance.json` and runs jobs from `LocalState/inbox`; on
 suspension it asks the active job to checkpoint. The window shows a read-only
 training dashboard.
 

@@ -11,6 +11,7 @@
 #include <condition_variable>
 #include <filesystem>
 #include <fstream>
+#include <ctime>
 #include <iomanip>
 #include <limits>
 #include <memory>
@@ -92,6 +93,15 @@ std::string worker_uuid() {
   }
   return out.str();
 }
+std::string utc_iso8601_now() {
+  const auto now = std::chrono::system_clock::now();
+  const auto time = std::chrono::system_clock::to_time_t(now);
+  std::tm utc{};
+  gmtime_s(&utc, &time);
+  std::ostringstream out;
+  out << std::put_time(&utc, "%Y-%m-%dT%H:%M:%SZ");
+  return out.str();
+}
 void worker() {
   winrt::init_apartment();
   std::unique_ptr<e0::WorkerLock> ownership;
@@ -105,8 +115,12 @@ void worker() {
     inbox = local / L"inbox";
     std::filesystem::create_directories(inbox);
     ownership = std::make_unique<e0::WorkerLock>(local / L"worker.lock");
+    const auto instance_id = worker_uuid();
+    const auto pid = uint64_t(GetCurrentProcessId());
+    e0::atomic_json(local / L"instance.json",
+                    instance_document(instance_id, utc_iso8601_now(), pid));
     lifecycle = std::make_unique<e0::RuntimeLifecycle>(
-        local, worker_uuid(), GetCurrentProcessId(),
+        local, instance_id, pid,
         winrt::to_string(winrt::Windows::ApplicationModel::Package::Current()
                              .Id()
                              .FullName()),

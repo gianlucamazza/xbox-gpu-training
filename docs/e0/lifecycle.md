@@ -41,6 +41,8 @@ env files can pass floats.
 | Portal user | (none) | — | `XGPU_PORTAL_USER` or `UWP_DEVICE_USER` | — |
 | Portal password | (none) | — | `XGPU_PORTAL_PASSWORD` or `OPENAPPX_DEVICE_PASSWORD` | — |
 | Credentials file | (none) | `--credentials` | `XGPU_PORTAL_CREDENTIALS` | — |
+| Instance document name | `instance.json` | `--instance-name` | `XGPU_INSTANCE_NAME` | — (app writes `LocalState/instance.json`) |
+| Orphan strict | off | `--orphan-strict` / `--no-orphan-strict` | `XGPU_ORPHAN_STRICT` | — |
 
 Device Portal user and password are never accepted on the command line.
 
@@ -62,12 +64,28 @@ historical inbox files:
   console can keep thousands from past jobs) are ignored. A `.claimed`
   with no result is a weak signal only when it is newer than app start.
   A `.ready` file is current queue, not history.
+- App start and instance identity come from `LocalState/instance.json`
+  (`schema` `xgpu.instance.v1`: `instance_id`, `started_at` UTC ISO-8601,
+  `pid`). The worker writes that file at startup. It is not part of
+  `floppylm.worker.v1` (`additionalProperties` is false; do not add
+  `started_at` to `worker.json`). If `instance.json` is missing, a Device
+  Portal process `CreateTime` / `StartTime` is used when the listing
+  publishes one. Some consoles publish neither field.
 - Idleness is `now - max(app start, last job end in this instance, last
-  host heartbeat in this instance)`. App start is the Device Portal
-  process `CreateTime` (or `worker.started_at` if a future worker
-  document publishes it). Results from before this instance do not count.
+  host heartbeat in this instance)`. Results from before this instance
+  do not count. `host.heartbeat` carries `instance_id`. A heartbeat
+  whose `instance_id` differs from `instance.json`, or that was written
+  before `started_at`, is ignored — a leftover file from an earlier
+  process does not bind to the current one.
 - A ready app younger than `idle_exit_seconds` is never an orphan. The
   host before-check may run before the first heartbeat.
+- When the start time is unknown (old build, missing `instance.json`,
+  and no process start field) the verdict is never orphan:
+  `orphan: null`, `reason: start_time_unknown`. The before-check is
+  `ok: true` and emits a warning. `--orphan-strict` /
+  `XGPU_ORPHAN_STRICT=1` refuses instead (default off).
+- With no process, `worker_state` is `null` rather than the leftover
+  value from a stale `worker.json`.
 
 No process plus stale history is `job_active=false`, `orphan=false`,
 `process_present=false` — OK to launch. `idle-gpu --when after` fails

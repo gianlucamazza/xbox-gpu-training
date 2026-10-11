@@ -12,6 +12,7 @@ from urllib.parse import parse_qs, urlsplit
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from e0_console_lifecycle import (  # noqa: E402
+    START_TIME_UNKNOWN_WARNING,
     LifecyclePortal,
     LifecycleSettings,
     PortalAuthError,
@@ -25,6 +26,7 @@ from e0_console_lifecycle import (  # noqa: E402
     decode_terminate_package,
     encode_package_name,
     gpu_advisory,
+    heartbeat_for_instance,
     ingest_cookies,
     last_job_ended_age_seconds,
     lifecycle_report,
@@ -139,10 +141,13 @@ class Detection(unittest.TestCase):
         self.assertFalse(pinned_engines(mean, 90.0))
 
     def test_idle_ready_app_is_not_an_orphan_even_if_gpu_is_pinned(self):
+        now = 2_000_000.0
         state = classify_app_state(
             process_present=True,
             worker={"state": "ready", "active_job": None},
             inbox=(),
+            now=now,
+            app_start_seconds=now - 30,
             heartbeat_age_seconds=None,
             last_job_ended_age_seconds=None,
             idle_exit_seconds=120,
@@ -242,7 +247,104 @@ class Detection(unittest.TestCase):
         self.assertFalse(state["process_present"])
         self.assertFalse(state["job_active"])
         self.assertFalse(state["orphan"])
+        self.assertIsNone(state["worker_state"])
         self.assertTrue(lifecycle_report(state, when="before")["ok"])
+
+    def test_unknown_start_is_not_orphan(self):
+        now = 2_000_000.0
+        state = classify_app_state(
+            process_present=True,
+            worker={"state": "ready", "active_job": None},
+            now=now,
+            heartbeat_age_seconds=917,
+            last_job_ended_age_seconds=917,
+            idle_exit_seconds=300,
+            heartbeat_stale_seconds=300,
+        )
+        report = lifecycle_report(state, when="before")
+        self.assertIsNone(state["orphan"])
+        self.assertFalse(state["start_time_known"])
+        self.assertTrue(report["ok"])
+        self.assertEqual(report["reason"], "start_time_unknown")
+        self.assertEqual(report["warning"], START_TIME_UNKNOWN_WARNING)
+
+    def test_unknown_start_strict_refuses(self):
+        now = 2_000_000.0
+        state = classify_app_state(
+            process_present=True,
+            worker={"state": "ready", "active_job": None},
+            now=now,
+            last_job_ended_age_seconds=917,
+            idle_exit_seconds=300,
+        )
+        report = lifecycle_report(state, when="before", orphan_strict=True)
+        self.assertIsNone(state["orphan"])
+        self.assertFalse(report["ok"])
+        self.assertEqual(report["reason"], "start_time_unknown")
+        self.assertNotIn("warning", report)
+
+    def test_stale_heartbeat_from_other_instance_is_ignored(self):
+        now = 2_000_000.0
+        started = now - 18
+        written = heartbeat_for_instance(
+            {
+                "schema": "floppylm.host.heartbeat.v1",
+                "instance_id": "previous-instance",
+                "written_at": now - 917,
+            },
+            instance_id="current-instance",
+            started_at=started,
+            now=now,
+        )
+        self.assertIsNone(written)
+        predates = heartbeat_for_instance(
+            {
+                "schema": "floppylm.host.heartbeat.v1",
+                "instance_id": "current-instance",
+                "written_at": started - 5,
+            },
+            instance_id="current-instance",
+            started_at=started,
+            now=now,
+        )
+        self.assertIsNone(predates)
+        state = classify_app_state(
+            process_present=True,
+            worker={"state": "ready", "active_job": None},
+            now=now,
+            app_start_seconds=started,
+            instance_id="current-instance",
+            heartbeat_written_at=written,
+            last_job_ended_age_seconds=917,
+            idle_exit_seconds=300,
+            heartbeat_stale_seconds=300,
+        )
+        report = lifecycle_report(state, when="before")
+        self.assertLess(state["app_age_seconds"], 300)
+        self.assertIsNone(state["heartbeat_age_seconds"])
+        self.assertIsNone(state["last_job_ended_age_seconds"])
+        self.assertFalse(state["orphan"])
+        self.assertTrue(report["ok"])
+        self.assertEqual(report["reason"], "ok")
+
+    def test_known_start_stale_idle_is_orphan(self):
+        now = 2_000_000.0
+        state = classify_app_state(
+            process_present=True,
+            worker={"state": "ready", "active_job": None},
+            now=now,
+            app_start_seconds=now - 4000,
+            instance_id="same-instance",
+            heartbeat_written_at=now - 4000,
+            last_job_ended_at=now - 4000,
+            idle_exit_seconds=1800,
+            heartbeat_stale_seconds=1800,
+        )
+        report = lifecycle_report(state, when="before")
+        self.assertTrue(state["start_time_known"])
+        self.assertTrue(state["orphan"])
+        self.assertFalse(report["ok"])
+        self.assertEqual(report["reason"], "orphan_stale_idle")
 
     def test_claimed_without_result_only_if_newer_than_app_start(self):
         now = 2_000_000.0
@@ -294,6 +396,8 @@ class Config(unittest.TestCase):
         self.assertEqual(settings.gpu_engine_filter, ())
         self.assertEqual(settings.gpu_engine_exclude, ())
         self.assertEqual(settings.terminate_by, ("package", "pid"))
+        self.assertEqual(settings.instance_name, "instance.json")
+        self.assertFalse(settings.orphan_strict)
 
     def test_float_env_integers(self):
         self.assertEqual(parse_int_setting("20.0"), 20)
@@ -347,6 +451,24 @@ class Config(unittest.TestCase):
             self.assertEqual(settings.process_images, ("custom.bin",))
             self.assertEqual(settings.gpu_engine_filter, (2,))
             self.assertEqual(settings.gpu_engine_exclude, (5,))
+
+    def test_orphan_strict_and_instance_name_override(self):
+        settings = load_settings(
+            environ={
+                "XGPU_ORPHAN_STRICT": "1",
+                "XGPU_INSTANCE_NAME": "boot.json",
+            }
+        )
+        self.assertTrue(settings.orphan_strict)
+        self.assertEqual(settings.instance_name, "boot.json")
+        parser = argparse.ArgumentParser()
+        add_settings_flags(parser)
+        args = parser.parse_args(
+            ["--no-orphan-strict", "--instance-name", "instance.json"]
+        )
+        settings = load_settings(args, environ={"XGPU_ORPHAN_STRICT": "1"})
+        self.assertFalse(settings.orphan_strict)
+        self.assertEqual(settings.instance_name, "instance.json")
 
     def test_alias_env_names(self):
         settings = load_settings(
@@ -453,14 +575,24 @@ class FakePortal(unittest.TestCase):
                 data = payload if isinstance(payload, bytes) else json.dumps(payload).encode()
                 return 200, [], data
             if method == "POST":
-                if filename == "shutdown":
-                    self.contents[(directory, filename)] = body or b""
-                    folder = self.files.setdefault("inbox", files())
-                    names = [item["Name"] for item in folder.get("Items", [])]
-                    if "shutdown" not in names:
-                        folder.setdefault("Items", []).append(
-                            {"Name": "shutdown", "Type": 32, "FileSize": 4}
-                        )
+                stored = body or b""
+                marker = b"\r\n\r\n"
+                if marker in stored:
+                    stored = stored.split(marker, 1)[1]
+                    for suffix in (b"\r\n--xgpu-lifecycle--\r\n", b"\r\n--xgpu-lifecycle--"):
+                        if stored.endswith(suffix):
+                            stored = stored[: -len(suffix)]
+                            break
+                try:
+                    self.contents[(directory, filename)] = json.loads(stored)
+                except (json.JSONDecodeError, UnicodeDecodeError):
+                    self.contents[(directory, filename)] = stored
+                folder = self.files.setdefault(directory, files())
+                names = [item["Name"] for item in folder.get("Items", [])]
+                if filename not in names:
+                    folder.setdefault("Items", []).append(
+                        {"Name": filename, "Type": 32, "FileSize": len(stored)}
+                    )
                 return 200, [], b""
             if method == "DELETE":
                 folder = self.files.get(directory, files())
@@ -616,6 +748,104 @@ class FakePortal(unittest.TestCase):
         self.assertFalse(fresh["job_active"])
         self.assertFalse(fresh["orphan"])
         self.assertTrue(fresh["ok"])
+        self.processes = listing()
+        gone_again = portal.check_idle("before", sleep=lambda _: None, now=self.now)
+        self.assertIsNone(gone_again["worker_state"])
+
+    def test_observe_unknown_start_without_instance_or_createtime(self):
+        self.processes = listing(app_proc())
+        self.files[""] = files("worker.json", "device.json", "host.heartbeat")
+        self.contents[("", "host.heartbeat")] = {
+            "schema": "floppylm.host.heartbeat.v1",
+            "written_at": self.now - 917,
+        }
+        self.settings = LifecycleSettings(
+            **{**self.settings.__dict__, "idle_exit_seconds": 300, "heartbeat_stale_seconds": 300}
+        )
+        report = self.portal().check_idle("before", sleep=lambda _: None, now=self.now)
+        self.assertIsNone(report["orphan"])
+        self.assertTrue(report["ok"])
+        self.assertEqual(report["reason"], "start_time_unknown")
+        self.assertEqual(report["warning"], START_TIME_UNKNOWN_WARNING)
+        self.settings = LifecycleSettings(
+            **{**self.settings.__dict__, "orphan_strict": True}
+        )
+        refused = self.portal().check_idle("before", sleep=lambda _: None, now=self.now)
+        self.assertFalse(refused["ok"])
+        self.assertEqual(refused["reason"], "start_time_unknown")
+
+    def test_observe_ignores_foreign_heartbeat_on_fresh_instance(self):
+        started = self.now - 18
+        self.processes = listing(app_proc())
+        self.files[""] = files(
+            "worker.json", "device.json", "host.heartbeat", "instance.json",
+            modified=self.now - 917,
+        )
+        self.contents[("", "instance.json")] = {
+            "schema": "xgpu.instance.v1",
+            "instance_id": "fresh-id",
+            "started_at": started,
+            "pid": 4242,
+        }
+        self.contents[("", "host.heartbeat")] = {
+            "schema": "floppylm.host.heartbeat.v1",
+            "instance_id": "old-id",
+            "written_at": self.now - 917,
+        }
+        self.files["inbox/results"] = files(folders=("old-job",))
+        self.files["inbox/results/old-job"] = files(
+            "status.json", modified=self.now - 917
+        )
+        self.settings = LifecycleSettings(
+            **{**self.settings.__dict__, "idle_exit_seconds": 300, "heartbeat_stale_seconds": 300}
+        )
+        report = self.portal().check_idle("before", sleep=lambda _: None, now=self.now)
+        self.assertAlmostEqual(report["app_age_seconds"], 18)
+        self.assertIsNone(report["heartbeat_age_seconds"])
+        self.assertIsNone(report["last_job_ended_age_seconds"])
+        self.assertFalse(report["orphan"])
+        self.assertTrue(report["ok"])
+        self.assertEqual(report["reason"], "ok")
+
+    def test_observe_known_start_stale_idle_is_orphan(self):
+        self.processes = listing(app_proc())
+        self.files[""] = files(
+            "worker.json", "device.json", "host.heartbeat", "instance.json"
+        )
+        self.contents[("", "instance.json")] = {
+            "schema": "xgpu.instance.v1",
+            "instance_id": "same-id",
+            "started_at": self.now - 4000,
+            "pid": 4242,
+        }
+        self.contents[("", "host.heartbeat")] = {
+            "schema": "floppylm.host.heartbeat.v1",
+            "instance_id": "same-id",
+            "written_at": self.now - 4000,
+        }
+        self.files["inbox/results"] = files(folders=("old-job",))
+        self.files["inbox/results/old-job"] = files(
+            "status.json", modified=self.now - 4000
+        )
+        report = self.portal().check_idle("before", sleep=lambda _: None, now=self.now)
+        self.assertTrue(report["start_time_known"])
+        self.assertTrue(report["orphan"])
+        self.assertFalse(report["ok"])
+        self.assertEqual(report["reason"], "orphan_stale_idle")
+
+    def test_write_heartbeat_carries_instance_id(self):
+        self.contents[("", "instance.json")] = {
+            "schema": "xgpu.instance.v1",
+            "instance_id": "live-id",
+            "started_at": self.now - 10,
+            "pid": 4242,
+        }
+        self.files[""] = files("worker.json", "device.json", "instance.json")
+        self.portal().write_heartbeat()
+        payload = self.contents[("", "host.heartbeat")]
+        self.assertEqual(payload["schema"], "floppylm.host.heartbeat.v1")
+        self.assertEqual(payload["instance_id"], "live-id")
+        self.assertIn("written_at", payload)
 
 
 def replace_terminate(settings, by):

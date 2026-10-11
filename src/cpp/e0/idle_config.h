@@ -36,6 +36,17 @@ inline HostIdleConfig load_host_idle_config(const nlohmann::json &j) {
   return config;
 }
 
+// LocalState/instance.json. Not part of floppylm.worker.v1 (additionalProperties
+// is false on that schema). The host tool uses this for instance start time
+// and identity. started_at is UTC ISO-8601.
+inline nlohmann::json instance_document(std::string instance_id,
+                                        std::string started_at, uint64_t pid) {
+  return {{"schema", "xgpu.instance.v1"},
+          {"instance_id", std::move(instance_id)},
+          {"started_at", std::move(started_at)},
+          {"pid", pid}};
+}
+
 // Consume LocalState/inbox/shutdown once the worker has decided to exit on
 // it. Leaving the marker would make the next launch quit immediately.
 inline bool consume_shutdown_marker(const std::filesystem::path &path) {

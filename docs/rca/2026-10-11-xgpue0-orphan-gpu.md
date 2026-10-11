@@ -115,8 +115,11 @@ index is compiled in. Defaults and overrides are in
   the foreground GPU engine; it is not the stay-alive or orphan signal.
 - Host tool `scripts/e0_console_lifecycle.py`: CSRF cookie discovery, 400/403
   retry, terminate by package (base64) and/or pid, and idle checks that use
-  LocalState job/heartbeat/last-job age. GPU samples stay advisory. The
-  consumed `inbox/shutdown` marker is deleted; `prepare` clears a stale one
-  before launch.
+  this instance's start time (`LocalState/instance.json`, else a process
+  `CreateTime` when the portal publishes one). A leftover `host.heartbeat`
+  from an earlier instance is ignored. When start time is unknown the
+  before-check reports `orphan: null` / `start_time_unknown` (strict mode
+  refuses). GPU samples stay advisory. The consumed `inbox/shutdown`
+  marker is deleted; `prepare` clears a stale one before launch.
 - Companion runner and the host unit `ExecStop` still need to invoke that tool;
   that wiring lives in `gianlucamazza/floppylm`.

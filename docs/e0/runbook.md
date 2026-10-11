@@ -116,9 +116,13 @@ python3 scripts/e0_console_lifecycle.py idle-gpu --when after
 
 `prepare` deletes `inbox/shutdown` only if the listing shows it. `idle-gpu
 --when before` treats an idle, ready app as OK to reuse, including a fresh
-instance sitting on historical `.claimed` / results. It refuses only a live
+instance sitting on historical `.claimed` / results or a leftover
+`host.heartbeat` from an earlier instance. It refuses only a live
 worker job (or a leftover process idle past the deadline since *this*
-instance started). GPU samples are advisory. `teardown` uploads
+instance started, using `LocalState/instance.json`). When that start
+time is unknown the before-check reports `reason: start_time_unknown`,
+`orphan: null`, and passes with a warning; `--orphan-strict` refuses.
+GPU samples are advisory. `teardown` uploads
 `inbox/shutdown`, waits, then `DELETE`s by base64 package and/or pid. `idle-gpu
 --when after` requires the process gone. Call `prepare` before launch and
 `teardown` from campaign completion and from the host unit `ExecStop`. The

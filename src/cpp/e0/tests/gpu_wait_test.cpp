@@ -161,6 +161,15 @@ void host_idle_watch_exits_on_shutdown_and_stale_heartbeat() {
           "shutdown marker is deleted when consumed");
   require(!consume_shutdown_marker(marker),
           "a missing shutdown marker is not an error");
+  const auto instance =
+      instance_document("8f14e45f-ceea-467c-9d73-aa7d99aa7d99",
+                        "2026-10-11T12:00:00Z", 4242);
+  require(instance.at("schema") == "xgpu.instance.v1" &&
+              instance.at("instance_id") ==
+                  "8f14e45f-ceea-467c-9d73-aa7d99aa7d99" &&
+              instance.at("started_at") == "2026-10-11T12:00:00Z" &&
+              instance.at("pid") == 4242 && !instance.contains("state"),
+          "instance.json is a separate start-time document");
   std::filesystem::remove_all(root);
 }
 int main(int argc, char **argv) {

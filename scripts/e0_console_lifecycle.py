@@ -46,6 +46,8 @@ DEFAULTS = {
     "terminate_by": ("package", "pid"),
     "shutdown_name": "shutdown",
     "heartbeat_name": "host.heartbeat",
+    "instance_name": "instance.json",
+    "orphan_strict": False,
 }
 
 ENV = {
@@ -71,6 +73,8 @@ ENV = {
     "credentials": "XGPU_PORTAL_CREDENTIALS",
     "user": "XGPU_PORTAL_USER",
     "password": "XGPU_PORTAL_PASSWORD",
+    "instance_name": "XGPU_INSTANCE_NAME",
+    "orphan_strict": "XGPU_ORPHAN_STRICT",
 }
 
 # Accepted aliases so existing Device Portal env names still work.
@@ -83,10 +87,16 @@ ENV_ALIASES = {
 
 SHUTDOWN_NAME = DEFAULTS["shutdown_name"]
 HEARTBEAT_NAME = DEFAULTS["heartbeat_name"]
+INSTANCE_NAME = DEFAULTS["instance_name"]
 FILE_TYPE = 32
 GPU_ADVISORY_NOTE = (
     "GPU utilisation is advisory and not decisive. On Xbox the foreground "
     "engine often reads ~100% for any idle foreground app."
+)
+START_TIME_UNKNOWN_WARNING = (
+    "instance start time is unknown (no LocalState/instance.json and no "
+    "process CreateTime); orphan is not decided. Set XGPU_ORPHAN_STRICT=1 "
+    "to refuse instead."
 )
 
 
@@ -105,6 +115,12 @@ def parse_int_setting(value: str | int | float) -> int:
 
 def parse_int_tuple(value: str) -> tuple[int, ...]:
     return tuple(parse_int_setting(part) for part in split_csv(value))
+
+
+def parse_bool_setting(value: str | bool) -> bool:
+    if isinstance(value, bool):
+        return value
+    return str(value).strip().lower() in ("1", "true", "yes", "on")
 
 
 def read_settings_file(path: Path) -> dict[str, str]:
@@ -152,6 +168,8 @@ class LifecycleSettings:
     terminate_by: tuple[str, ...] = DEFAULTS["terminate_by"]
     user: str = ""
     password: str = ""
+    instance_name: str = DEFAULTS["instance_name"]
+    orphan_strict: bool = DEFAULTS["orphan_strict"]
 
     def overlay_mapping(self, mapping: dict[str, str]) -> "LifecycleSettings":
         updates = {}
@@ -177,6 +195,7 @@ class LifecycleSettings:
             "package_family",
             "user",
             "password",
+            "instance_name",
         )
         for key in ints:
             raw = env_value(mapping, key)
@@ -202,6 +221,9 @@ class LifecycleSettings:
         raw = env_value(mapping, "terminate_by")
         if raw is not None:
             updates["terminate_by"] = split_csv(raw)
+        raw = env_value(mapping, "orphan_strict")
+        if raw is not None:
+            updates["orphan_strict"] = parse_bool_setting(raw)
         return replace(self, **updates)
 
     def overlay_args(self, args: argparse.Namespace) -> "LifecycleSettings":
@@ -226,6 +248,12 @@ class LifecycleSettings:
             value = getattr(args, key, None)
             if value not in (None, ""):
                 updates[key] = value
+        instance_name = getattr(args, "instance_name", None)
+        if instance_name not in (None, ""):
+            updates["instance_name"] = instance_name
+        orphan_strict = getattr(args, "orphan_strict", None)
+        if orphan_strict is not None:
+            updates["orphan_strict"] = bool(orphan_strict)
         if getattr(args, "gpu_engine", None):
             updates["gpu_engine_filter"] = tuple(args.gpu_engine)
         if getattr(args, "gpu_engine_exclude", None):
@@ -512,6 +540,46 @@ def heartbeat_age_seconds(
     return None
 
 
+def instance_id_of(instance: dict | None) -> str:
+    if not instance:
+        return ""
+    return str(instance.get("instance_id") or "")
+
+
+def instance_start_seconds(instance: dict | None, now: float) -> float | None:
+    """Unix seconds from LocalState/instance.json started_at, or None."""
+    if not instance:
+        return None
+    return parse_portal_time(instance.get("started_at"), now)
+
+
+def heartbeat_for_instance(
+    heartbeat: dict | None,
+    *,
+    instance_id: str = "",
+    started_at: float | None = None,
+    now: float,
+    listing_written_at: float | None = None,
+) -> float | None:
+    """Unix time of a heartbeat that belongs to this instance, or None.
+
+    A leftover host.heartbeat from an earlier process is ignored when its
+    instance_id differs from LocalState/instance.json or when it was written
+    before this instance started. A file with no matching instance_id does
+    not bind to the current process.
+    """
+    doc = heartbeat if isinstance(heartbeat, dict) else {}
+    hb_id = str(doc.get("instance_id") or "")
+    if instance_id and hb_id != instance_id:
+        return None
+    written = parse_portal_time(doc.get("written_at"), now)
+    if written is None:
+        written = listing_written_at
+    if written is not None and started_at is not None and written < started_at:
+        return None
+    return written
+
+
 def last_job_ended_at(
     result_listings: list[dict],
     *,
@@ -629,6 +697,7 @@ def classify_app_state(
     result_job_ids: set[str] | tuple[str, ...] = (),
     now: float | None = None,
     app_start_seconds: float | None = None,
+    instance_id: str = "",
     heartbeat_age_seconds: float | None = None,
     heartbeat_written_at: float | None = None,
     last_job_ended_age_seconds: float | None = None,
@@ -636,12 +705,14 @@ def classify_app_state(
     idle_exit_seconds: float = DEFAULTS["idle_exit_seconds"],
     heartbeat_stale_seconds: float = DEFAULTS["heartbeat_stale_seconds"],
 ) -> dict:
-    """Orphan predicate from this app instance. GPU and job history are not used."""
+    """Orphan predicate from this app instance. GPU and job history are not used.
+
+    Start time comes from the caller (instance.json, else process CreateTime).
+    worker.json is not a start-time source: floppylm.worker.v1 has no
+    started_at and additionalProperties is false.
+    """
     worker = worker or {}
-    device = device or {}
     clock = time.time() if now is None else now
-    if app_start_seconds is None:
-        app_start_seconds = parse_portal_time(worker.get("started_at"), clock)
     inbox_items = [
         item
         if isinstance(item, dict)
@@ -656,7 +727,9 @@ def classify_app_state(
         if process_present
         else ()
     )
-    worker_state = str(worker.get("state") or "") if process_present else ""
+    worker_state = str(worker.get("state") or "") if process_present else None
+    if worker_state == "":
+        worker_state = None
     active = worker.get("active_job") if process_present else None
     running = bool(process_present) and (
         worker_state == "running" or isinstance(active, dict)
@@ -697,7 +770,15 @@ def classify_app_state(
     heartbeat_stale = heartbeat_age is None or heartbeat_age >= heartbeat_stale_seconds
     young = app_age is not None and app_age < idle_exit_seconds
     leftover = idle_age is not None and idle_age >= idle_exit_seconds
-    orphan = bool(process_present) and (not job_active) and leftover and (not young)
+    start_known = app_start_seconds is not None
+    if not process_present:
+        orphan = False
+    elif job_active:
+        orphan = False
+    elif not start_known:
+        orphan = None
+    else:
+        orphan = leftover and (not young)
     return {
         "process_present": bool(process_present),
         "job_active": job_active,
@@ -706,7 +787,9 @@ def classify_app_state(
         "claimed_live": weak_claimed,
         "running": running,
         "ready": ready,
-        "worker_state": worker_state or str(device.get("state") or ""),
+        "worker_state": worker_state,
+        "instance_id": instance_id or None,
+        "start_time_known": start_known,
         "app_age_seconds": app_age,
         "idle_age_seconds": idle_age,
         "heartbeat_age_seconds": heartbeat_age,
@@ -718,12 +801,22 @@ def classify_app_state(
     }
 
 
-def lifecycle_report(observed: dict, *, when: str) -> dict:
+def lifecycle_report(
+    observed: dict, *, when: str, orphan_strict: bool = False
+) -> dict:
+    warning = None
     if when == "before":
         if observed.get("job_active"):
             ok, reason = False, "job_active"
         elif observed.get("orphan"):
             ok, reason = False, "orphan_stale_idle"
+        elif observed.get("orphan") is None:
+            reason = "start_time_unknown"
+            if orphan_strict:
+                ok = False
+            else:
+                ok = True
+                warning = START_TIME_UNKNOWN_WARNING
         else:
             ok, reason = True, "ok"
     elif when == "after":
@@ -733,7 +826,10 @@ def lifecycle_report(observed: dict, *, when: str) -> dict:
             ok, reason = True, "ok"
     else:
         raise ValueError("when must be before or after")
-    return {"when": when, "ok": ok, "reason": reason, **observed}
+    report = {"when": when, "ok": ok, "reason": reason, **observed}
+    if warning:
+        report["warning"] = warning
+    return report
 
 
 def localstate_dir(directory: str) -> str:
@@ -854,12 +950,10 @@ class LifecyclePortal:
         listing = listing if listing is not None else self.processes()
         procs = self.matching_processes(listing)
         now_s = time.time() if now is None else now
+        instance = self.read_json(self.settings.instance_name, "")
         worker = self.read_json("worker.json", "")
         device = self.read_json("device.json", "")
         heartbeat_doc = self.read_json(HEARTBEAT_NAME, "")
-        written_at = parse_portal_time(
-            heartbeat_doc.get("written_at") if heartbeat_doc else None, now_s
-        )
         inbox = self._optional_listing("inbox")
         local = self._optional_listing("")
         results = self._optional_listing("inbox/results")
@@ -868,15 +962,19 @@ class LifecyclePortal:
             name = item_name(item)
             if name and not item_is_file(item):
                 result_listings.append(self._optional_listing("inbox/results/" + name))
-        app_start = process_start_seconds(procs, now_s)
+        instance_id = instance_id_of(instance)
+        app_start = instance_start_seconds(instance, now_s)
         if app_start is None:
-            app_start = parse_portal_time(worker.get("started_at"), now_s)
-        listing_heartbeat_age = heartbeat_age_seconds(
-            local, now=now_s, written_at=written_at
+            app_start = process_start_seconds(procs, now_s)
+        listing_age = heartbeat_age_seconds(local, now=now_s)
+        listing_written = None if listing_age is None else now_s - listing_age
+        heartbeat_written = heartbeat_for_instance(
+            heartbeat_doc,
+            instance_id=instance_id,
+            started_at=app_start,
+            now=now_s,
+            listing_written_at=listing_written,
         )
-        heartbeat_written = written_at
-        if heartbeat_written is None and listing_heartbeat_age is not None:
-            heartbeat_written = now_s - listing_heartbeat_age
         state = classify_app_state(
             process_present=bool(procs),
             worker=worker,
@@ -885,6 +983,7 @@ class LifecyclePortal:
             result_job_ids=result_job_ids(result_listings),
             now=now_s,
             app_start_seconds=app_start,
+            instance_id=instance_id,
             heartbeat_written_at=heartbeat_written,
             last_job_ended_at=last_job_ended_at(
                 result_listings, now=now_s, not_before=app_start
@@ -922,16 +1021,15 @@ class LifecyclePortal:
         )
 
     def write_heartbeat(self) -> None:
-        self.upload(
-            HEARTBEAT_NAME,
-            json.dumps(
-                {
-                    "schema": "floppylm.host.heartbeat.v1",
-                    "written_at": datetime.now(timezone.utc).timestamp(),
-                }
-            ).encode(),
-            directory="",
-        )
+        instance = self.read_json(self.settings.instance_name, "")
+        instance_id = instance_id_of(instance)
+        payload = {
+            "schema": "floppylm.host.heartbeat.v1",
+            "written_at": datetime.now(timezone.utc).timestamp(),
+        }
+        if instance_id:
+            payload["instance_id"] = instance_id
+        self.upload(HEARTBEAT_NAME, json.dumps(payload).encode(), directory="")
 
     def write_shutdown(self, reason: str = "campaign-complete") -> None:
         self.upload(SHUTDOWN_NAME, reason.encode(), directory="inbox")
@@ -1009,12 +1107,20 @@ class LifecyclePortal:
             self.clear_stale_markers()
         except (FileNotFoundError, RuntimeError):
             pass
-        after = lifecycle_report(self.observe(sleep=sleep), when="after")
+        after = lifecycle_report(
+            self.observe(sleep=sleep),
+            when="after",
+            orphan_strict=self.settings.orphan_strict,
+        )
         after["terminated"] = killed
         return after
 
     def check_idle(self, when: str, *, sleep=time.sleep, now=None) -> dict:
-        return lifecycle_report(self.observe(sleep=sleep, now=now), when=when)
+        return lifecycle_report(
+            self.observe(sleep=sleep, now=now),
+            when=when,
+            orphan_strict=self.settings.orphan_strict,
+        )
 
 
 def https_request_fn(settings: LifecycleSettings) -> RequestFn:
@@ -1093,6 +1199,13 @@ def add_settings_flags(parser: argparse.ArgumentParser) -> None:
         action="append",
         choices=("package", "pid"),
         default=None,
+    )
+    parser.add_argument("--instance-name", default="")
+    parser.add_argument(
+        "--orphan-strict",
+        action=argparse.BooleanOptionalAction,
+        default=None,
+        help="refuse when instance start time is unknown (default: warn and pass)",
     )
 
 
