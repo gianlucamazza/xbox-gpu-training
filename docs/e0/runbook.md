@@ -114,10 +114,11 @@ python3 scripts/e0_console_lifecycle.py teardown
 python3 scripts/e0_console_lifecycle.py idle-gpu --when after
 ```
 
-`prepare` deletes a leftover `inbox/shutdown` before launch. `idle-gpu --when
-before` treats an idle, ready app as OK to reuse; it refuses only a running or
-queued job, or a leftover process whose heartbeat is stale and whose last job
-ended past the idle deadline. GPU samples are advisory. `teardown` uploads
+`prepare` deletes `inbox/shutdown` only if the listing shows it. `idle-gpu
+--when before` treats an idle, ready app as OK to reuse, including a fresh
+instance sitting on historical `.claimed` / results. It refuses only a live
+worker job (or a leftover process idle past the deadline since *this*
+instance started). GPU samples are advisory. `teardown` uploads
 `inbox/shutdown`, waits, then `DELETE`s by base64 package and/or pid. `idle-gpu
 --when after` requires the process gone. Call `prepare` before launch and
 `teardown` from campaign completion and from the host unit `ExecStop`. The

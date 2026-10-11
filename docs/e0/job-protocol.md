@@ -111,7 +111,8 @@ unchanged. The host refreshes `host.heartbeat` while it still intends to submit
 work, runs `scripts/e0_console_lifecycle.py prepare` before launch to clear a
 stale `inbox/shutdown`, writes `inbox/shutdown` when work is done, and runs
 `teardown` from campaign end and from the host unit stop path. Idle/orphan
-checks use job and heartbeat state, not GPU utilisation
+checks use this instance's worker state and start time, not GPU
+utilisation or historical `.claimed` files
 ([lifecycle.md](lifecycle.md)). The companion campaign runner in
 `gianlucamazza/floppylm` must invoke that tool.
 

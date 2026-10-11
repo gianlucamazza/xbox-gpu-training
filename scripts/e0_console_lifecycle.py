@@ -512,27 +512,112 @@ def heartbeat_age_seconds(
     return None
 
 
-def last_job_ended_age_seconds(
+def last_job_ended_at(
     result_listings: list[dict],
     *,
     now: float,
     statuses: list[dict] | None = None,
+    not_before: float | None = None,
 ) -> float | None:
-    ages = []
+    """Unix time of the most recent finished job, optionally only this instance."""
+    instants = []
     for listing in result_listings:
         for item in listing_items(listing):
             if item_name(item) == "status.json":
                 age = item_age_seconds(item, now)
                 if age is not None:
-                    ages.append(age)
+                    instants.append(now - age)
     for status in statuses or []:
         if status.get("state") in ("running",):
             continue
         for key in ("finished_at", "completed_at", "ended_at"):
             instant = parse_portal_time(status.get(key), now)
             if instant is not None:
-                ages.append(max(0.0, now - instant))
-    return min(ages) if ages else None
+                instants.append(instant)
+    if not_before is not None:
+        instants = [instant for instant in instants if instant >= not_before]
+    return max(instants) if instants else None
+
+
+def last_job_ended_age_seconds(
+    result_listings: list[dict],
+    *,
+    now: float,
+    statuses: list[dict] | None = None,
+    not_before: float | None = None,
+) -> float | None:
+    instant = last_job_ended_at(
+        result_listings, now=now, statuses=statuses, not_before=not_before
+    )
+    return None if instant is None else max(0.0, now - instant)
+
+
+def inbox_entries(listing: dict | None, now: float) -> list[dict]:
+    entries = []
+    for item in listing_items(listing):
+        name = item_name(item)
+        if not name:
+            continue
+        instant = None
+        for key in ("DateModified", "dateModified", "DateCreated", "dateCreated"):
+            instant = parse_portal_time(item.get(key), now)
+            if instant is not None:
+                break
+        entries.append({"name": name, "modified": instant})
+    return entries
+
+
+def result_job_ids(result_listings: list[dict]) -> set[str]:
+    ids = set()
+    for listing in result_listings:
+        for item in listing_items(listing):
+            name = item_name(item)
+            if name and not item_is_file(item):
+                ids.add(name)
+    return ids
+
+
+def process_start_seconds(procs: list[dict], now: float) -> float | None:
+    starts = []
+    for proc in procs:
+        for key in ("CreateTime", "CreationTime", "StartTime", "createTime"):
+            instant = parse_portal_time(proc.get(key), now)
+            if instant is not None:
+                starts.append(instant)
+                break
+    return min(starts) if starts else None
+
+
+def claimed_job_id(name: str) -> str:
+    lower = name.lower()
+    if lower.endswith(".claimed"):
+        return name[: -len(".claimed")]
+    return ""
+
+
+def live_claimed_without_result(
+    inbox_items: list[dict] | tuple[str, ...],
+    result_ids: set[str],
+    app_start: float | None,
+) -> tuple[str, ...]:
+    """Historical .claimed files with a result are ignored.
+
+    A .claimed with no result is a weak in-flight signal only when it is
+    newer than this app instance.
+    """
+    live = []
+    for item in inbox_items:
+        if isinstance(item, str):
+            name, modified = item, None
+        else:
+            name, modified = str(item.get("name") or ""), item.get("modified")
+        job_id = claimed_job_id(name)
+        if not job_id or job_id in result_ids:
+            continue
+        if app_start is None or modified is None or modified < app_start:
+            continue
+        live.append(name)
+    return tuple(live)
 
 
 def classify_app_state(
@@ -540,41 +625,95 @@ def classify_app_state(
     process_present: bool,
     worker: dict | None = None,
     device: dict | None = None,
-    inbox: tuple[str, ...] = (),
+    inbox: tuple[str, ...] | list[dict] = (),
+    result_job_ids: set[str] | tuple[str, ...] = (),
+    now: float | None = None,
+    app_start_seconds: float | None = None,
     heartbeat_age_seconds: float | None = None,
+    heartbeat_written_at: float | None = None,
     last_job_ended_age_seconds: float | None = None,
+    last_job_ended_at: float | None = None,
     idle_exit_seconds: float = DEFAULTS["idle_exit_seconds"],
     heartbeat_stale_seconds: float = DEFAULTS["heartbeat_stale_seconds"],
 ) -> dict:
-    """Orphan predicate from LocalState job/heartbeat ages. GPU is not used."""
+    """Orphan predicate from this app instance. GPU and job history are not used."""
     worker = worker or {}
     device = device or {}
-    names = {name.lower() for name in inbox}
-    queued = any(name.endswith(".ready") for name in names)
-    claimed = any(name.endswith(".claimed") for name in names)
-    worker_state = str(worker.get("state") or device.get("state") or "")
-    running = worker_state == "running" or worker.get("active_job") not in (None, "", {})
-    job_active = running or queued or claimed
-    ready = worker_state in ("ready", "") and not job_active
-    heartbeat_stale = (
-        heartbeat_age_seconds is None or heartbeat_age_seconds >= heartbeat_stale_seconds
+    clock = time.time() if now is None else now
+    if app_start_seconds is None:
+        app_start_seconds = parse_portal_time(worker.get("started_at"), clock)
+    inbox_items = [
+        item
+        if isinstance(item, dict)
+        else {"name": item, "modified": None}
+        for item in inbox
+    ]
+    names = tuple(str(item.get("name") or "") for item in inbox_items)
+    result_ids = set(result_job_ids)
+    queued = bool(process_present) and any(name.lower().endswith(".ready") for name in names)
+    weak_claimed = (
+        live_claimed_without_result(inbox_items, result_ids, app_start_seconds)
+        if process_present
+        else ()
     )
-    leftover = (
-        last_job_ended_age_seconds is not None
-        and last_job_ended_age_seconds >= idle_exit_seconds
+    worker_state = str(worker.get("state") or "") if process_present else ""
+    active = worker.get("active_job") if process_present else None
+    running = bool(process_present) and (
+        worker_state == "running" or isinstance(active, dict)
     )
-    orphan = bool(process_present) and (not job_active) and heartbeat_stale and leftover
+    job_active = running or queued or bool(weak_claimed)
+    ready = bool(process_present) and worker_state == "ready" and not job_active
+    if last_job_ended_at is None and last_job_ended_age_seconds is not None:
+        last_job_ended_at = clock - last_job_ended_age_seconds
+    if (
+        last_job_ended_at is not None
+        and app_start_seconds is not None
+        and last_job_ended_at < app_start_seconds
+    ):
+        last_job_ended_at = None
+    if heartbeat_written_at is None and heartbeat_age_seconds is not None:
+        heartbeat_written_at = clock - heartbeat_age_seconds
+    if (
+        heartbeat_written_at is not None
+        and app_start_seconds is not None
+        and heartbeat_written_at < app_start_seconds
+    ):
+        heartbeat_written_at = None
+    anchors = [
+        value
+        for value in (app_start_seconds, last_job_ended_at, heartbeat_written_at)
+        if value is not None
+    ]
+    idle_since = max(anchors) if anchors else None
+    idle_age = None if idle_since is None else max(0.0, clock - idle_since)
+    app_age = (
+        None if app_start_seconds is None else max(0.0, clock - app_start_seconds)
+    )
+    heartbeat_age = (
+        None
+        if heartbeat_written_at is None
+        else max(0.0, clock - heartbeat_written_at)
+    )
+    heartbeat_stale = heartbeat_age is None or heartbeat_age >= heartbeat_stale_seconds
+    young = app_age is not None and app_age < idle_exit_seconds
+    leftover = idle_age is not None and idle_age >= idle_exit_seconds
+    orphan = bool(process_present) and (not job_active) and leftover and (not young)
     return {
         "process_present": bool(process_present),
         "job_active": job_active,
         "queued": queued,
-        "claimed": claimed,
+        "claimed": bool(weak_claimed),
+        "claimed_live": weak_claimed,
         "running": running,
         "ready": ready,
-        "worker_state": worker_state,
-        "heartbeat_age_seconds": heartbeat_age_seconds,
+        "worker_state": worker_state or str(device.get("state") or ""),
+        "app_age_seconds": app_age,
+        "idle_age_seconds": idle_age,
+        "heartbeat_age_seconds": heartbeat_age,
         "heartbeat_stale": heartbeat_stale,
-        "last_job_ended_age_seconds": last_job_ended_age_seconds,
+        "last_job_ended_age_seconds": (
+            None if last_job_ended_at is None else max(0.0, clock - last_job_ended_at)
+        ),
         "orphan": orphan,
     }
 
@@ -729,16 +868,26 @@ class LifecyclePortal:
             name = item_name(item)
             if name and not item_is_file(item):
                 result_listings.append(self._optional_listing("inbox/results/" + name))
+        app_start = process_start_seconds(procs, now_s)
+        if app_start is None:
+            app_start = parse_portal_time(worker.get("started_at"), now_s)
+        listing_heartbeat_age = heartbeat_age_seconds(
+            local, now=now_s, written_at=written_at
+        )
+        heartbeat_written = written_at
+        if heartbeat_written is None and listing_heartbeat_age is not None:
+            heartbeat_written = now_s - listing_heartbeat_age
         state = classify_app_state(
             process_present=bool(procs),
             worker=worker,
             device=device,
-            inbox=inbox_names(inbox),
-            heartbeat_age_seconds=heartbeat_age_seconds(
-                local, now=now_s, written_at=written_at
-            ),
-            last_job_ended_age_seconds=last_job_ended_age_seconds(
-                result_listings, now=now_s
+            inbox=inbox_entries(inbox, now_s),
+            result_job_ids=result_job_ids(result_listings),
+            now=now_s,
+            app_start_seconds=app_start,
+            heartbeat_written_at=heartbeat_written,
+            last_job_ended_at=last_job_ended_at(
+                result_listings, now=now_s, not_before=app_start
             ),
             idle_exit_seconds=self.settings.idle_exit_seconds,
             heartbeat_stale_seconds=self.settings.heartbeat_stale_seconds,
@@ -788,13 +937,17 @@ class LifecyclePortal:
         self.upload(SHUTDOWN_NAME, reason.encode(), directory="inbox")
 
     def clear_stale_markers(self) -> dict:
-        """Delete leftover inbox/shutdown so the next launch does not exit."""
+        """Delete leftover inbox/shutdown so the next launch does not exit.
+
+        Device Portal accepts DELETE of a missing file. List first and report
+        cleared only when the marker was present.
+        """
         cleared = []
-        try:
+        listing = self._optional_listing("inbox")
+        names = {item_name(item) for item in listing_items(listing)}
+        if SHUTDOWN_NAME in names:
             self.delete_file(SHUTDOWN_NAME, "inbox")
             cleared.append("inbox/shutdown")
-        except FileNotFoundError:
-            pass
         return {"cleared": cleared}
 
     def terminate(self) -> dict:
@@ -860,8 +1013,8 @@ class LifecyclePortal:
         after["terminated"] = killed
         return after
 
-    def check_idle(self, when: str, *, sleep=time.sleep) -> dict:
-        return lifecycle_report(self.observe(sleep=sleep), when=when)
+    def check_idle(self, when: str, *, sleep=time.sleep, now=None) -> dict:
+        return lifecycle_report(self.observe(sleep=sleep, now=now), when=when)
 
 
 def https_request_fn(settings: LifecycleSettings) -> RequestFn:

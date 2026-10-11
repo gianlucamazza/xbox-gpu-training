@@ -54,16 +54,24 @@ so a truncated value cannot busy-loop.
 
 ## Idle / orphan check
 
-Orphan detection uses LocalState, not GPU utilisation:
+Orphan detection uses this app instance, not GPU utilisation and not
+historical inbox files:
 
-- no job running or queued (worker/device `ready`, no `.ready` / `.claimed`)
-- host heartbeat missing or older than `heartbeat_stale_seconds`
-- time since the last job ended (`inbox/results/*/status.json` mtime) at or
-  above `idle_exit_seconds`
+- `job_active` comes from the live `worker.json` (`state` / `active_job`)
+  and only when the process is present. Finished `.claimed` files (a
+  console can keep thousands from past jobs) are ignored. A `.claimed`
+  with no result is a weak signal only when it is newer than app start.
+  A `.ready` file is current queue, not history.
+- Idleness is `now - max(app start, last job end in this instance, last
+  host heartbeat in this instance)`. App start is the Device Portal
+  process `CreateTime` (or `worker.started_at` if a future worker
+  document publishes it). Results from before this instance do not count.
+- A ready app younger than `idle_exit_seconds` is never an orphan. The
+  host before-check may run before the first heartbeat.
 
-A freshly launched idle/ready app has no last-job age and is **OK to reuse**.
-`idle-gpu --when before` fails only on `job_active` or `orphan_stale_idle`.
-`idle-gpu --when after` fails only if the process is still listed.
+No process plus stale history is `job_active=false`, `orphan=false`,
+`process_present=false` — OK to launch. `idle-gpu --when after` fails
+only if the process is still listed.
 
 GPU samples remain advisory: every adapter's `EnginesUtilization` is averaged
 over `gpu_sample_count` reads and reported as `gpu_advisory` with
@@ -73,8 +81,9 @@ reads ~100% for any idle foreground app; do not treat that as an orphan.
 
 ## Teardown
 
-`prepare` deletes a leftover `inbox/shutdown` before launch (a consumed marker
-that was not removed used to quit the next process within seconds).
+`prepare` lists `inbox` and deletes `inbox/shutdown` only if that name is
+present. Device Portal accepts DELETE of a missing file; `cleared` is
+reported only when the marker was actually there.
 
 `teardown` uploads `inbox/shutdown`, waits, then `DELETE`s
 `/api/taskmanager/app?package=<base64>` and/or `/api/taskmanager/process?pid=…`.

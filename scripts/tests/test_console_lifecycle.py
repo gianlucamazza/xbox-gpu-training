@@ -28,6 +28,7 @@ from e0_console_lifecycle import (  # noqa: E402
     ingest_cookies,
     last_job_ended_age_seconds,
     lifecycle_report,
+    live_claimed_without_result,
     load_settings,
     parse_int_setting,
     parse_int_tuple,
@@ -156,10 +157,12 @@ class Detection(unittest.TestCase):
         self.assertFalse(advisory["decisive"])
 
     def test_orphan_is_stale_idle_after_a_finished_job(self):
+        now = 2_000_000.0
         state = classify_app_state(
             process_present=True,
             worker={"state": "ready", "active_job": None},
-            inbox=(),
+            now=now,
+            app_start_seconds=now - 4000,
             heartbeat_age_seconds=4000,
             last_job_ended_age_seconds=4000,
             idle_exit_seconds=1800,
@@ -173,7 +176,7 @@ class Detection(unittest.TestCase):
     def test_queued_or_running_job_is_busy_not_orphan(self):
         queued = classify_app_state(
             process_present=True,
-            worker={"state": "ready"},
+            worker={"state": "ready", "active_job": None},
             inbox=("trial.ready",),
         )
         self.assertTrue(queued["job_active"])
@@ -185,6 +188,85 @@ class Detection(unittest.TestCase):
         )
         self.assertTrue(running["job_active"])
         self.assertEqual(lifecycle_report(running, when="before")["reason"], "job_active")
+
+    def test_finished_claimed_history_is_not_job_active(self):
+        now = 2_000_000.0
+        claimed = [f"job-{i:04d}.claimed" for i in range(32)]
+        results = {name[: -len(".claimed")] for name in claimed}
+        state = classify_app_state(
+            process_present=True,
+            worker={"state": "ready", "active_job": None},
+            inbox=[{"name": name, "modified": now - 10_000} for name in claimed],
+            result_job_ids=results,
+            now=now,
+            app_start_seconds=now - 30,
+            last_job_ended_age_seconds=8_000,
+            idle_exit_seconds=1800,
+        )
+        self.assertFalse(state["job_active"])
+        self.assertFalse(state["claimed"])
+        self.assertTrue(state["ready"])
+        self.assertFalse(state["orphan"])
+
+    def test_fresh_app_with_old_history_is_not_orphan(self):
+        now = 2_000_000.0
+        state = classify_app_state(
+            process_present=True,
+            worker={"state": "ready", "active_job": None},
+            now=now,
+            app_start_seconds=now - 12,
+            heartbeat_age_seconds=None,
+            last_job_ended_age_seconds=10_000,
+            idle_exit_seconds=1800,
+            heartbeat_stale_seconds=1800,
+        )
+        report = lifecycle_report(state, when="before")
+        self.assertTrue(state["ready"])
+        self.assertLess(state["app_age_seconds"], 1800)
+        self.assertFalse(state["orphan"])
+        self.assertTrue(report["ok"])
+
+    def test_no_process_with_stale_history_is_idle(self):
+        now = 2_000_000.0
+        claimed = [f"job-{i:04d}.claimed" for i in range(64)]
+        state = classify_app_state(
+            process_present=False,
+            worker={"state": "ready", "active_job": None},
+            inbox=tuple(claimed) + ("leftover.ready",),
+            result_job_ids={name[: -len(".claimed")] for name in claimed},
+            now=now,
+            last_job_ended_age_seconds=50_000,
+            heartbeat_age_seconds=50_000,
+            idle_exit_seconds=1800,
+        )
+        self.assertFalse(state["process_present"])
+        self.assertFalse(state["job_active"])
+        self.assertFalse(state["orphan"])
+        self.assertTrue(lifecycle_report(state, when="before")["ok"])
+
+    def test_claimed_without_result_only_if_newer_than_app_start(self):
+        now = 2_000_000.0
+        app_start = now - 20
+        live = live_claimed_without_result(
+            [
+                {"name": "old.claimed", "modified": app_start - 5},
+                {"name": "fresh.claimed", "modified": app_start + 1},
+                {"name": "done.claimed", "modified": app_start + 2},
+            ],
+            {"done"},
+            app_start,
+        )
+        self.assertEqual(live, ("fresh.claimed",))
+        state = classify_app_state(
+            process_present=True,
+            worker={"state": "ready", "active_job": None},
+            inbox=[{"name": "fresh.claimed", "modified": app_start + 1}],
+            result_job_ids=(),
+            now=now,
+            app_start_seconds=app_start,
+        )
+        self.assertTrue(state["job_active"])
+        self.assertEqual(state["claimed_live"], ("fresh.claimed",))
 
     def test_after_ignores_advisory_gpu(self):
         gone = classify_app_state(process_present=False)
@@ -343,6 +425,7 @@ class FakePortal(unittest.TestCase):
             heartbeat_stale_seconds=1800,
         )
         self.now = 2_000_000.0
+        self.processes = listing(app_proc(CreateTime=self.now - 15))
 
     def request(self, method, path, headers, body):
         self.calls.append((method, path, dict(headers), body))
@@ -493,13 +576,46 @@ class FakePortal(unittest.TestCase):
             )
         )
 
+    def test_prepare_does_not_report_clear_when_marker_absent(self):
+        self.files["inbox"] = files()
+        portal = self.portal()
+        cleared = portal.clear_stale_markers()
+        self.assertEqual(cleared["cleared"], [])
+        self.assertFalse(
+            any(c[0] == "DELETE" and "shutdown" in c[1] for c in self.calls)
+        )
+
     def test_before_check_reuses_idle_ready_app(self):
         portal = self.portal()
-        report = portal.check_idle("before", sleep=lambda _: None)
+        report = portal.check_idle("before", sleep=lambda _: None, now=self.now)
         self.assertTrue(report["ok"])
         self.assertFalse(report["orphan"])
         self.assertTrue(report["gpu_advisory"]["engine_pinned"])
         self.assertFalse(report["gpu_advisory"]["decisive"])
+
+    def test_observe_ignores_finished_claimed_history(self):
+        claimed = [f"job-{i:04d}.claimed" for i in range(96)]
+        folders = [name[: -len(".claimed")] for name in claimed]
+        self.files["inbox"] = files(*claimed, modified=self.now - 20_000)
+        self.files["inbox/results"] = files(folders=folders)
+        for job_id in folders:
+            self.files[f"inbox/results/{job_id}"] = files(
+                "status.json", modified=self.now - 20_000
+            )
+        self.processes = listing()
+        portal = self.portal()
+        gone = portal.check_idle("before", sleep=lambda _: None, now=self.now)
+        self.assertFalse(gone["process_present"])
+        self.assertFalse(gone["job_active"])
+        self.assertFalse(gone["orphan"])
+        self.assertTrue(gone["ok"])
+        self.processes = listing(app_proc(CreateTime=self.now - 8))
+        fresh = portal.check_idle("before", sleep=lambda _: None, now=self.now)
+        self.assertTrue(fresh["process_present"])
+        self.assertTrue(fresh["ready"])
+        self.assertFalse(fresh["job_active"])
+        self.assertFalse(fresh["orphan"])
+        self.assertTrue(fresh["ok"])
 
 
 def replace_terminate(settings, by):
