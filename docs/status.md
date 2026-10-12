@@ -70,9 +70,9 @@ with a CoreWindow and no XAML or D3D12 initialization. The historical 0.1.0.56 m
 99.55% on that whole-console counter; it does not establish per-app GPU work or power.
 See [investigation](evidence/e0-20261001-dashboard/notes.md#idle-gpu-investigation-remains-open)
 and [raw finding](evidence/e0-20261001-dashboard/idle-investigation.json).
-The 2026-10-11 RCA and ADR 0010 later showed that releasing the dashboard timer
-and `DisplayRequest` did not drop engine 5 on a later idle package; process exit
-did. Engine-5 attribution is still open. An independent GPU trace is needed;
+The 2026-10-11 RCA and ADR 0010 later showed that, on package `0.1.0.115`,
+releasing the dashboard timer and `DisplayRequest` did not drop engine 5;
+process exit did. Engine-5 attribution is still open. An independent GPU trace is needed;
 no validated GPU reduction exists. Diagnostic paths were not merged.
 
 ## Scientific campaign
