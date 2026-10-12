@@ -41,7 +41,8 @@ A value without one of these tags is not written.
   ([platform/gdk-vs-gdkx.md](platform/gdk-vs-gdkx.md), [platform/dev-mode.md](platform/dev-mode.md)).
 - **Game designation memory.** The package is a UWP App; planning budget ~1 GB
   ([platform/uwp-resources.md](platform/uwp-resources.md)).
-- **Language-model quality** until the scientific E0 campaign publishes its gated result.
+- **Language-model quality.** FloppyLM owns scientific status; this repository
+  does not copy those figures. The quality cell stays **UNMEASURED** here.
 - **Series X, matched CPU or PIX measurements** — none exist ([status.md](status.md#unmeasured)).
 
 ## Repository boundaries

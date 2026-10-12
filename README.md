@@ -40,8 +40,8 @@ console through the job protocol described in [docs/e0/job-protocol.md](docs/e0/
 The E0 trainer passes its full hardware acceptance on Series S (52 operation cases,
 36 model fixtures, exact resume, real suspension). Scientific state is owned by
 [FloppyLM](https://github.com/gianlucamazza/floppylm/blob/main/docs/STATUS.md);
-no language-model quality result is published yet. Package, throughput and open items:
-**[docs/status.md](docs/status.md)**.
+language-model quality stays **UNMEASURED** in this repository. Package,
+throughput and open items: **[docs/status.md](docs/status.md)**.
 
 ## On-console dashboard
 

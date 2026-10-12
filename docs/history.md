@@ -19,6 +19,7 @@ Chronology of the project. Current state lives in [status.md](status.md).
 | 2026-10-01 | ADR 0005, canonical documentation links and dashboard update caching merged | [PR #27](https://github.com/gianlucamazza/xbox-gpu-training/pull/27) (`53ab3c2`) |
 | 2026-10-01 | Actual CodeRabbit review accepted; openappx PR #7 merged and 0.7.0 installed locally | [openappx record](evidence/e0-20261001-dashboard/openappx.json) |
 | 2026-10-01 | Package 0.1.0.56 signed/deployed with TLS pin; full hardware gates and bit identity passed; idle GPU hypothesis falsified | [release evidence](evidence/e0-20261001-dashboard/notes.md) |
+| 2026-10-10 | FloppyLM records E0 campaign `e0-campaign-20261009-109` complete on package `0.1.0.109`; this repository has no evidence pack for that package | [FloppyLM status](https://github.com/gianlucamazza/floppylm/blob/main/docs/STATUS.md), [status.md](status.md) |
 | 2026-10-11 | Package `0.1.0.109` left `XgpuE0.exe` running after campaign `e0-campaign-20261009-109`; operator-reported engine 5 pinned until a manual Device Portal kill | [RCA](rca/2026-10-11-xgpue0-orphan-gpu.md) |
 
 ## Phases (GitHub milestones)
@@ -34,4 +35,4 @@ Milestones keep their Italian titles. Phases 0–5 form the [diagnostic lane](di
 | 4 | [Fase 4 — Streaming memoria](https://github.com/gianlucamazza/xbox-gpu-training/milestone/5) | Double buffer under App ~1 GB | Done on desktop; console UNVALIDATED |
 | 5 | [Fase 5 — QAT completo WSD](https://github.com/gianlucamazza/xbox-gpu-training/milestone/6) | Schedule + N-step smoke | Done; N=16 schedule smoke only |
 | 6 | [Fase 6 — Validazione Series S\|X](https://github.com/gianlucamazza/xbox-gpu-training/milestone/7) | Console table or `BLOCKED` | Series S E0 measured; Series X and diagnostic workloads UNMEASURED |
-| 7 | [Fase 7 — Pubblicazione](https://github.com/gianlucamazza/xbox-gpu-training/milestone/8) | Honest results page | Functional results published; scientific results pending |
+| 7 | [Fase 7 — Pubblicazione](https://github.com/gianlucamazza/xbox-gpu-training/milestone/8) | Honest results page | Functional results published; scientific results owned by FloppyLM |

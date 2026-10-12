@@ -7,8 +7,10 @@ measurements: [status.md](status.md).
 **Summary.** The E0 trainer executes the FloppyLM E0 protocol on a retail Series S
 GPU and agrees with independent oracles on every operation, model fixture, optimizer
 step and resume check. Its synthetic throughput is measured. This is **functional**
-evidence: no language-model quality, Series X, matched-CPU or PIX result exists yet.
-The scientific campaign is running; its results will be added here once gated.
+evidence: no language-model quality, Series X, matched-CPU or PIX result is sourced
+here. FloppyLM owns [scientific status](https://github.com/gianlucamazza/floppylm/blob/main/docs/STATUS.md);
+this page does not copy those numbers. Current package and open items:
+[status.md](status.md).
 
 ## Measurement hosts
 
@@ -34,7 +36,7 @@ Sourced from the evidence directories; values in [status.md](status.md).
 | Real Dev Home suspension checkpoints and recovers                            | `lifecycle.json`                          | Sourced                       |
 | E0.1 engine is bit-identical to the previous engine                          | `bit-identity.json`                       | Sourced                       |
 | Representative synthetic throughput and peak app memory                      | `throughput.json` (`purpose: functional`) | Sourced, functional only      |
-| Language-model quality / perplexity                                          | —                                         | UNMEASURED (campaign pending) |
+| Language-model quality / perplexity                                          | —                                         | UNMEASURED (not sourced here) |
 | Series X, matched CPU, PIX                                                   | —                                         | UNMEASURED                    |
 
 Throughput was measured on a synthetic corpus and excludes corpus upload and Python
@@ -120,8 +122,8 @@ estimate, not a measurement. Original 1-bit BitNet: Wang et al.,
 
 ## Limitations
 
-- Language-model quality is not measured; the campaign is in progress.
-- No Series X measurement and no PIX capture.
+- Language-model quality is **UNMEASURED** here; FloppyLM owns scientific status.
+- No Series X measurement and no PIX `.wpix` capture.
 - Diagnostic-lane workloads were never deployed to a console.
 - UWP App mode runs at feature level 11.0 with a partial GPU share, not full title
   GPU access ([platform/dx12-hlsl-compute.md](platform/dx12-hlsl-compute.md)).

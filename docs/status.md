@@ -4,9 +4,14 @@ Single source of truth for the current state of the project. Other pages link he
 instead of restating these values. Numbers below are checked against the evidence
 JSON by `scripts/check_doc_claims.py`; tags follow [claims-policy.md](claims-policy.md).
 
-Last updated: 2026-10-03.
+Last updated: 2026-10-12.
 
-## Active package
+## Last sourced hardware qualification
+
+This repository's committed evidence still ends at package `0.1.0.98`. There is
+no `docs/evidence/` directory for `0.1.0.109`, no git tag beyond `v0.1.0.66`,
+and no CHANGELOG in this tree. FloppyLM records a later Xbox package `0.1.0.109`
+and a completed E0 campaign; that is companion state, not a sourced bump here.
 
 | Field            | Value                                                                                                         |
 | ---------------- | ------------------------------------------------------------------------------------------------------------- |
@@ -19,6 +24,22 @@ Last updated: 2026-10-03.
 
 The package passed the full acceptance ([e0/acceptance.md](e0/acceptance.md)); its
 bit identity with the previous package is in the table below.
+
+## Package 0.1.0.109 (not sourced here)
+
+FloppyLM's [status page](https://github.com/gianlucamazza/floppylm/blob/main/docs/STATUS.md)
+records package `0.1.0.109` as the Xbox backend for campaign
+`e0-campaign-20261009-109` and marks that scientific campaign complete. This
+repository does not carry companion evidence JSON for that package, so none of
+those gate, throughput, or quality numbers are restated here.
+
+After that campaign ended, `XgpuE0.exe` stayed listed until a manual Device
+Portal kill. The leftover engine-5 reading is documented in the
+[2026-10-11 RCA](rca/2026-10-11-xgpue0-orphan-gpu.md) and
+[ADR 0010](adr/0010-idle-compositor-release.md). Process teardown is now
+described in [lifecycle.md](e0/lifecycle.md) (merged in #46). That RCA does
+**not** certify a GPU-utilisation reduction, and it does **not** make
+`0.1.0.109` the sourced active package in this tree.
 
 ## Measured on Series S (Sourced, functional)
 
@@ -49,34 +70,43 @@ with a CoreWindow and no XAML or D3D12 initialization. The historical 0.1.0.56 m
 99.55% on that whole-console counter; it does not establish per-app GPU work or power.
 See [investigation](evidence/e0-20261001-dashboard/notes.md#idle-gpu-investigation-remains-open)
 and [raw finding](evidence/e0-20261001-dashboard/idle-investigation.json).
-An independent GPU trace is needed for attribution. Diagnostic paths were not merged.
+The 2026-10-11 RCA and ADR 0010 later showed that, on package `0.1.0.115`,
+releasing the dashboard timer and `DisplayRequest` did not drop engine 5;
+process exit did. Engine-5 attribution is still open. An independent GPU trace is needed;
+no validated GPU reduction exists. Diagnostic paths were not merged.
 
 ## Scientific campaign
 
-No campaign was started for this functional qualification. Historical campaigns
-remain bound to their original package and source; never resume them onto the
-active package. FloppyLM owns the
-[current scientific status](https://github.com/gianlucamazza/floppylm/blob/main/docs/STATUS.md).
-The historical stall's initiating cause remains unproven; the controlled watchdog
-test qualifies detection, process exit and explicit recovery only.
+FloppyLM owns the
+[current scientific status](https://github.com/gianlucamazza/floppylm/blob/main/docs/STATUS.md)
+and reports the E0 campaign on `0.1.0.109` complete. This repository does not
+copy those quality, selection, or cost numbers. The last sourced hardware
+qualification here (`0.1.0.98`) started no campaign of its own. Historical
+campaigns remain bound to their original package and source; never resume them
+onto a later package from this page. The historical stall's initiating cause
+remains unproven; the controlled watchdog test qualifies detection, process
+exit and explicit recovery only.
 
 ## Unmeasured
 
 | Target                                                                                   | State            |
 | ---------------------------------------------------------------------------------------- | ---------------- |
-| Scientific E0 selection, paired seeds, costs, exclusions                                 | stopped; owner decision pending |
+| Scientific E0 selection, paired seeds, costs, exclusions                                 | Not sourced here; FloppyLM owns the campaign record |
 | Language-model quality / perplexity                                                      | **UNMEASURED**   |
 | Series X                                                                                 | **UNMEASURED**   |
 | Matched CPU versus console throughput                                                    | **UNMEASURED**   |
 | PIX `.wpix` capture (Windows or console)                                                 | **UNMEASURED**   |
 | Diagnostic-lane workloads (hello / matmul / FLP2 / stream-stress / qat-smoke) on console | **UNMEASURED**   |
 
+PIX `.wpix` capture is still **UNMEASURED**: no PIX capture exists yet.
+Idle engine-5 attribution is still **open**: no validated GPU reduction; an
+independent GPU trace is required.
+
 ## Next
 
-1. Obtain independent GPU attribution for the unresolved idle counter.
-2. Review the host correctness/runtime and backend qualification PRs; see the
-   [accepted evidence](evidence/e0-20261003-098/notes.md).
-3. Await the FloppyLM owner's scientific proposal decision before any new campaign.
-4. Leave every unmeasured cell empty until measured.
+1. Obtain independent GPU attribution for the unresolved idle engine-5 counter.
+2. Do not treat `0.1.0.109` as a sourced hardware bump until an evidence
+   directory is committed here.
+3. Leave every unmeasured cell empty until measured.
 
 Earlier packages and the full chronology: [history.md](history.md), [evidence index](evidence/README.md).
