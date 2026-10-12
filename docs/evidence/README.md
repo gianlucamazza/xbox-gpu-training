@@ -19,3 +19,7 @@ Dashboard package: [e0-20261001-dashboard](e0-20261001-dashboard/notes.md), pack
 Dashboard UI package: [e0-20261001-dashboard-ui](e0-20261001-dashboard-ui/notes.md), package `0.1.0.66`, source `0965acb` (merge `f8c9f69`), CI 36921727698. Acceptance, bit identity with 0.1.0.56 and dashboard screenshots; worker, recovery and lifecycle not rerun.
 
 Real-deadline watchdog: [e0-20261003-098](e0-20261003-098/notes.md), complete functional qualification with exact recovery and preservation evidence. The [0.1.0.96 incomplete attempt](e0-20261003-096-incomplete/notes.md) records the defect discovered before the final qualification.
+
+This tree has no evidence directory for package `0.1.0.109`. FloppyLM holds a
+companion record for that later package and campaign; do not copy those numbers
+here. Current state: [status.md](../status.md).
